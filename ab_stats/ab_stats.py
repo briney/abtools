@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-mpl.use('pdf')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -73,7 +73,7 @@ parser.add_argument('-3', '--cdr3', dest='cdr3_plot', default=None,
 					help="Plot the distribution of CDR3 lengths, as nucleotide or amino acid. \
 					Options are 'nt', 'aa', or 'both'. \
 					If not provided, no plot will be made.")
-parser.add_argument('-H', '--heatmap', dest='vj_heatmap', default=False, action='store_true',
+parser.add_argument('-H', '--heatmap', dest='heatmap', default=False, action='store_true',
 					help="If set, generates a heatmap (or quiltplot, if you're a novice) of combined variable and joining gene use. \
 					If not provided, no plot will be made.")
 parser.add_argument('-I', '--isotype', dest='isotype_plot', default=False, action='store_true',
@@ -115,7 +115,7 @@ def query(db, collection):
 	c = db[collection]
 	results = c.find({'chain': args.chain, 'prod': 'yes'},
 					 {'_id': 0,
-					  'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.gene': 1,
+					  'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.fam': 1,
 					  'v_gene.fam': 1, 'd_gene.fam': 1,
 					  'cdr3_len': 1, 'isotype': 1}).limit(5000)
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
@@ -162,7 +162,14 @@ def cdr3_plot(seqs, collection, make_plot):
 	x, y = aggregate(cdr3s)
 	color = sns.hls_palette(7)[4]
 	plot_file = '{}_{}_cdr3_lengths.pdf'.format(collection, args.chain)
-	make_barplot([str(i) for i in x], y, color, plot_file)
+	x_title = 'CDR3 Length (AA)'
+	y_title = 'Frequency (%)'
+	make_barplot([str(i) for i in x], y,
+				 color,
+				 plot_file,
+				 xlabel=x_title,
+				 ylabel=y_title,
+				 grid=True)
 
 
 def germline_plot(seqs, gene, collection, level):
@@ -177,7 +184,11 @@ def germline_plot(seqs, gene, collection, level):
 		x = [i.replace('IG{}{}'.format(chain, gene), '{}{}'.format(gene, chain)) for i in x]
 		plot_file = '{}_{}{}_{}.pdf'.format(collection, gene, chain, l)
 		colors = get_germline_plot_colors(x, l)
-		make_barplot(x, y, colors, plot_file, l)
+		make_barplot(x, y,
+					 colors,
+					 plot_file,
+					 ylabel='Frequency (%)',
+					 l=l)
 
 
 def get_germline_plot_colors(data, l):
@@ -194,16 +205,38 @@ def isotypes():
 	pass
 
 
-def vj_heatmap():
-	pass
+def vj_heatmap(seqs, collection, make_plot):
+	if not make_plot:
+		return None
+	plot_file = '{}_VJheatmap_{}.pdf'.format(collection, args.chain)
+	vj_data = group_by_vj(seqs)
+	vj_df = pd.DataFrame(vj_data)
+	make_heatmap(vj_df.transpose(), plot_file)
+
+
+def group_by_vj(data):
+	vj = {}
+	for d in data:
+		v = d['v_gene']['gene']
+		j = d['j_gene']['fam'].rstrip('P')
+		if v[:3] != j[:3]:
+			continue
+		if v not in vj:
+			vj[v] = {}
+		vj[v][j] = vj[v][j] + 1 if j in vj[v] else 1
+	total = len(data)
+	for v in vj.keys():
+		for j in vj[v].keys():
+			vj[v][j] = 100. * vj[v][j] / total
+	return vj
 
 
 
 
 
 
-
-def make_barplot(x, y, colors, ofile, l=None):
+def make_barplot(x, y, colors, ofile, xlabel=None, ylabel=None, l=None, grid=False):
+	sns.set_style('white')
 	# set bar locations and width
 	ind = np.arange(len(x))
 	width = 0.75
@@ -217,12 +250,39 @@ def make_barplot(x, y, colors, ofile, l=None):
 	xtick_names = ax.set_xticklabels(x)
 	if l == 'gene':
 		plt.setp(xtick_names, rotation=90, fontsize=7)
+	if grid:
+		ax.yaxis.grid(True, alpha=0.5)
+	# axis labels
+	if xlabel:
+		ax.set_xlabel(xlabel)
+	if ylabel:
+		ax.set_ylabel(ylabel)
 	# make the plot
 	bar = ax.bar(ind, y, width, color=colors)
 	plt.savefig(os.path.join(args.output, ofile))
 	plt.close()
 
 
+def make_heatmap(df, ofile):
+	sns.set()
+	# set up plot, determine plot size
+	h, w = df.shape
+	f, ax = plt.subplots(figsize=(w / 2, h / 3))
+	sns.heatmap(df,
+				square=True,
+				cmap='Blues',
+				cbar=True,
+				cbar_kws={'orientation': 'horizontal',
+						  'fraction': 0.02,
+						  'pad': 0.02,
+						  'spacing': 'proportional'})
+	# adjust labels
+	ax.xaxis.tick_top()
+	plt.xticks(rotation=90)
+	f.tight_layout()
+	# make the plot
+	plt.savefig(os.path.join(args.output, ofile))
+	plt.close()
 
 
 
@@ -244,7 +304,6 @@ def print_collection_info(collection):
 
 
 def main():
-	sns.set_style('white')
 	db = get_db()
 	for collection in get_collections(db):
 		print_collection_info(collection)
@@ -253,6 +312,7 @@ def main():
 		germline_plot(seqs, 'D', collection, level=args.div_plot)
 		germline_plot(seqs, 'J', collection, level=args.join_plot)
 		cdr3_plot(seqs, collection, args.cdr3_plot)
+		vj_heatmap(seqs, collection, args.heatmap)
 
 
 
