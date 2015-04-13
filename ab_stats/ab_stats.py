@@ -43,7 +43,7 @@ from pymongo import MongoClient
 
 parser = argparse.ArgumentParser("Computes and plots basic repertoire information from one or more antibody NGS datasets.")
 parser.add_argument('-o', '--output', dest='output', required=True,
-					help="Output directory for the FASTA files. Required.")
+					help="Output directory for figure and data files. Required.")
 parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
 					help="Directory for temporary files. Required.")
 parser.add_argument('-d', '--database', dest='db', required=True,
@@ -117,7 +117,7 @@ def query(db, collection):
 					 {'_id': 0,
 					  'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.fam': 1,
 					  'v_gene.fam': 1, 'd_gene.fam': 1,
-					  'cdr3_len': 1, 'isotype': 1}).limit(5000)
+					  'cdr3_len': 1, 'isotype': 1})
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
 	print('Done.\nFound {} sequences\n'.format(len(seqs)))
 	return seqs
