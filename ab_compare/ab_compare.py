@@ -39,7 +39,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 
 
 
@@ -68,7 +68,7 @@ parser.add_argument('-I', '--iterations', dest='iterations', type=int, default=1
 					help="Number of iterations of the similarity calculation to perform. \
 					Default is 10000.")
 parser.add_argument('-s', '--similarity_method', dest='method',
-					choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard'],
+					choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
 					default='marisita-horn',
 					help="The similarity calculation to use. \
 					Options are 'marisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
@@ -95,6 +95,9 @@ args = parser.parse_args()
 
 
 def get_db():
+	'''
+	Gets a MongoDB database connection object.
+	'''
 	if args.user and args.password:
 		password = urllib.quote_plus(password)
 		uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
@@ -102,6 +105,18 @@ def get_db():
 	else:
 		conn = MongoClient(args.ip, 27017)
 	return conn[args.db]
+
+
+def create_index(collection, fields):
+	'''
+	Creates an index in collection on fields.
+
+	Inputs
+	collection: the name of a MongoDB collection
+	fields: a list of one or more fields
+	'''
+	index_fields = [(f, ASCENDING) for f in fields]
+	db[collection].create_index(index_fields)
 
 
 def get_collection_pairs():
@@ -119,12 +134,21 @@ def get_collection_pairs():
 	return pairs
 
 
+def index_collections(pairs):
+	collections = sorted(list(set([c for tup in pairs for c in tup])))
+	fields = ['chain', 'prod']
+	print('\n\nCreating indexes...')
+	for c in collections:
+		print(c)
+		create_index(c, fields)
+
+
 def query(collection):
 	print('\nGetting {} sequences from MongoDB...'.format(collection), end='')
 	sys.stdout.flush()
 	c = db[collection]
 	results = c.find({'chain': args.chain, 'prod': 'yes'},
-					 {'_id': 0, 'v_gene.gene': 1, 'cdr3_len': 1}).limit(20000)
+					 {'_id': 0, 'v_gene.gene': 1, 'cdr3_len': 1})
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
 	print('Done.\nFound {} sequences'.format(len(seqs)))
 	return seqs
@@ -216,7 +240,10 @@ def simdif_method(sample1, sample2):
 	methods = {'marisita-horn': (mh_similarity, False, False),
  		       'kullback-leibler': (kl_divergence, True, True),
  		       'jensen-shannon': (js_similarity, False, True),
- 		       'jaccard': (jaccard_similarity, False, False)}
+ 		       'jaccard': (jaccard_similarity, False, False),
+ 		       'bray-curtis': (bc_similarity, False, True),
+ 		       'renkonen': (renkonen_similarity, False, True),
+ 		       'cosine': (cosine_similarity, False, False)}
  	method, continuous, normalize = methods[args.method]
  	s1, s2 = random_sample_no_replacement(sample1,
  										  sample2,
@@ -362,17 +389,75 @@ def renkonen_similarity(s1, s2):
 	Calculates the Renkonen similarity (also known as the
 	percentage similarity) for two samples.
 
-	NOTE: sample1 and sample2 should be the same length, and
+	NOTE: s1 and s2 should be the same length, and
 	the sum of each sample should equal 1.
 
 	Inputs
-	sample1: probability distribution
-	sample2: probability distribution
+	s1: probability distribution
+	s2: probability distribution
 
 	Output
 	Renkonen similarity (float, between 0 and 1)
 	'''
 	return sum(min(vals) for vals in zip(s1, s2))
+
+
+def bc_similarity(s1, s2):
+	'''
+	Calculates the Bray-Curtis similarity for two samples.
+
+	NOTE: s1 and s2 should be the same length, and
+	the sum of each sample should equal 1.
+
+	Inputs
+	s1: probability distribution
+	s2: probability distribution
+
+	Output
+	Bray-Curtis similarity (float, between 0 and 1)
+	'''
+	return 2.0 * sum(min(vals) for vals in zip(s1, s2)) / (sum(s1) + sum(s2))
+
+
+def cosine_similarity(s1, s2):
+	'''
+	Calculates the cosine (angular) similarity for two samples.
+
+	NOTE: s1 and s2 should be the same length.
+
+	Inputs
+	s1: list of frequencies
+	s2: list of frequencies
+
+	Output
+	Cosine similarity (float, between 0 and 1)
+	'''
+	num = sum([Pi * Qi for Pi, Qi in zip(s1, s2)])
+	denomPi = mp.sqrt(sum([Pi * Pi for Pi in s1])) * mp.sqrt(sum([Qi * Qi for Qi in s2]))
+	return float(num) / denom
+
+
+def sd_similarity(s1, s2):
+	'''
+	Calculates the Brey-Curtis similarity for two samples.
+
+	NOTE: s1 and s2 should be the same length, and
+	the sum of each sample should equal 1..
+
+	Inputs
+	s1: list of frequencies
+	s2: list of frequencies
+
+	Output
+	Brey-Curtis similarity (float, between 0 and 1)
+	'''
+	num = 0
+	denom = 0
+	for x, y in zip(s1, s2):
+		num += min(x, y) > 0
+		denom += min(x) > 0
+		denom += min(y) > 0
+	return 1. * num / denom
 
 
 def bin_similarities(similarities):
@@ -570,6 +655,7 @@ def print_final_results(scores, control=False):
 def main():
 	print_method()
 	pairs = get_collection_pairs()
+	index_collections(pairs)
 	prev1 = None
 	scores = {}
 	cscores = {}
