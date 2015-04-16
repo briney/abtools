@@ -115,15 +115,15 @@ def query(db, collection):
 	c = db[collection]
 	results = c.find({'chain': args.chain, 'prod': 'yes'},
 					 {'_id': 0,
-					  'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.fam': 1,
-					  'v_gene.fam': 1, 'd_gene.fam': 1,
+					  'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.gene': 1,
+					  'v_gene.fam': 1, 'd_gene.fam': 1, 'j_gene.fam': 1,
 					  'cdr3_len': 1, 'isotype': 1})
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
 	print('Done.\nFound {} sequences\n'.format(len(seqs)))
 	return seqs
 
 
-def aggregate(data, norm=True, sort_by='value'):
+def aggregate(data, norm=True, sort_by='value', keys=None):
 	'''
 	Counts the number of occurances of each item in 'data'.
 
@@ -135,9 +135,15 @@ def aggregate(data, norm=True, sort_by='value'):
 	Output
 	a non-redundant list of values (from 'data') and a list of counts.
 	'''
-	vdict = {}
-	for d in data:
-		vdict[d] = vdict[d] + 1 if d in vdict else 1
+	if keys:
+		vdict = {k: 0 for k in keys}
+		for d in data:
+			if d in keys:
+				vdict[d] += 1
+	else:
+		vdict = {}
+		for d in data:
+			vdict[d] = vdict[d] + 1 if d in vdict else 1
 	vals = [(k, v) for k, v in vdict.iteritems()]
 	if sort_by == 'value':
 		vals.sort(key=lambda x: x[0])
@@ -158,29 +164,46 @@ def aggregate(data, norm=True, sort_by='value'):
 def cdr3_plot(seqs, collection, make_plot):
 	if not make_plot:
 		return None
-	cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0]
-	x, y = aggregate(cdr3s)
+	max_len = 40 if args.chain == 'heavy' else 20
+	cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0 and s['cdr3_len'] <= max_len]
+	x, y = aggregate(cdr3s, keys=range(1, max_len + 1))
 	color = sns.hls_palette(7)[4]
 	plot_file = '{}_{}_cdr3_lengths.pdf'.format(collection, args.chain)
 	x_title = 'CDR3 Length (AA)'
 	y_title = 'Frequency (%)'
+	size = (9, 4) if args.chain == 'heavy' else (6, 4)
 	make_barplot([str(i) for i in x], y,
 				 color,
 				 plot_file,
 				 xlabel=x_title,
 				 ylabel=y_title,
-				 grid=True)
+				 grid=True,
+				 size=size,
+				 xfontsize=7)
 
 
 def germline_plot(seqs, gene, collection, level):
+	from germlines import germlines
+	germs = germlines('human', gene, args.chain)
 	if not level:
 		return None
 	level = ['fam', 'gene'] if level == 'both' else [level, ]
 	for l in level:
+		if l == 'fam':
+			keys = list(set([g.split('-')[0] for g in germs]))
+			size = (6, 4)
+		else:
+			keys = list(set([g.split('*')[0] for g in germs]))
+			if gene == 'J':
+				size = (6, 4)
+			elif gene == 'D':
+				size = (8, 4)
+			else:
+				size = (10, 4)
 		gtype = '{}_gene'.format(gene.lower())
 		chain = args.chain[0].upper()
-		data = [s[gtype][l].rstrip('D') for s in seqs]
-		x, y = aggregate(data)
+		data = [s[gtype][l].rstrip('D') for s in seqs if gtype in s]
+		x, y = aggregate(data, keys=keys)
 		x = [i.replace('IG{}{}'.format(chain, gene), '{}{}'.format(gene, chain)) for i in x]
 		plot_file = '{}_{}{}_{}.pdf'.format(collection, gene, chain, l)
 		colors = get_germline_plot_colors(x, l)
@@ -188,7 +211,8 @@ def germline_plot(seqs, gene, collection, level):
 					 colors,
 					 plot_file,
 					 ylabel='Frequency (%)',
-					 l=l)
+					 l=l,
+					 size=size)
 
 
 def get_germline_plot_colors(data, l):
@@ -215,14 +239,23 @@ def vj_heatmap(seqs, collection, make_plot):
 
 
 def group_by_vj(data):
+	from germlines import germlines
+	vs = list(set([g.split('*')[0] for g in germlines('human', 'V', args.chain)]))
+	js = list(set([g.split('*')[0] for g in germlines('human', 'J', args.chain)]))
 	vj = {}
+	for v in vs:
+		vj[v] = {}
+		for j in js:
+			vj[v][j] = 0
 	for d in data:
 		v = d['v_gene']['gene']
-		j = d['j_gene']['fam'].rstrip('P')
+		j = d['j_gene']['gene'].rstrip('P')
 		if v[:3] != j[:3]:
 			continue
 		if v not in vj:
-			vj[v] = {}
+			continue
+		if j not in vj[v]:
+			continue
 		vj[v][j] = vj[v][j] + 1 if j in vj[v] else 1
 	total = len(data)
 	for v in vj.keys():
@@ -235,13 +268,16 @@ def group_by_vj(data):
 
 
 
-def make_barplot(x, y, colors, ofile, xlabel=None, ylabel=None, l=None, grid=False):
-	sns.set_style('white')
+def make_barplot(x, y, colors, ofile, xlabel=None, ylabel=None, l=None, grid=False, size=None, xfontsize=None):
+	sns.set_style('ticks')
 	# set bar locations and width
 	ind = np.arange(len(x))
 	width = 0.75
 	# plot objects
-	fig = plt.figure()
+	if size:
+		fig = plt.figure(figsize=size)
+	else:
+		fig = plt.figure()
 	ax = fig.add_subplot(111)
 	# axis limits and ticks
 	ax.set_ylim(0, 1.05 * max(y))
@@ -257,8 +293,13 @@ def make_barplot(x, y, colors, ofile, xlabel=None, ylabel=None, l=None, grid=Fal
 		ax.set_xlabel(xlabel)
 	if ylabel:
 		ax.set_ylabel(ylabel)
+	if xfontsize:
+		plt.setp(xtick_names, fontsize=xfontsize)
+	ax.tick_params(axis='x', which='both', top='off', length=3, pad=1.5)
+	ax.tick_params(axis='y', which='both', right='off', length=3, pad=1.5)
 	# make the plot
 	bar = ax.bar(ind, y, width, color=colors)
+	fig.tight_layout()
 	plt.savefig(os.path.join(args.output, ofile))
 	plt.close()
 
@@ -267,7 +308,7 @@ def make_heatmap(df, ofile):
 	sns.set()
 	# set up plot, determine plot size
 	h, w = df.shape
-	f, ax = plt.subplots(figsize=(w / 2, h / 3))
+	f, ax = plt.subplots(figsize=(w / 1.75, h / 3))
 	sns.heatmap(df,
 				square=True,
 				cmap='Blues',
@@ -275,7 +316,7 @@ def make_heatmap(df, ofile):
 				cbar_kws={'orientation': 'horizontal',
 						  'fraction': 0.02,
 						  'pad': 0.02,
-						  'spacing': 'proportional'})
+						  'shrink': 0.675})
 	# adjust labels
 	ax.xaxis.tick_top()
 	plt.xticks(rotation=90)
