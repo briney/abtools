@@ -1,0 +1,3 @@
+dlopen(/Users/bryanbriney/anaconda/lib/python2.7/site-packages/_mysql.so, 2): Library not loaded: libssl.1.0.0.dylib
+  Referenced from: /Users/bryanbriney/anaconda/lib/python2.7/site-packages/_mysql.so
+  Reason: image not found

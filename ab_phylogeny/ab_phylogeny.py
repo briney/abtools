@@ -2,17 +2,25 @@
 # filename: ab_phylogeny.py
 
 
-
-###########################################################################
 #
-# Copyright (c) 2014 Bryan Briney.  All rights reserved.
+# Copyright (c) 2015 Bryan Briney
+# License: The MIT license (http://opensource.org/licenses/MIT)
 #
-# @version: 1.0.0
-# @author: Bryan Briney
-# @license: MIT (http://opensource.org/licenses/MIT)
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-###########################################################################
-
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 
 
 import os
@@ -25,8 +33,8 @@ import seaborn as sns
 
 from Bio import SeqIO
 
-from timepoint import Timepoint
-from msa import align
+from utils import msa, tree
+from utils.timepoint import Timepoint
 
 
 
@@ -42,6 +50,14 @@ parser.add_argument('-r', '--root', dest='root', required=True,
 					Required.")
 parser.add_argument('-m', '--mabs', dest='mabs', default=None,
 					help="FASTA file containing sequences of monoclonal antibodies of the appropriate chain.")
+parser.add_argument('-a', '--alignment', dest='alignment', default=None,
+					help="Provide a pre-aligned dataset. \
+					Ensure that the root sequence is labeled as 'root' and that all mAb sequences are pre-pended with 'mab_'. \
+					If provided, -i, -r and -m are ignored.")
+parser.add_argument('-n', '--newick', dest='newick', default=None,
+					help="Provide a pre-generated Newick tree file. \
+					Ensure that the root sequence is labeled as 'root' and that all mAb sequences are pre-pended with 'mab_'. \
+					If provided -i, -r, -m and -a are ignored.")
 parser.add_argument('-s', '--sample_id', dest='sample_id', default=None,
 					help="Sample ID. If not provided, the sample ID will be inferred from the input file.")
 parser.add_argument('-t', '--timepoints', dest='timepoints', default=None,
@@ -50,16 +66,22 @@ parser.add_argument('-t', '--timepoints', dest='timepoints', default=None,
 					TimepointName is the name appended to the sequences in the input file.\
 					TimepointOrder is an integer that indicates the order in which the timepoints should be sorted.\
 					TimepointColor is an RGB or hex value that will be used to color the phylogenetic tree.\
-					If mab sequences are provided, the 'mabs' entry will be used to sort/color the mab sequences.\
+					If mAb sequences are provided, the 'mab' entry will be used to sort/color the mAb sequences.\
 					If not provided, colors will be automatically selected and timepoints will be determined by a simple \
 					sort of the raw timepoint values parsed from the input file.")
-parser.add_argument('-a', '--aa', dest='is_aa', default=False, action='store_true',
+parser.add_argument('-A', '--aa', dest='is_aa', default=False, action='store_true',
 					help="If used, all input files contain amino acid sequences. \
 					Default is nucleotide sequences.")
 parser.add_argument('-D', '--delimiter', dest='delimiter', default='_',
 					help="Delimiter that separates the timepoint and sequence ID. \
-					Cannot use ':' or ';', since these can screw up the tree file. \
+					Cannot use ':', ';' or '=', since these can screw up the tree file. \
 					Default is '_'.")
+parser.add_argument('-S', '--scale', dest='scale', default=None,
+					help="Scale for the resulting ete2 tree. \
+					If not provided, the ete2 default value will be used.")
+parser.add_argument('-b', '--branch_vertical_margin', dest='branch_vertical_margin', default=None,
+					help="Branch vertical margin for the resulting ete2 tree. \
+					If not provided, the ete2 default value will be used..")
 args = parser.parse_args()
 
 
@@ -106,8 +128,8 @@ def parse_mabs():
 
 
 def parse_timepoints(tps):
+	timepoints = []
 	if args.timepoints:
-		timepoints = []
 		with open(args.timepoints, 'r') as f:
 			for line in f:
 				name, order, color = line.strip().split('\t')
@@ -115,28 +137,32 @@ def parse_timepoints(tps):
 					timepoints.append(Timepoint(name, order, color))
 	else:
 		colors = sns.hls_palette(len(tps), l=0.5, s=0.9)
-		for i, tp in enumerate(sorted(tps)):
-			timepoints.append(Timepoint(tp, i + 1, colors[i]))
+		timepoints.append(Timepoint('root', 0, colors[0]))
+		for i, tp in enumerate(sorted([t for t in tps if t != 'root'])):
+			timepoints.append(Timepoint(tp, i + 1, colors[i + 1]))
 	return timepoints
 
 
 
 
 def make_msa(seqs):
-	import msa
 	if args.sample_id:
 		sample = args.sample_id
 	else:
-		sample = os.path.basename(args.input).replace('.fasta', '')
+		sample = '.'.join(os.path.basename(args.input).split('.')[:-1])
 	fasta_file = os.path.join(args.output, '{}.fasta'.format(sample))
 	alignment = msa.align(seqs, fasta_file)
 	return alignment
 
 
 
-def make_tree_file(alignment):
-	import tree
-	return tree.make_tree(alignment, args.is_aa)
+def make_tree(alignment, timepoints):
+	return tree.make_tree(alignment,
+						  timepoints,
+						  args.delimiter,
+						  args.is_aa,
+						  args.scale,
+						  args.branch_vertical_margin)
 
 
 
@@ -147,8 +173,8 @@ def main():
 	seqs, tps = parse_seqs()
 	timepoints = parse_timepoints(tps)
 	alignment = make_msa(seqs)
-	tree_file = make_tree_file(alignment)
-	make_figure(tree_file, timepoints)
+	make_tree(alignment, timepoints)
+	# make_figure(tree_file, timepoints)
 
 
 

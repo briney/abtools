@@ -2,15 +2,25 @@
 # filename: ab_finder.py
 
 
-###########################################################################
 #
-# Copyright (c) 2015 Bryan Briney.  All rights reserved.
+# Copyright (c) 2015 Bryan Briney
+# License: The MIT license (http://opensource.org/licenses/MIT)
 #
-# @version: 1.0.0
-# @author: Bryan Briney
-# @license: MIT (http://opensource.org/licenses/MIT)
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-###########################################################################
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 
 
 from __future__ import print_function
@@ -174,7 +184,7 @@ def query(collection):
 	print_query_info()
 	iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
 	vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
-	return coll.find({'chain': {'$in': chain}}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
+	return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
 
 
 def ensure_index(collection, field):

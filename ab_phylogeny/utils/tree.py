@@ -2,16 +2,25 @@
 # filename: tree.py
 
 
-
-###########################################################################
 #
-# Copyright (c) 2014 Bryan Briney.  All rights reserved.
+# Copyright (c) 2015 Bryan Briney
+# License: The MIT license (http://opensource.org/licenses/MIT)
 #
-# @version: 1.0.0
-# @author: Bryan Briney
-# @license: MIT (http://opensource.org/licenses/MIT)
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-###########################################################################
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 
 
 import os
@@ -21,7 +30,7 @@ import ete2
 
 
 
-def make_tree(alignment, aa):
+def make_tree(alignment, timepoints, delimiter, is_aa, scale, branch_vert_margin):
 	'''
 	Builds a tree file (using FastTree) from a sequence alignment in FASTA format
 
@@ -31,30 +40,39 @@ def make_tree(alignment, aa):
 	Output
 	path to a Newick-formatted tree file
 	'''
+
+	for tp in timepoints:
+
+
+		print(tp.name, tp.color)
+
+
 	tree = alignment.replace('_aligned.aln', '_tree.nw')
-	return fast_tree(alignment, tree, aa)
+	tree = fast_tree(alignment, tree, is_aa)
+	make_figure(tree, timepoints, delimiter, scale, branch_vert_margin)
 
 
 
-def fast_tree(alignment, tree, aa):
-	if aa:
-		ft_cmd = 'fasttree -nt {} > {}'.format(alignment, tree)
-	else:
+def fast_tree(alignment, tree, is_aa):
+	if is_aa:
 		ft_cmd = 'fasttree {} > {}'.format(alignment, tree)
+	else:
+		ft_cmd = 'fasttree -nt {} > {}'.format(alignment, tree)
 	ft = sp.Popen(ft_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 	stdout, stderr = ft.communicate()
 	return tree
 
 
-def make_figure(tree, timepoints):
+def make_figure(tree, timepoints, delimiter, scale, branch_vert_margin):
 	fig = tree.replace('_tree.nw', '_tree.pdf')
 	orders = {tp.name: tp.order for tp in timepoints}
 	colors = {tp.name: tp.color for tp in timepoints}
 	# make the tree
 	t = ete2.Tree(tree)
+	t.set_outgroup(t&"root")
 	# style the nodes based on timepoint
 	for node in t.traverse():
-		earliest = get_earliest_leaf(node.get_leaf_names(), orders)
+		earliest = get_earliest_leaf(node.get_leaf_names(), orders, delimiter)
 		color = colors[earliest]
 		style = ete2.NodeStyle()
 		style['size'] = 0
@@ -66,18 +84,25 @@ def make_figure(tree, timepoints):
 		style['hz_line_type'] = 0
 		node.set_style(style)
 	# style the full tree
+	# root = (t&"root")
+	# nearest_to_root, distance = root.get_closest_leaf()
+	# root_node = t.get_common_ancestor(root, nearest_to_root)
+	t.dist = 0
 	ts = ete2.TreeStyle()
-	ts.show_leaf_names = False
-	ts.scale = 500
-	ts.branch_vertical_margin = 1.5
+	ts.show_leaf_name = False
+	if scale:
+		ts.scale = int(scale)
+	if branch_vert_margin:
+		ts.branch_vertical_margin = float(branch_vert_margin)
+	ts.show_scale = False
 	# render the tree
 	t.render(fig, tree_style=ts)
 
 
-def get_earliest_leaf(leaves, order):
+def get_earliest_leaf(leaves, order, delimiter):
 	counts = {}
 	for leaf in leaves:
-		tp = leaf.split('_')[0]
+		tp = leaf.split(delimiter)[0]
 		counts[tp] = counts[tp] + 1 if tp in counts else 1
 	total = sum(counts.values())
 	if 'root' in counts:

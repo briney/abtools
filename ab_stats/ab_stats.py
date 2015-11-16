@@ -349,8 +349,11 @@ def main():
 	for collection in get_collections(db):
 		print_collection_info(collection)
 		seqs = query(db, collection)
+		if len(seqs) == 0:
+			continue
 		germline_plot(seqs, 'V', collection, level=args.var_plot)
-		germline_plot(seqs, 'D', collection, level=args.div_plot)
+		if args.chain == 'heavy':
+			germline_plot(seqs, 'D', collection, level=args.div_plot)
 		germline_plot(seqs, 'J', collection, level=args.join_plot)
 		cdr3_plot(seqs, collection, args.cdr3_plot)
 		vj_heatmap(seqs, collection, args.heatmap)

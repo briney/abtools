@@ -21,6 +21,7 @@ import os
 import sys
 import uuid
 import time
+import math
 import shelve
 import urllib
 import sqlite3
@@ -60,14 +61,23 @@ parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
 					help="Minimum number of sequences for finding centroids from a UAID group.  Defaults to 1.")
 parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
 					help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
+parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
+					help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
+					If the '--no_uaid' flag is also used, this option will be ignored. \
+					For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
+					Default is to not parse UAIDs.")
 parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
 					help="Generates consensus sequences for each UAID or homology cluster. Default is to identify cluster centroids.")
 parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
 					help="Identity threshold for sequence clustering. Not used for UAID-based correction. Default is 0.975.")
+parser.add_argument('--only-largest-cluster', default=False, action='store_true',
+					help="If set while calculating centroids using UAIDs, only the largest centroid for each UAID cluster is retained.")
 parser.add_argument('-g', '--germs', dest='germs', default=None,
 					help="Path to a FASTA-formatted file of germline V gene sequences. Required if building consensus sequences, not required for centroids.")
 parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
 					help="If set, will run in debug mode.")
+parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
+					help="Delay, in minutes, until the script starts executing. Default is 0.")
 args = parser.parse_args()
 
 
@@ -85,7 +95,7 @@ args = parser.parse_args()
 def get_collections():
 	if args.collection:
 		return [args.collection, ]
-	conn = MongoClient(args.ip, args.port)
+	conn = MongoClient(args.ip, 27017)
 	db = conn[args.db]
 	collections = db.collection_names(include_system_collections=False)
 	return sorted(collections)
@@ -107,15 +117,19 @@ def query(collection):
 		conn = MongoClient(args.ip, 27017)
 	db = conn[args.db]
 	coll = db[collection]
-	results = coll.find({}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, 'vdj_nt': 1})
+	results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, 'vdj_nt': 1, 'raw_query': 1})
 	if args.uaid:
 		seqs = []
 		for r in results:
 			if 'uaid' in r:
 				seqs.append((r['seq_id'], r['uaid'], r['vdj_nt'], r['v_gene']['full']))
+			elif args.parse_uaids:
+				seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r['vdj_nt'], r['v_gene']['full']))
 			else:
 				err = 'UAID field was not found. '
-				err += 'Ensure that UAIDs are being parsed by AbStar or use the -u option for identity-based clustering.'
+				err += 'Ensure that UAIDs are being parsed by AbStar, \
+				use the -parse_uaids option to parse the UAIDs from the raw query input, \
+				or use the -u option for identity-based clustering.'
 				raise ValueError(err)
 	else:
 		seqs = [(r['seq_id'], r['vdj_nt'], r['v_gene']['full']) for r in results]
@@ -325,7 +339,7 @@ def get_uaid_centroids(uaid_clusters):
 			centroids.extend(centroid)
 			sizes.extend(size)
 	else:
-		p = mp.Pool()
+		p = mp.Pool(maxtasksperchild=100)
 		async_results = []
 		for c in clusters:
 			async_results.append(p.apply_async(do_usearch_centroid, (c, )))
@@ -373,6 +387,10 @@ def do_usearch_centroid(uaid_group_seqs):
 		size = int(cent.id.split(';')[1].replace('size=', ''))
 		centroid_seqs.append('>{}_{}\n{}'.format(seq_id, size, str(cent.seq)))
 		sizes.append(size)
+	if args.only_largest_cluster:
+		cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
+		centroid_seqs = [cents_plus_sizes[0][0], ]
+		sizes = [cents_plus_sizes[0][1], ]
 	os.unlink(fasta.name)
 	os.unlink(results.name)
 	os.unlink(centroids.name)
@@ -535,6 +553,31 @@ def print_collection_info(collection):
 	print('')
 
 
+def countdown():
+	start = time.time()
+	h = int(args.sleep / 60)
+	m = int(args.sleep % 60)
+	hz = '0' if len(str(h)) == 1 else ''
+	mz = '0' if len(str(m)) == 1 else ''
+	print('Countdown: {}{}:{}{}:{}'.format(hz, h, mz, m, '00'), end='')
+	sys.stdout.flush()
+	done = False
+	while not done:
+		time.sleep(0.25)
+		elapsed = int(time.time() - start)
+		if elapsed < args.sleep * 60:
+			h = int((args.sleep - elapsed / 60.) / 60)
+			m = int((args.sleep - elapsed / 60.) % 60)
+			s = int((60 * args.sleep - elapsed) % 60)
+			hz = '0' if len(str(h)) == 1 else ''
+			mz = '0' if len(str(m)) == 1 else ''
+			sz = '0' if len(str(s)) == 1 else ''
+			print('\rCountdown: {}{}:{}{}:{}{}'.format(hz, h, mz, m, sz, s), end='')
+			sys.stdout.flush()
+		else:
+			print('\rCountdown: 00:00:00')
+			done = True
+
 
 def main():
 	for collection in get_collections():
@@ -552,12 +595,22 @@ def main():
 				seq_clusters, sizes = cdhit_clustering(seq_db, uaid=False)
 				sequences, sizes = get_consensus(seq_clusters)
 			else:
+				filtered_seqs = []
+				filtered_sizes = []
 				sequences, sizes = cdhit_clustering(seq_db, uaid=False, centroid=True)
+				for seq, size in zip(sequences, sizes):
+					if size >= args.min_seqs:
+						filtered_seqs.append(seq)
+						filtered_sizes.append(size)
+				sequences = filtered_seqs
+				sizes = filtered_sizes
 		write_output(collection, sequences, sizes, collection_start)
 		remove_sqlite_db()
 
 
 if __name__ == '__main__':
+	if args.sleep:
+		countdown()
 	if args.consensus:
 		germs = parse_germs()
 	main()

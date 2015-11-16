@@ -2,15 +2,25 @@
 # filename: ab_compare.py
 
 
-###########################################################################
 #
-# Copyright (c) 2015 Bryan Briney.  All rights reserved.
+# Copyright (c) 2015 Bryan Briney
+# License: The MIT license (http://opensource.org/licenses/MIT)
 #
-# @version: 1.0.0
-# @author: Bryan Briney
-# @license: MIT (http://opensource.org/licenses/MIT)
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-###########################################################################
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 
 
 from __future__ import print_function
@@ -55,6 +65,9 @@ parser.add_argument('-2', '--collection2', dest='collection2', default=None,
 					help="Name of the second MongoDB collection to query for comparison. \
 					If not provided, the collection provided by -1 will be iteratively compared with all other collections in the database. \
 					If both -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
+parser.add_argument('--collection_prefix', dest='collection_prefix', default=None,
+					help="If supplied, will iteratively process only collections beginning with <collection_prefix>.\
+					if '-1' is also provided, it will be iteratively compared with all collections beginning with <collection_prefix>.")
 parser.add_argument('-i', '--ip', dest='ip', default='localhost',
 					help="IP address for the MongoDB server.  Defaults to 'localhost'.")
 parser.add_argument('-u', '--user', dest='user', default=None,
@@ -124,6 +137,8 @@ def get_collection_pairs():
 		print_single_pair_info(args.collection1, args.collection2)
 		return [(args.collection1, args.collection2), ]
 	collections = db.collection_names(include_system_collections=False)
+	if args.collection_prefix:
+		collections = [c for c in collections if c.startswith(args.collection_prefix)]
 	if args.collection1:
 		collections.sort()
 		pairs = zip([args.collection1] * len(collections), collections)
@@ -165,6 +180,18 @@ def query(collection):
 
 def random_sample_no_replacement(s1, s2, only_continuous, norm):
 	chunksize = min(int(0.9 * len(s1)), int(0.9 * len(s2)), args.chunksize)
+	c1_indexes = []
+	c2_indexes = []
+	# while len(c1_indexes) < chunksize:
+	# 	index = random.randint(0, len(c1) - 1)
+	# 	if index not in c1_indexes:
+	# 		c1.indexes.append(index)
+	# while len(c2_indexes) < chunksize:
+	# 	index = random.randint(0, len(c2) - 1)
+	# 	if index not in c2_indexes:
+	# 		c2.indexes.append(index)
+	# c1 = [s1[i] for i in c1_indexes]
+	# c2 = [s2[i] for i in c2_indexes]
 	c1 = random.sample(s1, chunksize)
 	c2 = random.sample(s2, chunksize)
 	agg1 = aggregate(c1)
@@ -193,10 +220,8 @@ def aggregate(data):
 	'''
 	Counts the number of occurances of each item in 'data'.
 
-	Inputs
+	Input
 	data: a list of values.
-	norm: normalize the resulting counts (as percent)
-	sort_by: how to sort the retured data. Options are 'value' and 'count'.
 
 	Output
 	a dict of bins and counts.
@@ -309,7 +334,8 @@ def kl_divergence(s1, s2):
 	Calculates the Kullback-Leibler divergence for two samples.
 
 	NOTE: s1 and s2 should be the same length, and the sum of
-	each should equal 1.
+	each should equal 1. Probabilities should be continuous for
+	both s1 and s2.
 
 	Inputs
 	sample1: probability distribution
