@@ -25,13 +25,12 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import time
-import tempfile
-import argparse
-import subprocess as sp
 import multiprocessing as mp
+import os
+import subprocess as sp
+import sys
+import tempfile
+import time
 
 import numpy as np
 import pandas as pd
@@ -41,51 +40,96 @@ from pymongo import MongoClient
 from Bio import SeqIO
 
 import matplotlib as mpl
-mpl.use('pdf')
+# mpl.use('pdf')
 import matplotlib.pyplot as plt
 
 
-parser = argparse.ArgumentParser("For a MongoDB collection, plots the germline divergence against the sequence identity to a given 'subject' sequence.")
-parser.add_argument('-d', '--database', dest='db', required=True,
-					help="Name of the MongoDB database to query. Required.")
-parser.add_argument('-c', '--collection', dest='collection', default=None,
-					help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
-parser.add_argument('-o', '--output', dest='output_dir', default=None,
-					help="Output directory figure files. If not provided, figures will not be generated. Directory will be created if it does not already exist.")
-parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
-					help="Directory for temporary storage. Will be created if it does not already exist. Required.")
-parser.add_argument('-l', '--log', dest='log', default=None,
-					help="The log file, to which the blast_parse log info will be written. Default is stdout.")
-parser.add_argument('-C', '--cluster', dest="cluster", default=False, action='store_true',
-					help="Use if performing computation on a Celery cluster. If set, input files will be split into many subfiles and passed to a Celery queue. \
-					If not set, input files will still be split, but will be distributed to local processors using multiprocessing.")
-parser.add_argument('-i', '--ip', dest='ip', default='localhost',
-					help="The IP address for the MongoDB server.  Defaults to 'localhost'.")
-parser.add_argument('-p', '--port', dest='port', default=27017,
-					help="The port for the MongoDB server.  Defaults to '27017'.")
-parser.add_argument('-s', '--standard', dest='standard', required=True,
-					help='Path to a file containing the standard sequence(s) for which identity/divergence will be calculated, in FASTA format. \
-					All sequences in the standard file will iteratively processed. Required')
-parser.add_argument('-q', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda', 'light'],
-					help="The chain type of the subject sequence.  Options are 'heavy', 'kappa', 'lambda' and 'light'.  \
-					Default is 'heavy'.")
-parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
-					help="Does not update the MongoDB with ab_compare info. Can save some time if the idenentity calculations aren't needed again.")
-parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
-					help="Use nucleotide sequences for alignment. Default is amino acid sequences. Ensure standard format matches.")
-parser.add_argument('-x', '--xmin', dest='x_min', type=int, default=-1,
-					help="Minimum X-axis (germline divergence) value for the AbCompare plot. Default is -1.")
-parser.add_argument('-X', '--xmax', dest='x_max', type=int, default=35,
-					help="Maximum X-axis (germline divergence) value for the AbCompare plot. Default is 35.")
-parser.add_argument('-y', '--ymin', dest='y_min', type=int, default=65,
-					help="Minimum Y-axis (mAb identity) value for the AbCompare plot. Default is 65.")
-parser.add_argument('-Y', '--ymax', dest='y_max', type=int, default=101,
-					help="Maximum Y-axis (mAb identity) value for the AbCompare plot. Default is 101.")
-parser.add_argument('-g', '--gridsize', dest='gridsize', type=int, default=0,
-					help="Gridsize for the AbCompare plot. Default is 36 for amino acid sequences and 50 for nucleotide sequences.")
-parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
-					help="If set, will write all failed/exception sequences to file and should give more informative errors.")
-args = parser.parse_args()
+def parse_args():
+	import argparse
+	parser = argparse.ArgumentParser("For a MongoDB collection, plots the germline divergence against the sequence identity to a given 'subject' sequence.")
+	parser.add_argument('-d', '--database', dest='db', required=True,
+						help="Name of the MongoDB database to query. Required.")
+	parser.add_argument('-c', '--collection', dest='collection', default=None,
+						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('-o', '--output', dest='output_dir', default=None,
+						help="Output directory figure files. If not provided, figures will not be generated. Directory will be created if it does not already exist.")
+	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
+						help="Directory for temporary storage. Will be created if it does not already exist. Required.")
+	parser.add_argument('-l', '--log', dest='log', default=None,
+						help="The log file, to which the blast_parse log info will be written. Default is stdout.")
+	parser.add_argument('-C', '--cluster', dest="cluster", default=False, action='store_true',
+						help="Use if performing computation on a Celery cluster. If set, input files will be split into many subfiles and passed to a Celery queue. \
+						If not set, input files will still be split, but will be distributed to local processors using multiprocessing.")
+	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
+						help="The IP address for the MongoDB server.  Defaults to 'localhost'.")
+	parser.add_argument('-p', '--port', dest='port', default=27017,
+						help="The port for the MongoDB server.  Defaults to '27017'.")
+	parser.add_argument('-u', '--user', dest='user', default=None,
+						help="Username for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-p', '--password', dest='password', default=None,
+						help="Password for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-s', '--standard', dest='standard', required=True,
+						help='Path to a file containing the standard sequence(s) for which identity/divergence will be calculated, in FASTA format. \
+						All sequences in the standard file will iteratively processed. Required')
+	parser.add_argument('-q', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda', 'light'],
+						help="The chain type of the subject sequence.  Options are 'heavy', 'kappa', 'lambda' and 'light'.  \
+						Default is 'heavy'.")
+	parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
+						help="Does not update the MongoDB with ab_compare info. Can save some time if the idenentity calculations aren't needed again.")
+	parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
+						help="Use nucleotide sequences for alignment. Default is amino acid sequences. Ensure standard format matches.")
+	parser.add_argument('-x', '--xmin', dest='x_min', type=int, default=-1,
+						help="Minimum X-axis (germline divergence) value for the AbCompare plot. Default is -1.")
+	parser.add_argument('-X', '--xmax', dest='x_max', type=int, default=35,
+						help="Maximum X-axis (germline divergence) value for the AbCompare plot. Default is 35.")
+	parser.add_argument('-y', '--ymin', dest='y_min', type=int, default=65,
+						help="Minimum Y-axis (mAb identity) value for the AbCompare plot. Default is 65.")
+	parser.add_argument('-Y', '--ymax', dest='y_max', type=int, default=101,
+						help="Maximum Y-axis (mAb identity) value for the AbCompare plot. Default is 101.")
+	parser.add_argument('-g', '--gridsize', dest='gridsize', type=int, default=0,
+						help="Gridsize for the AbCompare plot. Default is 36 for amino acid sequences and 50 for nucleotide sequences.")
+	parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
+						help="If set, will write all failed/exception sequences to file and should give more informative errors.")
+	return parser.parse_args()
+
+
+class Args(object):
+	"""docstring for Args"""
+	def __init__(self, db=None, collection=None,
+				 output=None, temp=None, log=None, cluster=False,
+				 ip='localhost', port=27017, user=None, password=None, update=True,
+				 standard=None, chain='heavy', is_aa=True,
+				 x_min=-1, x_max=35, y_min=65, y_max=101, gridsize=0,
+				 debug=False):
+		super(Args, self).__init__()
+		if not all([db, output, temp, standard]):
+			print('\nERROR: You must provide a MongoDB database name, output and temp directories, \
+				and a file containing one or more comparison (standard) sequences.\n')
+			sys.exit(1)
+		self.db = db
+		self.collection = collection
+		self.output = output
+		self.temp = temp
+		self.log = log
+		self.cluster = bool(cluster)
+		self.ip = ip
+		self.port = int(port)
+		self.user = user
+		self.password = password
+		self.standard = standard
+		if chain not in ['heavy', 'kappa', 'lambda', 'light']:
+			print('\nERROR: Please select an appropriate chain. \
+				Valid choices are: heavy, light, kappa and lambda.\n')
+			sys.exit(1)
+		self.chain = chain
+		self.update = bool(update)
+		self.is_aa = bool(is_aa)
+		self.x_min = int(x_min)
+		self.x_max = int(x_max)
+		self.y_min = int(y_min)
+		self.y_max = int(y_max)
+		self.gridsize = int(gridsize)
+		self.debug = bool(debug)
 
 
 
@@ -97,13 +141,13 @@ args = parser.parse_args()
 
 
 
-def make_directories():
+def make_directories(args):
 	for d in [args.output_dir, args.temp_dir]:
 		if d:
-			_make_direc(d)
+			_make_direc(args)
 
 
-def _make_direc(d):
+def _make_direc(d, args):
 	if not os.path.exists(d):
 		os.makedirs(d)
 	if args.cluster:
@@ -112,26 +156,26 @@ def _make_direc(d):
 		stdout, stderr = p.communicate()
 
 
-def get_standards():
+def get_standards(args):
 	standards = []
 	for s in SeqIO.parse(open(args.standard, 'r'), 'fasta'):
 		standards.append(s)
 	return standards
 
 
-def get_chain():
+def get_chain(args):
 	if args.chain == 'light':
 		return ['kappa', 'lambda']
 	return [args.chain, ]
 
 
-def get_sequences(collection, temp_dir, log):
+def get_sequences(db, collection, temp_dir, log, args):
 	files = []
 	fastas = []
 	chunksize = 1000
 	seq_counter = 0
 	total_seq_counter = 0
-	query_results = query(collection)
+	query_results = query(db, collection, args)
 	iden_field = 'aa_identity' if args.is_aa else 'nt_identity'
 	vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
 	for seq in query_results:
@@ -169,7 +213,20 @@ def clean_up(files):
 
 
 
-def get_collections():
+def get_db(args):
+	'''
+	Gets a MongoDB database connection object.
+	'''
+	if args.user and args.password:
+		password = urllib.quote_plus(password)
+		uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
+		conn = MongoClient(uri)
+	else:
+		conn = MongoClient(args.ip, 27017)
+	return conn[args.db]
+
+
+def get_collections(db, args):
 	if not args.collection:
 		subjects = db.collection_names()
 		subjects.remove('system.indexes')
@@ -177,9 +234,9 @@ def get_collections():
 	return [args.collection, ]
 
 
-def query(collection):
+def query(db, collection, args):
 	coll = db[collection]
-	chain = get_chain()
+	chain = get_chain(args)
 	ensure_index(collection, 'chain')
 	print_query_info()
 	iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
@@ -187,7 +244,7 @@ def query(collection):
 	return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
 
 
-def ensure_index(collection, field):
+def ensure_index(db, collection, field):
 	print("Indexing '{}' on {}...".format(field, collection))
 	coll = db[collection]
 	coll.ensure_index(field)
@@ -199,7 +256,7 @@ def chunker(l, n):
 		yield l[i:i + n]
 
 
-def update_db(standard, scores, collection):
+def update_db(db, standard, scores, collection, args):
 	print_update_info()
 	start = time.time()
 	standard = standard.replace('.', '_')
@@ -208,7 +265,7 @@ def update_db(standard, scores, collection):
 	async_results = []
 	groups = regroup(g.groups)
 	for group in groups:
-		async_results.append(p.apply_async(update, args=(collection, group, standard)))
+		async_results.append(p.apply_async(update, args=(db, collection, group, standard, args)))
 	monitor_update(async_results)
 	p.close()
 	p.join()
@@ -217,7 +274,7 @@ def update_db(standard, scores, collection):
 	print_done()
 
 
-def update(collection, data, standard):
+def update(db, collection, data, standard, args):
 	coll = db[collection]
 	score = data[0]
 	ids = data[1]
@@ -387,15 +444,15 @@ def print_done():
 
 
 
-def run_jobs(files, standard, log):
+def run_jobs(files, standard, log, args):
 	log.write('Running AbCompare...\n')
 	if args.cluster:
-		return _run_jobs_via_celery(files, standard, log)
+		return _run_jobs_via_celery(files, standard, log, args)
 	else:
-		return _run_jobs_via_multiprocessing(files, standard, log)
+		return _run_jobs_via_multiprocessing(files, standard, log, args)
 
 
-def _run_jobs_via_multiprocessing(files, standard, log):
+def _run_jobs_via_multiprocessing(files, standard, log, args):
 	from utils.identity import identity
 	results = []
 	if args.debug:
@@ -430,7 +487,7 @@ def monitor_mp_jobs(results, log):
 	log.write('\n\n')
 
 
-def _run_jobs_via_celery(files, standard, log):
+def _run_jobs_via_celery(files, standard, log, args):
 	from utils.vdj import run as run_vdj
 	async_results = []
 	for f in files:
@@ -481,21 +538,24 @@ def update_progress(finished, jobs, log, failed=None):
 	sys.stdout.flush()
 
 
+def run(**kwargs):
+	args = Args(**kwargs)
+	main(args)
 
 
-
-def main():
+def main(args):
+	db = get_db(args)
 	log = args.log if args.log else sys.stdout
-	make_directories()
-	standards = get_standards()
+	make_directories(args)
+	standards = get_standards(args)
 	print_standards_info(standards)
-	collections = get_collections()
+	collections = get_collections(db, args)
 	print_collections_info(collections)
 	for collection in collections:
 		indexed = False
 		print_single_collection(collection)
-		remove_padding(collection)
-		seq_files = get_sequences(collection, args.temp_dir, log)
+		remove_padding(db, collection)
+		seq_files = get_sequences(db, collection, args.temp_dir, log, args)
 		for standard in standards:
 			print_single_standard(standard)
 			scores = run_jobs(seq_files, standard, log)
@@ -503,13 +563,12 @@ def main():
 				make_figure(standard.id, scores, collection)
 			if args.update:
 				if not indexed:
-					ensure_index(collection, 'seq_id')
+					ensure_index(db, collection, 'seq_id')
 					indexed = True
-				update_db(standard.id, scores, collection)
+				update_db(db, standard.id, scores, collection, args)
 		clean_up(seq_files)
 
 
 if __name__ == '__main__':
-	conn = MongoClient(args.ip, args.port, max_pool_size=2000)
-	db = conn[args.db]
-	main()
+	args = parse_args()
+	main(args)

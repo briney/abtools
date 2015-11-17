@@ -18,7 +18,7 @@ config = {
 						 'pymongo',
 						 'seaborn'],
 	'packages': ['abtools'],
-	'scripts': ['bin/abtools'],
+	# 'scripts': ['bin/abtools'],
 	'name': 'abstar',
 	'include_package_data': True
 }

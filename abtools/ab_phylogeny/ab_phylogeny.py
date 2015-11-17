@@ -24,9 +24,8 @@
 
 
 import os
-import sys
-import argparse
 import subprocess as sp
+import sys
 
 import matplotlib as mpl
 import seaborn as sns
@@ -96,7 +95,7 @@ class Args(object):
 				 timepoints=None, timepoint_delimiter='_',
 				 tree_scale=None, branch_vertical_margin=None):
 		super(Args, self).__init__()
-		if not all(input, output):
+		if not all([input, output]):
 			print('Input and Output files must be provided.')
 			sys.exit(1)
 		self.input = input
@@ -168,8 +167,6 @@ def parse_timepoints(tps, args):
 	return timepoints
 
 
-
-
 def make_msa(seqs, args):
 	if args.sample_id:
 		sample = args.sample_id
@@ -178,7 +175,6 @@ def make_msa(seqs, args):
 	fasta_file = os.path.join(args.output, '{}.fasta'.format(sample))
 	alignment = msa.align(seqs, fasta_file)
 	return alignment
-
 
 
 def make_tree(alignment, timepoints, args):
@@ -200,8 +196,6 @@ def main(args):
 	timepoints = parse_timepoints(tps, args)
 	alignment = make_msa(seqs, args)
 	make_tree(alignment, timepoints, args)
-	# make_figure(tree_file, timepoints)
-
 
 
 if __name__ == '__main__':

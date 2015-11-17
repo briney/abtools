@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-mpl.use('Agg')
+# mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -183,7 +183,7 @@ def cdr3_plot(seqs, collection, make_plot):
 
 
 def germline_plot(seqs, gene, collection, level):
-	from germlines import germlines
+	from abtools.ab_stats.germlines import germlines
 	germs = germlines('human', gene, args.chain)
 	if not level:
 		return None
