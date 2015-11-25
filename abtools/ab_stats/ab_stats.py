@@ -39,66 +39,103 @@ import seaborn as sns
 
 from pymongo import MongoClient
 
-
-
-parser = argparse.ArgumentParser("Computes and plots basic repertoire information from one or more antibody NGS datasets.")
-parser.add_argument('-o', '--output', dest='output', required=True,
-					help="Output directory for figure and data files. Required.")
-parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
-					help="Directory for temporary files. Required.")
-parser.add_argument('-d', '--database', dest='db', required=True,
-					help="Name of the MongoDB database to query. Required.")
-parser.add_argument('-c', '--collection', dest='collection', default=None,
-					help="Name of the MongoDB collection to query. \
-					If not provided, all collections in the given database will be processed iteratively.")
-parser.add_argument('-i', '--ip', dest='ip', default='localhost',
-					help="IP address for the MongoDB server.  Defaults to 'localhost'.")
-parser.add_argument('-u', '--user', dest='user', default=None,
-					help="Username for the MongoDB server. Not used if not provided.")
-parser.add_argument('-p', '--password', dest='password', default=None,
-					help="Password for the MongoDB server. Not used if not provided.")
-parser.add_argument('-V', '--var', dest='var_plot', default=None,
-					help="Plot the distribution of variable families or genes. \
-					Options are 'fam', 'gene', or 'both'. \
-					If not provided, no plot will be made.")
-parser.add_argument('-D', '--div', dest='div_plot', default=None,
-					help="Plot the distribution of diversity families or genes. \
-					Options are 'fam', 'gene', or 'both'. \
-					If not provided, no plot will be made.")
-parser.add_argument('-J', '--join', dest='join_plot', default=None,
-					help="Plot the distribution of joining families or genes. \
-					Only option is 'gene'. \
-					If not provided, no plot will be made.")
-parser.add_argument('-3', '--cdr3', dest='cdr3_plot', default=None,
-					help="Plot the distribution of CDR3 lengths, as nucleotide or amino acid. \
-					Options are 'nt', 'aa', or 'both'. \
-					If not provided, no plot will be made.")
-parser.add_argument('-H', '--heatmap', dest='heatmap', default=False, action='store_true',
-					help="If set, generates a heatmap (or quiltplot, if you're a novice) of combined variable and joining gene use. \
-					If not provided, no plot will be made.")
-parser.add_argument('-I', '--isotype', dest='isotype_plot', default=False, action='store_true',
-					help="Plot the isotype frequency. \
-					Requires that isotypes have been identified using AbStar, or the 'isotype' field is present in the given MongoDB collection. \
-					If not provided, no plot will be made.")
-parser.add_argument('-C', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda'],
-					help="Select the antibody chain to analyze. \
-					Options are 'heavy', 'kappa', and 'lambda'. \
-					Default is 'heavy'.")
-parser.add_argument('--debug', dest='debug', action='store_true', default=False,
-					help="If set, will run in debug mode.")
-args = parser.parse_args()
+from abtools.utils import mongodb
 
 
 
+def parse_args():
+	parser = argparse.ArgumentParser("Computes and plots basic repertoire information from one or more antibody NGS datasets.")
+	parser.add_argument('-o', '--output', dest='output', required=True,
+						help="Output directory for figure and data files. Required.")
+	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
+						help="Directory for temporary files. Required.")
+	parser.add_argument('-d', '--database', dest='db', required=True,
+						help="Name of the MongoDB database to query. Required.")
+	parser.add_argument('-c', '--collection', dest='collection', default=None,
+						help="Name of the MongoDB collection to query. \
+						If not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
+						help="IP address for the MongoDB server.  Defaults to 'localhost'.")
+	parser.add_argument('--port', dest='port', default=27017, type=int,
+						help="Port for the MongoDB server.  Defaults to 27017.")
+	parser.add_argument('-u', '--user', dest='user', default=None,
+						help="Username for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-p', '--password', dest='password', default=None,
+						help="Password for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-V', '--var', dest='var_plot', default=None,
+						help="Plot the distribution of variable families or genes. \
+						Options are 'fam', 'gene', or 'both'. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-D', '--div', dest='div_plot', default=None,
+						help="Plot the distribution of diversity families or genes. \
+						Options are 'fam', 'gene', or 'both'. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-J', '--join', dest='join_plot', default=None,
+						help="Plot the distribution of joining families or genes. \
+						Only option is 'gene'. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-3', '--cdr3', dest='cdr3_plot', default=None,
+						help="Plot the distribution of CDR3 lengths, as nucleotide or amino acid. \
+						Options are 'nt', 'aa', or 'both'. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-H', '--heatmap', dest='heatmap', default=False, action='store_true',
+						help="If set, generates a heatmap (or quiltplot, if you're a novice) of combined variable and joining gene use. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-I', '--isotype', dest='isotype_plot', default=False, action='store_true',
+						help="Plot the isotype frequency. \
+						Requires that isotypes have been identified using AbStar, or the 'isotype' field is present in the given MongoDB collection. \
+						If not provided, no plot will be made.")
+	parser.add_argument('-C', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda'],
+						help="Select the antibody chain to analyze. \
+						Options are 'heavy', 'kappa', and 'lambda'. \
+						Default is 'heavy'.")
+	parser.add_argument('--debug', dest='debug', action='store_true', default=False,
+						help="If set, will run in debug mode.")
+	return parser.parse_args()
 
-def get_db():
-	if args.user and args.password:
-		password = urllib.quote_plus(password)
-		uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
+
+
+class Args(object):
+	"""docstring for Args"""
+	def __init__(self, output=None, temp=None,
+		db=None, collection=None, ip='localhost', port=27017,
+		user=None, password=None,
+		var_plot=None, div_plot=None, join_plot=None,
+		cdr3_plot=None, heatmap=False, isotype_plot=False, chain='heavy',
+		debug=False):
+		super(Args, self).__init__()
+
+		if not all([output, temp, db]):
+			print('\nERROR: --output, --temp and --database are all required options.\n')
+			sys.exit(1)
+
+		self.output = output
+		self.temp = temp
+		self.db = db
+		self.collection = collection
+		self.ip = ip
+		self.port = int(port)
+		self.user = user
+		self.password = password
+		self.var_plot = var_plot
+		self.div_plot = div_plot
+		self.join_plot = join_plot
+		self.cdr3_plot = cdr3_plot
+		self.heatmap = heatmap
+		self.isotype_plot = isotype_plot
+		self.chain = chain
+		self.debug = debug
+
+
+
+def get_db(db, ip='localhost', port=27017, user=None, password=None):
+	if user and password:
+		pwd = urllib.quote_plus(password)
+		uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
 		conn = MongoClient(uri)
 	else:
-		conn = MongoClient(args.ip, 27017)
-	return conn[args.db]
+		conn = MongoClient(ip, port)
+	return conn[db]
 
 
 def get_collections(db):
@@ -340,12 +377,14 @@ def print_collection_info(collection):
 
 
 
+def run(**kwargs):
+	args = Args(**kwargs)
+	main(args)
 
 
 
-
-def main():
-	db = get_db()
+def main(args):
+	db = get_db(args)
 	for collection in get_collections(db):
 		print_collection_info(collection)
 		seqs = query(db, collection)
@@ -362,4 +401,5 @@ def main():
 
 
 if __name__ == '__main__':
+	args = parse_args()
 	main()
