@@ -32,10 +32,11 @@ class Sequence(object):
 	"""
 	Container for biological (RNA and DNA) sequences.
 
-	::seq:: can be one of three things:
+	::seq:: can be one of several things:
 		1) a sequence, as a string
 		2) an iterable, formatted as (seq_id, sequence)
 		3) a Biopython SeqRecord object
+		4) an AbTools Sequence object
 
 	If ::seq:: is provided as a string, the sequence ID can optionally be
 	provided via ::id::.  If ::seq:: is a string and ::id:: is not provided,
@@ -102,6 +103,10 @@ class Sequence(object):
 				id = uuid.uuid4()
 			self.id = id
 			self.qual = qual
+		elif type(seq) == Sequence:
+			self.id = seq.id
+			self.sequence = seq.sequence
+			self.qual = seq.qual
 		elif type(seq) in [list, tuple]:
 			self.id = str(seq[0])
 			self.sequence = str(seq[1]).upper()

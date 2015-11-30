@@ -58,7 +58,7 @@ def get_db(db, ip='localhost', port=27017, user=None, password=None):
 	return conn[db]
 
 
-def get_collections(db, prefix=None, suffix=None):
+def get_collections(db, collection=None, prefix=None, suffix=None):
 	'''
 	Returns a sorted list of collection names found in ::db::
 
@@ -68,6 +68,8 @@ def get_collections(db, prefix=None, suffix=None):
 	If prefix or suffix are provided, only collections
 	containing the prefix/suffix will be returned.
 	'''
+	if collection:
+		return [collection, ]
 	collections = db.collection_names(include_system_collections=False)
 	if prefix:
 		collections = [c for c in collections if c.startswith(prefix)]
@@ -107,3 +109,27 @@ def mongoimport(jfile, database, collection, ip='localhost', port=27017, user=No
 	mongo = sp.Popen(mongo_cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
 	stdout, stderr = mongo.communicate()
 	return stdout
+
+
+def index(db, collection, fields, asc=True):
+	import pymongo
+	# if not fields:
+	# 	logger.critical('ENSURE-INDEX EXCEPTION: either "field" or "fields" must be provided.')
+	# 	raise RuntimeError('Either "field" or "fields" must be provided to index')
+	_dir = pymongo.ASCENDING if asc else pymongo.DESCENDING
+	_dirs = [_dir] * len(fields)
+	_fields = zip(fields, _dirs)
+	coll = db[collection]
+	coll.create_index(_fields)
+
+
+def remove_padding(db, collection, field='padding'):
+	'''
+	Removes a padding field from all records in ::collection::
+
+	Inputs are a pymongo Database object, a collection name, and an optional
+	padding ::field:: name (default is 'padding').
+	'''
+	c = db[collection]
+	print_remove_padding()
+	c.update({}, {'$unset': {field: ''}}, multi=True)

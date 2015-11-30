@@ -127,6 +127,7 @@ class Args(object):
 		self.debug = debug
 
 
+
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
 	if user and password:
 		pwd = urllib.quote_plus(password)
@@ -195,6 +196,8 @@ def aggregate(data, norm=True, sort_by='value', keys=None):
 	return xs, ys
 
 
+
+
 def cdr3_plot(seqs, collection, make_plot):
 	if not make_plot:
 		return None
@@ -217,7 +220,7 @@ def cdr3_plot(seqs, collection, make_plot):
 
 
 def germline_plot(seqs, gene, collection, level):
-	from abtools.ab_stats.germlines import germlines
+	from abtools.utils.germlines import germlines
 	germs = germlines('human', gene, args.chain)
 	if not level:
 		return None
@@ -273,7 +276,7 @@ def vj_heatmap(seqs, collection, make_plot):
 
 
 def group_by_vj(data):
-	from germlines import germlines
+	from abtools.utils.germlines import germlines
 	vs = list(set([g.split('*')[0] for g in germlines('human', 'V', args.chain)]))
 	js = list(set([g.split('*')[0] for g in germlines('human', 'J', args.chain)]))
 	vj = {}
