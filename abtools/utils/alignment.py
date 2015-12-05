@@ -61,7 +61,7 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
 
 	::sequences:: can be one of four different things:
 		1) a FASTA-formatted string of sequences
-		2) a list of biopythong SeqRecord objects
+		2) a list of Biopython SeqRecord objects
 		3) a list of VaxTools Sequence objects
 		4) a list of lists/tuples, of the format (seq_id, sequence)
 
@@ -78,13 +78,13 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
 	'''
 	if sequences:
 		fasta_string = _get_fasta_string(sequences)
-		fasta_file = tempfile.NamedTemporaryFile()
+		fasta_file = tempfile.NamedTemporaryFile(delete=False)
 		fasta_file.write(fasta_string)
 		ffile = fasta_file.name
 	elif fasta:
 		ffile = fasta
 	if alignment_file is None:
-		alignment_file = tempfile.NamedTemporaryFile().name
+		alignment_file = tempfile.NamedTemporaryFile(delete=False).name
 	aln_format = ''
 	if fmt == 'clustal':
 		aln_format = '--clustalout '
@@ -114,7 +114,7 @@ def muscle(sequences=None, alignment_file=None, fasta=None, fmt='fasta', as_file
 
 	::sequences:: can be one of four different things:
 		1) a FASTA-formatted string of sequences
-		2) a list of biopythong SeqRecord objects
+		2) a list of Biopython SeqRecord objects
 		3) a list of VaxTools Sequence objects
 		4) a list of lists/tuples, of the format (seq_id, sequence)
 
@@ -141,7 +141,7 @@ def muscle(sequences=None, alignment_file=None, fasta=None, fmt='fasta', as_file
 					  universal_newlines=True,
 					  shell=True)
 	alignment = muscle.communicate(input=fasta_string)[0]
-	aln = AlignIO.read(StringIO(alignment), 'clustal')
+	aln = AlignIO.read(StringIO(alignment), fmt)
 	if as_file:
 		if not alignment_file:
 			alignment_file = tempfile.NamedTemporaryFile().name
@@ -246,6 +246,9 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
 		sys.exit(1)
 	if target:
 		targets = [target, ]
+	if type(targets) not in (list, tuple):
+		print('\nERROR: ::targets:: requires an iterable (list or tuple).')
+		print('For a single sequence, use ::target::\n')
 	alignments = []
 	for t in targets:
 		alignment = NWAlignment(query=query,

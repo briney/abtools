@@ -16,7 +16,7 @@ config = {
 						 'nwalign',
 						 'pandas',
 						 'pymongo',
-						 'scikit-bio'
+						 'scikit-bio',
 						 'seaborn'],
 	'packages': ['abtools'],
 	'scripts': ['bin/abcompare',

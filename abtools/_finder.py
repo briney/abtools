@@ -455,7 +455,8 @@ def run_jobs(files, standard, log, args):
 
 
 def _run_jobs_via_multiprocessing(files, standard, log, args):
-	from utils.identity import identity
+	# from utils.identity import identity
+	from abtools.queue.alignment import global_alignment as global_alignment
 	results = []
 	if args.debug:
 		for f in files:
@@ -490,7 +491,7 @@ def monitor_mp_jobs(results, log):
 
 
 def _run_jobs_via_celery(files, standard, log, args):
-	from utils.vdj import run as run_vdj
+	from abtools.queue.alignment import global_alignment as global_alignment
 	async_results = []
 	for f in files:
 		async_results.append(run_vdj.delay(f, standard, args.is_aa))
