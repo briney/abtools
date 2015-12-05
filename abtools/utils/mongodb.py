@@ -100,12 +100,12 @@ def update(field, value, db, collection, match=None):
 	conn.close()
 
 
-def mongoimport(jfile, database, collection, ip='localhost', port=27017, user=None, password=None):
+def mongoimport(json_file, database, collection, ip='localhost', port=27017, user=None, password=None):
 	u = " -u {}".format(user) if user else ""
 	p = " -p {}".format(password) if password else ""
 	# user_password = "{}{} --authenticationDatabase admin".format(username, password)
 	mongo_cmd = "mongoimport --host {}:{}{}{} --db {} --collection {} --file {}".format(
-		ip, port, u, p, database, collection, jfile)
+		ip, port, u, p, database, collection, json_file)
 	mongo = sp.Popen(mongo_cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
 	stdout, stderr = mongo.communicate()
 	return stdout
@@ -113,9 +113,6 @@ def mongoimport(jfile, database, collection, ip='localhost', port=27017, user=No
 
 def index(db, collection, fields, asc=True):
 	import pymongo
-	# if not fields:
-	# 	logger.critical('ENSURE-INDEX EXCEPTION: either "field" or "fields" must be provided.')
-	# 	raise RuntimeError('Either "field" or "fields" must be provided to index')
 	_dir = pymongo.ASCENDING if asc else pymongo.DESCENDING
 	_dirs = [_dir] * len(fields)
 	_fields = zip(fields, _dirs)

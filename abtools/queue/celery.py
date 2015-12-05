@@ -20,7 +20,7 @@ from celery import Celery
 
 
 # instantiate Celery object
-celery = Celery(include=['utils.identity'])
+celery = Celery(include=['queue.tasks'])
 
 
 # import celery config file

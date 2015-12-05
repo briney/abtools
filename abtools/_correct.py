@@ -39,7 +39,7 @@ from Bio import SeqIO
 from Bio import AlignIO
 from Bio.Align import AlignInfo
 
-from abtools.utils import mongodb
+from abtools.utils import log, mongodb
 
 
 def parse_args():
@@ -52,6 +52,9 @@ def parse_args():
 						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
 	parser.add_argument('-o', '--output', dest='output', required=True,
 						help="Output directory for the FASTA files. Required")
+	parser.add_argument('-l', '--log', dest='log',
+						help="Location for the log file. \
+						If not provided, log will be written to <output>/abcorrect.log")
 	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
 						help="Directory for temporary files, including the SQLite database. Required")
 	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
@@ -89,7 +92,7 @@ def parse_args():
 class Args(object):
 	"""docstring for Args"""
 	def __init__(self, db=None, collection=None,
-				 output=None, temp=None,
+				 output=None, log=None, temp=None,
 				 ip='localhost', user=None, password=None,
 				 min_seqs=1, identity_threshold=0.975,
 				 uaid=True, parse_uaids=0,
@@ -103,6 +106,7 @@ class Args(object):
 		self.db = db
 		self.collection = collection
 		self.output = output
+		self.log = log
 		self.temp = temp
 		self.ip = ip
 		self.user = user
@@ -467,24 +471,33 @@ def calculate_consensus(cluster, germs, args):
 	if len(cluster) == 1:
 		return (cluster[0].split('\n')[1].upper(), 1)
 	fasta_string = consensus_alignment_input(cluster, germs, args)
+
 	if len(cluster) < 100:
-		muscle_cline = 'muscle -clwstrict'
+		alignment = muscle(fasta_string)
 	elif len(cluster) < 1000:
-		muscle_cline = 'muscle -clwstrict -maxiters 2'
+		alignment = muscle(fasta_string, maxiters=2)
 	else:
-		muscle_cline = 'muscle -clwstrict -maxiters 1 -diags'
-	muscle = sp.Popen(str(muscle_cline),
-					  stdin=sp.PIPE,
-					  stdout=sp.PIPE,
-					  stderr=sp.PIPE,
-					  universal_newlines=True,
-					  shell=True)
-	alignment = muscle.communicate(input=fasta_string)[0]
-	alignment_string = AlignIO.read(StringIO(alignment), 'clustal')
-	summary_align = AlignInfo.SummaryInfo(alignment_string)
+		alignment = muscle(fasta_string, maxiters=1, diags=True)
+
+	# if len(cluster) < 100:
+	# 	alignment = muscle(fasta_string)
+	# elif len(cluster) < 1000:
+	# 	muscle_cline = 'muscle -clwstrict -maxiters 2'
+	# else:
+	# 	muscle_cline = 'muscle -clwstrict -maxiters 1 -diags'
+	# muscle = sp.Popen(str(muscle_cline),
+	# 				  stdin=sp.PIPE,
+	# 				  stdout=sp.PIPE,
+	# 				  stderr=sp.PIPE,
+	# 				  universal_newlines=True,
+	# 				  shell=True)
+	# alignment = muscle.communicate(input=fasta_string)[0]
+	# alignment_string = AlignIO.read(StringIO(alignment), 'clustal')
+
+	summary_align = AlignInfo.SummaryInfo(alignment)
 	consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
-	consensus_string = str(consensus).replace('-', '')
-	return (consensus_string.upper(), len(cluster))
+	consensus = str(consensus).replace('-', '')
+	return (consensus.upper(), len(cluster))
 
 
 def consensus_alignment_input(cluster, germs, args):
@@ -549,12 +562,13 @@ def update_progress(finished, jobs, log, failed=None):
 
 def write_output(collection, fastas, sizes, collection_start_time, args):
 	seq_type = 'consensus' if args.consensus else 'centroid'
-	print('\nWriting {} sequences to output file...'.format(seq_type), end='')
+	logger.info('Writing {} sequences to output file...'.format(seq_type), end='')
 	sys.stdout.flush()
 	write_fasta_output(collection, fastas, args)
 	write_stats_output(collection, sizes, args)
-	print('Done. \n{} {} sequences were identified.'.format(len(fastas), seq_type))
-	print('{} was processed in {} seconds.\n'.format(collection, round(time.time() - collection_start_time, 2)))
+	logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
+	logger.info('{} was processed in {} seconds.\n'.format(collection,
+		round(time.time() - collection_start_time, 2)))
 
 
 def write_fasta_output(collection, fastas, args):
@@ -580,12 +594,12 @@ def write_stats_output(collection, sizes, args):
 
 
 def print_collection_info(collection):
-	print('')
-	print('')
-	print('-' * 25)
-	print(collection)
-	print('-' * 25)
-	print('')
+	logger.info('')
+	logger.info('')
+	logger.info('-' * 25)
+	logger.info(collection)
+	logger.info('-' * 25)
+	logger.info('')
 
 
 def countdown(args):
@@ -616,6 +630,8 @@ def countdown(args):
 
 def run(**kwargs):
 	args = Args(**kwargs)
+	global logger
+	logger = log.get_logger('abcorrect')
 	main(args)
 
 
@@ -655,4 +671,7 @@ def main(args):
 
 if __name__ == '__main__':
 	args = parse_args()
+	logfile = args.log if args.log else os.path.join(args.output, 'abcorrect.log')
+	log.setup_logging(logfile)
+	logger = log.get_logger('abcorrect')
 	main(args)

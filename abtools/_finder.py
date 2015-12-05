@@ -40,10 +40,9 @@ from pymongo import MongoClient
 from Bio import SeqIO
 
 import matplotlib as mpl
-# mpl.use('pdf')
 import matplotlib.pyplot as plt
 
-from abtools.utils import mongodb
+from abtools.utils import log, mongodb
 
 
 def parse_args():
@@ -52,34 +51,46 @@ def parse_args():
 	parser.add_argument('-d', '--database', dest='db', required=True,
 						help="Name of the MongoDB database to query. Required.")
 	parser.add_argument('-c', '--collection', dest='collection', default=None,
-						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
+						help="Name of the MongoDB collection to query. \
+						If not provided, all collections in the given database will be processed iteratively.")
 	parser.add_argument('-o', '--output', dest='output_dir', default=None,
-						help="Output directory figure files. If not provided, figures will not be generated. Directory will be created if it does not already exist.")
+						help="Output directory figure files. If not provided, figures will not be generated. \
+						Directory will be created if it does not already exist.")
 	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
-						help="Directory for temporary storage. Will be created if it does not already exist. Required.")
+						help="Directory for temporary storage. \
+						Will be created if it does not already exist. Required.")
 	parser.add_argument('-l', '--log', dest='log', default=None,
-						help="The log file, to which the blast_parse log info will be written. Default is stdout.")
+						help="The log file, to which the blast_parse log info will be written. \
+						Default is <output>/abfinder.log.")
 	parser.add_argument('-C', '--cluster', dest="cluster", default=False, action='store_true',
-						help="Use if performing computation on a Celery cluster. If set, input files will be split into many subfiles and passed to a Celery queue. \
-						If not set, input files will still be split, but will be distributed to local processors using multiprocessing.")
+						help="Use if performing computation on a Celery cluster. \
+						If set, input files will be split into many subfiles and passed to a Celery queue. \
+						If not set, input files will still be split, \
+						but will be distributed to local processors using multiprocessing.")
 	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
-						help="The IP address for the MongoDB server.  Defaults to 'localhost'.")
+						help="The IP address for the MongoDB server.  \
+						Defaults to 'localhost'.")
 	parser.add_argument('-p', '--port', dest='port', default=27017,
-						help="The port for the MongoDB server.  Defaults to '27017'.")
+						help="The port for the MongoDB server. Defaults to '27017'.")
 	parser.add_argument('-u', '--user', dest='user', default=None,
 						help="Username for the MongoDB server. Not used if not provided.")
 	parser.add_argument('-p', '--password', dest='password', default=None,
 						help="Password for the MongoDB server. Not used if not provided.")
 	parser.add_argument('-s', '--standard', dest='standard', required=True,
-						help='Path to a file containing the standard sequence(s) for which identity/divergence will be calculated, in FASTA format. \
+						help='Path to a file containing the standard sequence(s) for which \
+						identity/divergence will be calculated, in FASTA format. \
 						All sequences in the standard file will iteratively processed. Required')
-	parser.add_argument('-q', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda', 'light'],
-						help="The chain type of the subject sequence.  Options are 'heavy', 'kappa', 'lambda' and 'light'.  \
+	parser.add_argument('-q', '--chain', dest='chain', default='heavy',
+						choices=['heavy', 'kappa', 'lambda', 'light'],
+						help="The chain type of the subject sequence. \
+						Options are 'heavy', 'kappa', 'lambda' and 'light'. \
 						Default is 'heavy'.")
 	parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
-						help="Does not update the MongoDB with ab_compare info. Can save some time if the idenentity calculations aren't needed again.")
+						help="Does not update the MongoDB with ab_compare info. \
+						Can save some time if the idenentity calculations aren't needed again.")
 	parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
-						help="Use nucleotide sequences for alignment. Default is amino acid sequences. Ensure standard format matches.")
+						help="Use nucleotide sequences for alignment. Default is amino acid sequences. \
+						Ensure standard format matches.")
 	parser.add_argument('-x', '--xmin', dest='x_min', type=int, default=-1,
 						help="Minimum X-axis (germline divergence) value for the AbCompare plot. Default is -1.")
 	parser.add_argument('-X', '--xmax', dest='x_max', type=int, default=35,
@@ -89,9 +100,11 @@ def parse_args():
 	parser.add_argument('-Y', '--ymax', dest='y_max', type=int, default=101,
 						help="Maximum Y-axis (mAb identity) value for the AbCompare plot. Default is 101.")
 	parser.add_argument('-g', '--gridsize', dest='gridsize', type=int, default=0,
-						help="Gridsize for the AbCompare plot. Default is 36 for amino acid sequences and 50 for nucleotide sequences.")
+						help="Gridsize for the AbCompare plot. \
+						Default is 36 for amino acid sequences and 50 for nucleotide sequences.")
 	parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
-						help="If set, will write all failed/exception sequences to file and should give more informative errors.")
+						help="If set, will write all failed/exception sequences to file \
+						and should give more informative errors.")
 	return parser.parse_args()
 
 
@@ -171,7 +184,7 @@ def get_chain(args):
 	return [args.chain, ]
 
 
-def get_sequences(db, collection, temp_dir, log, args):
+def get_sequences(db, collection, temp_dir, args):
 	files = []
 	fastas = []
 	chunksize = 1000
@@ -190,7 +203,6 @@ def get_sequences(db, collection, temp_dir, log, args):
 			seq_counter = 0
 	if fastas:
 		files.append(write_to_temp_file(fastas, temp_dir))
-	print_query_done()
 	return files
 
 
@@ -272,8 +284,8 @@ def update_db(db, standard, scores, collection, args):
 	p.close()
 	p.join()
 	run_time = time.time() - start
-	print('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2), round(len(scores) / run_time, 1)))
-	print_done()
+	print('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
+		round(len(scores) / run_time, 1)))
 
 
 def update(db, collection, data, standard, args):
@@ -281,7 +293,8 @@ def update(db, collection, data, standard, args):
 	score = data[0]
 	ids = data[1]
 	mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
-	coll.update({'seq_id': {'$in': ids}}, {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}}, multi=True)
+	coll.update({'seq_id': {'$in': ids}},
+				{'$push': {mab_id_field: {standard.lower(): float(score)}}}, multi=True)
 
 
 def monitor_update(results):
@@ -355,7 +368,6 @@ def make_figure(standard_id, scores, collection):
 	# save figure and close
 	plt.savefig(fig_file)
 	plt.close()
-	print_done()
 
 
 def set_gridsize():
@@ -377,63 +389,51 @@ def set_gridsize():
 
 
 def print_standards_info(standards):
-	print('')
-	print('')
-	print('Found {} standard sequence(s):'.format(len(standards)))
-	print(', '.join([s.id for s in standards]))
+	logger.info('')
+	logger.info('')
+	logger.info('Found {} standard sequence(s):'.format(len(standards)))
+	logger.info(', '.join([s.id for s in standards]))
 
 
 def print_collections_info(collections):
-	print('')
-	print('Found {} collection(s):'.format(len(collections)))
-	print(', '.join(collections))
+	logger.info('')
+	logger.info('Found {} collection(s):'.format(len(collections)))
+	logger.info(', '.join(collections))
 
 
 def print_single_standard(standard):
 	standard_id_string = 'Standard ID: {}'.format(standard.id)
-	print('-' * len(standard_id_string))
-	print(standard_id_string)
-	print('-' * len(standard_id_string))
-	print('')
+	logger.info('-' * len(standard_id_string))
+	logger.info(standard_id_string)
+	logger.info('-' * len(standard_id_string))
+	logger.info('')
 
 
 def print_single_collection(collection):
 	collection_string = '      Collection: {}      '.format(collection)
-	print('')
-	print('')
-	print('=' * len(collection_string))
-	print(collection_string)
-	print('=' * len(collection_string))
-	print('')
+	logger.info('')
+	logger.info('')
+	logger.info('=' * len(collection_string))
+	logger.info(collection_string)
+	logger.info('=' * len(collection_string))
+	logger.info('')
 
 
 def print_query_info():
-	print('Querying for comparison sequences...', end='')
-	sys.stdout.flush()
+	logger.info('Querying for comparison sequences...')
 
 
 def print_remove_padding():
-	print('Removing MongoDB padding...')
-
-
-def print_query_done():
-	print('Done.')
-	print('\n')
+	logger.info('Removing MongoDB padding...')
 
 
 def print_fig_info():
-	print('Making the identity/divergence figure...', end='')
-	sys.stdout.flush()
+	logger.info('Making identity/divergence figure...')
 
 
 def print_update_info():
-	print('')
-	print('Updating the MongoDB database with identity scores:')
-
-
-def print_done():
-	print('Done.')
-	print('')
+	logger.info('')
+	logger.info('Updating the MongoDB database with identity scores:')
 
 
 
@@ -446,17 +446,16 @@ def print_done():
 
 
 
-def run_jobs(files, standard, log, args):
-	log.write('Running AbCompare...\n')
+def run_jobs(files, standard, args):
+	logger.info.write('Running AbCompare...')
 	if args.cluster:
-		return _run_jobs_via_celery(files, standard, log, args)
+		return _run_jobs_via_celery(files, standard, args)
 	else:
-		return _run_jobs_via_multiprocessing(files, standard, log, args)
+		return _run_jobs_via_multiprocessing(files, standard, args)
 
 
-def _run_jobs_via_multiprocessing(files, standard, log, args):
-	# from utils.identity import identity
-	from abtools.queue.alignment import global_alignment as global_alignment
+def _run_jobs_via_multiprocessing(files, standard, args):
+	from abtools.queue.tasks import identity
 	results = []
 	if args.debug:
 		for f in files:
@@ -466,7 +465,7 @@ def _run_jobs_via_multiprocessing(files, standard, log, args):
 		async_results = []
 		for f in files:
 			async_results.append(p.apply_async(identity, (f, standard, args.is_aa)))
-		monitor_mp_jobs(async_results, log)
+		monitor_mp_jobs(async_results)
 		for a in async_results:
 			results.extend(a.get())
 		p.close()
@@ -479,32 +478,32 @@ def _run_jobs_via_multiprocessing(files, standard, log, args):
 	return df
 
 
-def monitor_mp_jobs(results, log):
+def monitor_mp_jobs(results):
 	finished = 0
 	jobs = len(results)
 	while finished < jobs:
 		time.sleep(1)
 		ready = [ar for ar in results if ar.ready()]
 		finished = len(ready)
-		update_progress(finished, jobs, log)
-	log.write('\n\n')
+		update_progress(finished, jobs)
+	logger.info('')
 
 
-def _run_jobs_via_celery(files, standard, log, args):
-	from abtools.queue.alignment import global_alignment as global_alignment
+def _run_jobs_via_celery(files, standard, args):
+	from abtools.queue.tasks import identity
 	async_results = []
 	for f in files:
-		async_results.append(run_vdj.delay(f, standard, args.is_aa))
-	succeeded, failed = monitor_celery_jobs(async_results, log)
+		async_results.append(identity.delay(f, standard, args.is_aa))
+	succeeded, failed = monitor_celery_jobs(async_results)
 	# retry any failed jobs
-	if failed:
-		retry_results = []
-		log.write('{} jobs failed and will be retried:\n'.format(len(failed)))
-		files_to_retry = [f for i, f in enumerate(files) if async_results[i].failed()]
-		for f in files_to_retry:
-			retry_results.append(run_vdj.delay(f, standard))
-		retry_succeeded, retry_failed = monitor_celery_jobs(retry_results, log)
-		succeeded.extend(retry_succeeded)
+	# if failed:
+	# 	retry_results = []
+	# 	log.write('{} jobs failed and will be retried:\n'.format(len(failed)))
+	# 	files_to_retry = [f for i, f in enumerate(files) if async_results[i].failed()]
+	# 	for f in files_to_retry:
+	# 		retry_results.append(run_vdj.delay(f, standard))
+	# 	retry_succeeded, retry_failed = monitor_celery_jobs(retry_results, log)
+	# 	succeeded.extend(retry_succeeded)
 	scores = []
 	for s in succeeded:
 		scores.extend(s.get())
@@ -516,7 +515,7 @@ def _run_jobs_via_celery(files, standard, log, args):
 	return df
 
 
-def monitor_celery_jobs(results, log):
+def monitor_celery_jobs(results):
 	finished = 0
 	jobs = len(results)
 	while finished < jobs:
@@ -524,12 +523,12 @@ def monitor_celery_jobs(results, log):
 		succeeded = [ar for ar in results if ar.successful()]
 		failed = [ar for ar in results if ar.failed()]
 		finished = len(succeeded) + len(failed)
-		update_progress(finished, jobs, log, failed=len(failed))
-	log.write('\n\n')
+		update_progress(finished, jobs, failed=len(failed))
+	logger.info('')
 	return succeeded, failed
 
 
-def update_progress(finished, jobs, log, failed=None):
+def update_progress(finished, jobs, failed=None):
 	pct = int(100. * finished / jobs)
 	ticks = pct / 2
 	spaces = 50 - ticks
@@ -543,12 +542,15 @@ def update_progress(finished, jobs, log, failed=None):
 
 def run(**kwargs):
 	args = Args(**kwargs)
+	global logger
+	logger = log.get_logger('abfinder')
 	main(args)
 
 
 def main(args):
-	db = mongo.get_db(args.db, args.ip, args.port, args.user, args.password)
-	log = args.log if args.log else sys.stdout
+	db = mongo.get_db(args.db, args.ip, args.port,
+		args.user, args.password)
+	# log = args.log if args.log else sys.stdout
 	make_directories(args)
 	standards = get_standards(args)
 	print_standards_info(standards)
@@ -558,10 +560,10 @@ def main(args):
 		indexed = False
 		print_single_collection(collection)
 		mongodb.remove_padding(db, collection)
-		seq_files = get_sequences(db, collection, args.temp_dir, log, args)
+		seq_files = get_sequences(db, collection, args.temp_dir, args)
 		for standard in standards:
 			print_single_standard(standard)
-			scores = run_jobs(seq_files, standard, log)
+			scores = run_jobs(seq_files, standard)
 			if args.output_dir:
 				make_figure(standard.id, scores, collection)
 			if args.update:
@@ -574,4 +576,7 @@ def main(args):
 
 if __name__ == '__main__':
 	args = parse_args()
+	logfile = args.log if args.log else os.path.join(args.output, 'abfinder.log')
+	log.setup_logging()
+	logger = log.get_logger('abfinder')
 	main(args)

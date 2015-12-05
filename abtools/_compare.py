@@ -44,11 +44,10 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-# mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from pymongo import MongoClient, ASCENDING
+from abtools.utils import log, mongodb
 
 
 
@@ -57,6 +56,9 @@ def parse_args():
 	parser = argparse.ArgumentParser("Compares two or more antibody repertoires.")
 	parser.add_argument('-o', '--output', dest='output', required=True,
 						help="Output directory for figure and data files. Required.")
+	parser.add_argument('-l', '--log', dest='log',
+						help="Location for the log file. \
+						If not provided, log will be written to <output>/abcompare.log")
 	parser.add_argument('-d', '--database', dest='db', required=True,
 						help="Name of the MongoDB database to query. Required.")
 	parser.add_argument('-1', '--collection1', dest='collection1', default=None,
@@ -101,7 +103,7 @@ def parse_args():
 
 class Args(object):
 	"""docstring for Args"""
-	def __init__(self, output=None, db=None,
+	def __init__(self, output=None, log=None, db=None,
 				 collection1=None, collection2=None, collection_prefix=None,
 				 ip='localhost', user=None, password=None,
 				 chunksize=100000, iterations=10000,
@@ -109,9 +111,10 @@ class Args(object):
 				 chain='heavy', debug=False):
 		super(Args, self).__init__()
 		if not all([output, db]):
-			print("\nERROR: Ouput directory and MongoDB database name must be provided.\n")
+			logging.info("\nERROR: Ouput directory and MongoDB database name must be provided.\n")
 			sys.exit(1)
 		self.output = output
+		args.log = log
 		self.db = db
 		self.collection1 = collection1
 		self.collection2 = collection2
@@ -124,7 +127,7 @@ class Args(object):
 		self.method = method
 		self.control_similarity = control_similarity
 		if chain not in ['heavy', 'kappa', 'lambda']:
-			print('\nERROR: Please select an appropriate chain. \
+			logging.info('\nERROR: Please select an appropriate chain. \
 				Valid choices are: heavy, kappa and lambda.\n')
 			sys.exit(1)
 		self.chain = chain
@@ -140,32 +143,7 @@ class Args(object):
 
 
 
-def get_db(args):
-	'''
-	Gets a MongoDB database connection object.
-	'''
-	if args.user and args.password:
-		password = urllib.quote_plus(password)
-		uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
-		conn = MongoClient(uri)
-	else:
-		conn = MongoClient(args.ip, 27017)
-	return conn[args.db]
-
-
-def create_index(db, collection, fields):
-	'''
-	Creates an index in collection on fields.
-
-	Inputs
-	collection: the name of a MongoDB collection
-	fields: a list of one or more fields
-	'''
-	index_fields = [(f, ASCENDING) for f in fields]
-	db[collection].create_index(index_fields)
-
-
-def get_collection_pairs(args):
+def get_collection_pairs(db, args):
 	if args.collection1 and args.collection2:
 		print_single_pair_info(args.collection1, args.collection2)
 		return [(args.collection1, args.collection2), ]
@@ -185,20 +163,22 @@ def get_collection_pairs(args):
 def index_collections(db, pairs):
 	collections = sorted(list(set([c for tup in pairs for c in tup])))
 	fields = ['chain', 'prod']
-	print('\n\nCreating indexes...')
+	logging.info('')
+	logging.info('Creating indexes...')
 	for c in collections:
 		print(c)
-		create_index(db, c, fields)
+
+		mongodb.index(db, c, fields)
 
 
 def query(db, collection, chain):
-	print('\nGetting {} sequences from MongoDB...'.format(collection), end='')
+	logger.info('Getting {} sequences from MongoDB...'.format(collection), end='')
 	sys.stdout.flush()
 	c = db[collection]
 	results = c.find({'chain': chain, 'prod': 'yes'},
 					 {'_id': 0, 'v_gene.gene': 1, 'cdr3_len': 1})
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
-	print('Done.\nFound {} sequences'.format(len(seqs)))
+	logger.info('Found {} sequences'.format(len(seqs)))
 	return seqs
 
 
@@ -631,48 +611,48 @@ def update_scores(s1, s2, median, scores):
 
 
 def print_method(method):
-	print('\n\nmethod: {} {}'.format(method.title(),
-								   'divergence' if args.method == 'kullback-leibler' else 'similarity'))
+	logger.info('METHOD: {} {}'.format(method.title(),
+		'divergence' if args.method == 'kullback-leibler' else 'similarity'))
 
 
 def print_collection_info(collection):
 	coll_string = '{0}{1}{0}'.format(' ' * 15, collection)
-	print('')
-	print('\n')
-	print('=' * len(coll_string))
-	print(coll_string)
-	print('=' * len(coll_string))
-	print('')
+	logger.info('')
+	logger.info('')
+	logger.info('=' * len(coll_string))
+	logger.info(coll_string)
+	logger.info('=' * len(coll_string))
+	logger.info('')
 
 
 def print_single_pair_info(p1, p2):
-	print('\n')
-	print('Found two collections: {} and {}'.format(p1, p2))
-	print('\n')
-	print('Making a single comparison:')
-	print('---------------------------')
-	print('{} vs {}'.format(p1, p2))
+	logger.info('')
+	logger.info('Found two collections: {} and {}'.format(p1, p2))
+	logger.info('')
+	logger.info('Making a single comparison:')
+	logger.info('---------------------------')
+	logger.info('{} vs {}'.format(p1, p2))
 
 
 def print_multiple_pairs_info(pairs):
-	print('\n')
+	logger.info('')
 	collections = sorted(list(set([c for tup in pairs for c in tup])))
-	print('Found {} collections: {}, and {}'.format(len(collections),
-													', '.join(collections[:-1]),
-													collections[-1]))
-	print('\n')
+	logger.info('Found {} collections: {}, and {}'.format(len(collections),
+		', '.join(collections[:-1]), collections[-1]))
+	logger.info('')
 	comp_string = 'Making {} comparisons:'.format(len(pairs))
-	print(comp_string)
-	print('-' * len(comp_string))
+	logger.info(comp_string)
+	logger.info('-' * len(comp_string))
 	for p1, p2 in pairs:
-		print('{} vs {}'.format(p1, p2))
+		logger.info('{} vs {}'.format(p1, p2))
 
 
 def print_pair_info(s1, s2):
-	print('\n\n')
+	logger.info('')
+	logger.info('')
 	compare_string = 'Comparing {} and {}'.format(s1, s2)
-	print(compare_string)
-	print('-' * len(compare_string))
+	logger.info(compare_string)
+	logger.info('-' * len(compare_string))
 
 
 def print_final_results(scores, control=False):
@@ -684,26 +664,29 @@ def print_final_results(scores, control=False):
 	'''
 	if not scores:
 		return 0
-	print('')
+	logger.info('')
 	if control:
-		print('Control scores:\n')
+		logger.info('Control scores:')
 	else:
-		print('Experimental scores:\n')
+		logger.info('Experimental scores:')
 	for s1 in sorted(scores.keys()):
-		print(s1)
-		print('-' * len(s1))
+		logger.info(s1)
+		logger.info('-' * len(s1))
 		for s2 in sorted(scores[s1].keys()):
-			print('{}\t{}'.format(s2, round(scores[s1][s2], 4)))
-		print('')
+			logger.info('{}\t{}'.format(s2, round(scores[s1][s2], 4)))
+		logger.info('')
 
 
 def run(**kwargs):
 	args = Args(**kwargs)
+	global logger
+	logger = log.get_logger('abcompare')
 	main(args)
 
 
 def main(args):
-	db = get_db(args)
+	db = mongodb.get_db(args.db, args.ip, args.port,
+						args.user, args.password)
 	print_method(args.method)
 	pairs = get_collection_pairs(args)
 	index_collections(db, pairs)
@@ -718,14 +701,16 @@ def main(args):
 			s1_all_vgenes = get_vgenes(db, s1, chain)
 		print_pair_info(s1, s2)
 		s1_vgenes, s2_vgenes = get_vgenes(db, s2, args.chain, prev_data=s1_all_vgenes)
-		print('\nCalculating similarities...')
+		logger.info('')
+		logger.info('Calculating similarities...')
 		median, counts, bins, similarities = calculate_similarities(s1_vgenes,
 																	s2_vgenes,
 																	args)
 		write_output(s1, s2, median, counts, bins, similarities)
 		scores = update_scores(s1, s2, median, scores)
 		if args.control_similarity:
-			print('\nCalculating control similarities...')
+			logger.info('')
+			logger.info('Calculating control similarities...')
 			cmedian, ccounts, cbins, csimilarities = calculate_control_similarities(s1_vgenes,
 																					s2_vgenes,
 																					args)
@@ -738,4 +723,7 @@ def main(args):
 
 if __name__ == '__main__':
 	args = parse_args()
+	logfile = args.log if args.log else os.path.join(args.output, 'abcompare.log')
+	log.setup_logging(logfile)
+	logger = log.get_logger('abcompare')
 	main(args)
