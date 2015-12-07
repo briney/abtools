@@ -36,17 +36,17 @@ def identity(f, standard, is_aa, debug=False):
 		germ_identity = float(s.id.split('_')[-1])
 		seq = str(s.seq).upper()
 		matrix = 'blosum62' if is_aa else None
-		alignment = nw.global_align(seq,
-									str(standard.seq.upper()),
-									matrix=matrix,
-									gap_open=-15,
-									gap_extend=-2,
-									score_match=1,
-									score_mismatch=0,
-									score_gap_open=0,
-									score_gap_extend=0,
-									aa=is_aa)
-		score = alignment.score
+		aln = nw.global_align(seq,
+							  str(standard.seq.upper()),
+							  matrix=matrix,
+							  gap_open=-15,
+							  gap_extend=-2,
+							  score_match=1,
+							  score_mismatch=0,
+							  score_gap_open=0,
+							  score_gap_extend=0,
+							  aa=is_aa)
+		score = aln.score
 		# align_matrix = 'nw/blosum62' if is_aa else 'nw/match3mismatch2'
 		# alignment = nw.global_align(seq,
 		# 							str(standard.seq.upper()),
@@ -70,10 +70,11 @@ def identity(f, standard, is_aa, debug=False):
 		# 						   matrix='nw/match1mismatch0',
 		# 						   gap_open=0,
 		# 						   gap_extend=0)
-		seq_trunc_align_length = len(alignment[0].rstrip('-').lstrip('-'))
-		standard_trunc_align_length = len(alignment[1].rstrip('-').lstrip('-'))
-		align_length = min(seq_trunc_align_length, standard_trunc_align_length)
-		norm_score = 100. * score / align_length
+		aln_length = min(len(aln.aligned_query.strip('-')), len(aln.aligned_target.strip('-')))
+		# seq_trunc_align_length = len(alignment[0].rstrip('-').lstrip('-'))
+		# standard_trunc_align_length = len(alignment[1].rstrip('-').lstrip('-'))
+		# align_length = min(seq_trunc_align_length, standard_trunc_align_length)
+		norm_score = 100. * score / aln_length
 		norm_score = round(norm_score, 1)
 		scores.append((seq_id, norm_score, germ_identity))
 	return scores
