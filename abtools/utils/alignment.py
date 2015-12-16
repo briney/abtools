@@ -167,6 +167,8 @@ def consensus(aln, name=None, threshold=0.51, ambiguous='N'):
 def _get_fasta_string(sequences):
 	if type(sequences) == str:
 		return sequences
+	elif all([type(s) == Sequence for s in sequences]):
+		return '\n'.join([s.fasta for s in seqeunces])
 	else:
 		return '\n'.join([Sequence(s).fasta for s in sequences])
 	# elif type(sequences[0]) == SeqRecord:

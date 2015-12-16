@@ -23,26 +23,62 @@
 #
 
 
-import logging
 import os
 import subprocess as sp
 import tarfile
 
-logger = logging.getLogger('s3')
+from abtools.utils import log
 
 
-def put(f, s3_path):
+def compress_and_upload(data, compressed_file, s3_path,
+	method='gz', delete=False, access_key=None, secret_key=None):
+	'''
+	Tars and compresses ::data:: and uploads to ::s3_path:: on S3.
+	The S3 upload uses s3cmd, so it must be either manually configured prior to use with
+	`s3cmd --configure`, programatically configured prior to s3.compress_and_upload()
+	with s3.configure(), or ::access_key:: and ::secret_key:: must be provided and
+	s3.compress_and_upload() will configure s3cmd.
+
+	::data:: can be:
+		-- a file
+		-- a folder
+		-- a list of files or folders.
+
+	::compressed_file:: is the name of the compressed file.  If ::delete:: is True,
+	the compressed file will be removed after upload to S3.
+
+	::s3_path:: should be the S3 path, with the filename omitted. The S3 filename will
+	be the basename of the ::compressed_file:: -- if the compressed file is
+	/path/to/compressed_file.tar.gz and ::s3_path:: is s3://path/to/s3/, then the
+	uploaded file will be s3://path/to/s3/compressed_file.tar.gz
+
+	::method:: can be 'gz' (default) or 'bz2'.
+
+	::temp_dir:: can be provided if the compressed data will be very large
+	and will not fit in the default temp directory ('/tmp').
+	'''
+	logger = log.get_logger('s3')
+	if all([access_key, secret_key]):
+		configure(access_key=access_key, secret_key=secret_key, logger=logger)
+	compress(data, compressed_file, compress=method, logger=logger)
+	put(compressed_file, s3_path, logger=logger)
+	if delete:
+		os.unlink(compressed_file)
+
+
+def put(f, s3_path, logger=None):
 	'''
 	Uploads a file to S3, using s3cmd.
 
-	Inputs: path to a single file, typically compressed using s3.compress() and
-	the s3 path into which the file should be uploaded. The s3 path should not already
-	include file name.
+	Inputs: path to a single file, and the s3 path into which the file
+	should be uploaded. The s3 path should not already include file name.
 	'''
+	if not logger:
+		logger = log.get_logger('s3')
 	fname = os.path.basename(f)
 	target = os.path.join(s3_path, fname)
 	s3cmd_cline = 's3cmd put {} {}'.format(f, target)
-	print_put_info(fname, target)
+	print_put_info(fname, target, logger)
 	s3cmd = sp.Popen(s3cmd_cline,
 					 stdout=sp.PIPE,
 					 stderr=sp.PIPE,
@@ -52,7 +88,7 @@ def put(f, s3_path):
 	logger.info('')
 
 
-def print_put_info(fname, target):
+def print_put_info(fname, target, logger):
 	logger.info('-' * 25)
 	logger.info('UPLOADING TO S3')
 	logger.info('-' * 25)
@@ -62,7 +98,7 @@ def print_put_info(fname, target):
 
 
 
-def compress(d, output, compress='gz'):
+def compress(d, output, compress='gz', logger=None):
 	'''
 	Creates a compressed tar file.
 
@@ -77,9 +113,12 @@ def compress(d, output, compress='gz'):
 		2) 'bz2' for bzip2 compression
 		3) 'none' for no compression
 	'''
-	if type(d) == str:
+	if not logger:
+		logger = log.get_logger('s3')
+	if os.path.isdir(d) or os.path.isfile(d):
 		d = [d, ]
-	print_compress_info(d, output, compress)
+	d = [os.path.expanduser(_d) for _d in d]
+	print_compress_info(d, output, compress, logger)
 	if compress.lower() == 'none':
 		compress = ''
 	elif compress.lower() not in ['gz', 'bz2']:
@@ -93,7 +132,9 @@ def compress(d, output, compress='gz'):
 	return output
 
 
-def print_compress_info(d, output, compress):
+def print_compress_info(d, output, compress, logger):
+	if not logger:
+		logger = log.get_logger('s3')
 	dirs = [obj for obj in d if os.path.isdir(obj)]
 	files = [obj for obj in d if os.path.isfile(obj)]
 	logger.info('-' * 25)
@@ -107,10 +148,26 @@ def print_compress_info(d, output, compress):
 	logger.info('')
 
 
-def configure():
-	logger.info('')
-	access_key = raw_input('AWS Access Key: ')
-	secret_key = raw_input('AWS Secret Key: ')
+def configure(access_key=None, secret_key=None, logger=None):
+	'''
+	Configures s3cmd prior to first use.
+
+	Optional inputs:
+		::access_key:: -- AWS access key
+		::secred_key:: -- AWS secret key
+
+	If ::access_key:: and ::secret_key:: are not provided via arguments,
+	they must be provided by user input at runtime. If providing AWS creds
+	at runtime, it's recommended to run s3.configure() at the start of your
+	script, since the script will pause at the configure() step until user
+	input is provided.
+	'''
+	if not logger:
+		logger = log.get_logger('s3')
+	if not all([access_key, secret_key]):
+		logger.info('')
+		access_key = raw_input('AWS Access Key: ')
+		secret_key = raw_input('AWS Secret Key: ')
 	_write_config(access_key, secret_key)
 	logger.info('')
 	logger.info('Completed writing S3 config file.')

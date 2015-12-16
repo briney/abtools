@@ -58,6 +58,7 @@ class Sequence(object):
 		self.__user_supplied_id = id
 		# self.__user_supplied_qual = qual
 		self._process_input(seq, id, qual)
+		self.fasta = '>{}\n{}'.format(self.id, self.sequence)
 
 	def __len__(self):
 		return len(self.sequence)
@@ -80,6 +81,8 @@ class Sequence(object):
 		return False
 
 
+
+
 	def reverse_complement(self):
 		rc = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',
 			  'Y': 'R', 'R': 'Y', 'S': 'S', 'W': 'W',
@@ -87,8 +90,8 @@ class Sequence(object):
 			  'H': 'D', 'V': 'B', 'N': 'N'}
 		return ''.join([rc.get(res, res) for res in self.sequence])
 
-	def fasta(self):
-		return '>{}\n{}'.format(self.id, self.sequence)
+	# def fasta(self):
+	# 	return '>{}\n{}'.format(self.id, self.sequence)
 
 	def fastq(self):
 		if not self.qual:

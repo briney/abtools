@@ -30,8 +30,7 @@ import subprocess as sp
 
 from pymongo import MongoClient
 
-
-logger = logging.getLogger('mongodb')
+from abtools.utils import log
 
 
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
@@ -68,7 +67,7 @@ def get_collections(db, collection=None, prefix=None, suffix=None):
 	If prefix or suffix are provided, only collections
 	containing the prefix/suffix will be returned.
 	'''
-	if collection:
+	if collection is not None:
 		return [collection, ]
 	collections = db.collection_names(include_system_collections=False)
 	if prefix:
@@ -90,13 +89,8 @@ def update(field, value, db, collection, match=None):
 		{'seq_id': {'$in': ['a', 'b', 'c']}, 'size': {'$gte': 25}, 'prod': 'yes'}
 	'''
 	c = db[collection]
-	if lookup_field and match:
-		if type(match) != list:
-			match = [match, ]
-		query_match = {match_field: {'$in': match}}
-	else:
-		query_match = {}
-	c.update_many(query_match, {field: value}, multi=True)
+	match = match if match is not None else {}
+	c.update_many(match, {field: value}, multi=True)
 	conn.close()
 
 
