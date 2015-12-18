@@ -26,6 +26,7 @@
 from __future__ import print_function
 
 import logging
+import os
 import subprocess as sp
 
 from pymongo import MongoClient
@@ -94,24 +95,63 @@ def update(field, value, db, collection, match=None):
 	conn.close()
 
 
-def mongoimport(json_file, database, collection, ip='localhost', port=27017, user=None, password=None):
-	u = " -u {}".format(user) if user else ""
-	p = " -p {}".format(password) if password else ""
-	# user_password = "{}{} --authenticationDatabase admin".format(username, password)
-	mongo_cmd = "mongoimport --host {}:{}{}{} --db {} --collection {} --file {}".format(
-		ip, port, u, p, database, collection, json_file)
-	mongo = sp.Popen(mongo_cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-	stdout, stderr = mongo.communicate()
-	return stdout
+def mongoimport(json, database,
+				ip='localhost', port=27017,
+				user=None, password=None,
+				delim='_', delim1=None, delim2=None,
+				delim_occurance=1, delim1_occurance=1, delim2_occurance=1):
+	'''
+	Performs mongoimport on one or more json files.
+	'''
+	logger = log.get_logger('mongodb')
+	_print_mongoimport_info(logger)
+	if type(json) not in [list, tuple]:
+		json = [json, ]
+	jsons = sorted([os.path.expanduser(j) for j in json if j.endswith('.json')])
+	collections = _get_import_collections(jsons, delim, delim_occurance,
+										  delim1, delim1_occurance,
+										  delim2, delim2_occurance)
+	logger.info('Found {} files to import'.format(len(jsons)))
+	logger.info('')
+	for i, (json_file, collection) in enumerate(zip(jsons, collections)):
+		logger.info('[ {} ] {} --> {}'.format(i + 1, os.path.basename(json_file), collection))
+		# logger.info("Performing mongoimport on {}.".format(os.path.basename(json_file)))
+		# logger.info("Importing the file into collection {}.".format(collection))
+		if all([user, password]):
+			host = '--host {} --port {} -username {} -password {}'.format(ip, port, user, password)
+		else:
+			host = '--host {} --port {}'.format(ip, port)
+		mongo_cmd = "mongoimport {} --db {} --collection {} --file {}".format(
+			host, database, collection, json_file)
+		mongo = sp.Popen(mongo_cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+		stdout, stderr = mongo.communicate()
 
 
-def index(db, collection, fields, asc=True):
+def index(db, collection, fields, directions=None, desc=False):
+	'''
+	Builds a simple (single field) or complex (multiple fields) index
+	on a single collection in a MongoDB database.
+
+	::db:: should be a pymongo connection object to the desired MongoDB database
+	::collection:: should be the name of the collection to be indexed
+	::fields:: is the field(s) to be indexed, and can be one of two things:
+		1) a single field, as a string
+		2) one or more fields, as an iterable (list or tuple)
+
+	By default, all fields will be indexed in ascending order. Setting ::desc:: to True
+	will result in the index being built in DESCENDING order. For multi-directional indexes,
+	a list of pymongo direction objects (pymongo.ASCENDING and pymongo.DESCENDING) can be provided,
+	in the same order as the list of fields to be indexed.
+	'''
 	import pymongo
-	_dir = pymongo.ASCENDING if asc else pymongo.DESCENDING
-	_dirs = [_dir] * len(fields)
-	_fields = zip(fields, _dirs)
+	if type(fields) == str:
+		fields = [fields, ]
+	if directions is None:
+		_dir = pymongo.DESCENDING if desc else pymongo.ASCENDING
+		directions = [_dir] * len(fields)
+	field_tuples = zip(fields, directions)
 	coll = db[collection]
-	coll.create_index(_fields)
+	coll.create_index(field_tuples)
 
 
 def remove_padding(db, collection, field='padding'):
@@ -122,5 +162,31 @@ def remove_padding(db, collection, field='padding'):
 	padding ::field:: name (default is 'padding').
 	'''
 	c = db[collection]
-	print_remove_padding()
+	# _print_remove_padding()
 	c.update({}, {'$unset': {field: ''}}, multi=True)
+
+
+def _get_import_collections(jsons, delim, delim_occurance,
+							delim1, delim1_occurance,
+							delim2, delim2_occurance):
+	jnames = [os.path.basename(j) for j in jsons]
+	if not all([delim1, delim2]):
+		collections = [delim.join(j.split(delim)[:delim_occurance]) for j in jnames]
+	else:
+		pre_colls = [delim1.join(j.split(delim1)[delim1_occurance:]) for j in jnames]
+		collections = [delim2.join(j.split(delim2)[:delim2_occurance]) for j in pre_colls]
+	return collections
+
+
+def _print_mongoimport_info(logger):
+	logger.info('')
+	logger.info('')
+	logger.info('')
+	logger.info('-' * 25)
+	logger.info('MONGOIMPORT')
+	logger.info('-' * 25)
+	logger.info('')
+
+def _print_remove_padding():
+	logger = log.get_logger('mongodb')
+	logger.info('Removing MongoDB padding...')

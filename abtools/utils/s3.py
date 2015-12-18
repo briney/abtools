@@ -84,11 +84,12 @@ def put(f, s3_path, logger=None):
 					 stderr=sp.PIPE,
 					 shell=True)
 	stdout, stderr = s3cmd.communicate()
-	logger.info('')
-	logger.info('')
 
 
 def print_put_info(fname, target, logger):
+	logger.info('')
+	logger.info('')
+	logger.info('')
 	logger.info('-' * 25)
 	logger.info('UPLOADING TO S3')
 	logger.info('-' * 25)
@@ -115,7 +116,7 @@ def compress(d, output, compress='gz', logger=None):
 	'''
 	if not logger:
 		logger = log.get_logger('s3')
-	if os.path.isdir(d) or os.path.isfile(d):
+	if type(d) not in [list, tuple]:
 		d = [d, ]
 	d = [os.path.expanduser(_d) for _d in d]
 	print_compress_info(d, output, compress, logger)
@@ -137,15 +138,23 @@ def print_compress_info(d, output, compress, logger):
 		logger = log.get_logger('s3')
 	dirs = [obj for obj in d if os.path.isdir(obj)]
 	files = [obj for obj in d if os.path.isfile(obj)]
+	logger.info('')
+	logger.info('')
+	logger.info('')
 	logger.info('-' * 25)
 	logger.info('COMPRESSING DATA')
 	logger.info('-' * 25)
 	logger.info('')
 	logger.info('Ouptut file: {}'.format(output))
-	logger.info('Compression = {}'.format(compress.lower()))
-	logger.info('Found {} directories to compress: {}'.format(len(dirs), ', '.join(dirs)))
-	logger.info('Found {} files to compress: {}'.format(len(files), ', '.join(files)))
-	logger.info('')
+	logger.info('Compression: {}'.format(compress.lower()))
+	if dirs:
+		d = 'directories' if len(dirs) > 1 else 'directory'
+		logger.info('Found {} {} to compress: {}'.format(len(dirs), d,
+														 ', '.join(dirs)))
+	if files:
+		f = 'files' if len(files) > 1 else 'file'
+		logger.info('Found {} {} to compress: {}'.format(len(files), f,
+														 ', '.join(files)))
 
 
 def configure(access_key=None, secret_key=None, logger=None):

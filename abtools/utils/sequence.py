@@ -95,7 +95,7 @@ class Sequence(object):
 			self._fastq = None
 		else:
 			if self._fastq is None:
-				self._fastq '@{}\n{}\n+\n{}'.format(self.id, self.sequence, self.qual)
+				self._fastq = '@{}\n{}\n+\n{}'.format(self.id, self.sequence, self.qual)
 		return self._fastq
 
 

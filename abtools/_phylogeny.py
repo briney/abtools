@@ -54,11 +54,11 @@ def parse_args():
 	parser.add_argument('-a', '--alignment', dest='alignment', default=None,
 						help="Provide a pre-aligned dataset. \
 						Ensure that the root sequence is labeled as 'root' and that all mAb sequences are pre-pended with 'mab_'. \
-						If provided, -i, -r and -m are ignored.")
+						If --alignment is provided, -i, -r and -m are ignored.")
 	parser.add_argument('-n', '--newick', dest='newick', default=None,
 						help="Provide a pre-generated Newick tree file. \
 						Ensure that the root sequence is labeled as 'root' and that all mAb sequences are pre-pended with 'mab_'. \
-						If provided -i, -r, -m and -a are ignored.")
+						If --newick is provided -i, -r, -m and -a are ignored.")
 	parser.add_argument('-s', '--sample_id', dest='sample_id', default=None,
 						help="Sample ID. If not provided, the sample ID will be inferred from the input file.")
 	parser.add_argument('-t', '--timepoints', dest='timepoints', default=None,

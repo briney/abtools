@@ -40,6 +40,8 @@ from Bio import AlignIO
 from Bio.Align import AlignInfo
 
 from abtools.utils import log, mongodb
+from abtools.utils.alignment import muscle
+from abtools.utils.pipeline import make_dir
 
 
 def parse_args():
@@ -93,7 +95,7 @@ class Args(object):
 	"""docstring for Args"""
 	def __init__(self, db=None, collection=None,
 				 output=None, log=None, temp=None,
-				 ip='localhost', user=None, password=None,
+				 ip='localhost', port=27017, user=None, password=None,
 				 min_seqs=1, identity_threshold=0.975,
 				 uaid=True, parse_uaids=0,
 				 consensus=False, only_largest_cluster=False, germs=None,
@@ -107,8 +109,9 @@ class Args(object):
 		self.collection = collection
 		self.output = output
 		self.log = log
-		self.temp = temp
+		self.temp_dir = temp
 		self.ip = ip
+		self.port = int(port)
 		self.user = user
 		self.password = password
 		self.min_seqs = int(min_seqs)
@@ -146,8 +149,7 @@ def get_seqs(db, collection, args):
 
 
 def query(db, collection, args):
-	print('Getting sequences from MongoDB...', end='')
-	# sys.stdout.flush()
+	logger.info('Getting sequences from MongoDB...')
 	# if args.user and args.password:
 	# 	password = urllib.quote_plus(password)
 	# 	uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
@@ -172,44 +174,40 @@ def query(db, collection, args):
 				raise ValueError(err)
 	else:
 		seqs = [(r['seq_id'], r['vdj_nt'], r['v_gene']['full']) for r in results]
-	print('Done.\nFound {} sequences\n'.format(len(seqs)))
+	logger.info('Found {} sequences\n'.format(len(seqs)))
 	return seqs
 
 
 def build_seq_db(seqs, args):
-	print('Building a SQLite database of sequences...', end='')
-	sys.stdout.flush()
+	logger.info('Building a SQLite database of sequences...')
 	db_path = os.path.join(args.temp_dir, 'seq_db')
 	conn = sqlite3.connect(db_path)
 	c = conn.cursor()
-	create_cmd = get_seq_db_creation_cmd()
-	insert_cmd = get_seq_db_insert_cmd()
+	create_cmd = get_seq_db_creation_cmd(args)
+	insert_cmd = get_seq_db_insert_cmd(args)
 	c.execute('DROP TABLE IF EXISTS seqs')
 	c.execute(create_cmd)
 	c.executemany(insert_cmd, seqs)
-	print('Done')
-	print('Indexing the SQLite database...', end='')
-	sys.stdout.flush()
-	start = time.time()
+	# logger.info('Indexing the SQLite database...')
+	# start = time.time()
 	c.execute('CREATE INDEX seq_index ON seqs (seq_id)')
-	print('Done')
-	print('Indexing took {} seconds\n'.format(round(time.time() - start, 2)))
+	# logger.info('Indexing took {} seconds'.format(round(time.time() - start, 2)))
 	return c
 
 
-def get_seq_db_creation_cmd():
+def get_seq_db_creation_cmd(args):
 	if args.uaid:
 		return '''CREATE TABLE seqs (seq_id text, uaid text, vdj_nt text, v_gene text)'''
 	return '''CREATE TABLE seqs (seq_id text, vdj_nt text, v_gene text)'''
 
 
-def get_seq_db_insert_cmd():
+def get_seq_db_insert_cmd(args):
 	if args.uaid:
 		return 'INSERT INTO seqs VALUES (?,?,?,?)'
 	return 'INSERT INTO seqs VALUES (?,?,?)'
 
 
-def remove_sqlite_db():
+def remove_sqlite_db(args):
 	db_path = os.path.join(args.temp_dir, 'seq_db')
 	os.unlink(db_path)
 
@@ -238,7 +236,7 @@ def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
 	outfile = os.path.join(args.temp_dir, 'clust')
 	logfile = open(os.path.join(args.temp_dir, 'log'), 'a')
 	threshold = 1.0 if uaid else args.identity_threshold
-	do_cdhit(infile.name, outfile, logfile, threshold)
+	do_cdhit(infile.name, outfile, logfile, threshold, args)
 	if centroid:
 		cent_handle = open(outfile, 'r')
 		if not uaid:
@@ -274,15 +272,15 @@ def make_cdhit_input(seq_db, args, uaid=True):
 	return infile
 
 
-def do_cdhit(fasta, clust, log, threshold):
+def do_cdhit(fasta, clust, log, threshold, args):
 	seq_type = 'UAIDs' if args.uaid else 'sequences'
-	print('Clustering {} with CD-HIT...'.format(seq_type), end='')
-	sys.stdout.flush()
+	logger.info('Clustering {} with CD-HIT...'.format(seq_type))
 	start_time = time.time()
 	cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T 0 -M 35000'.format(fasta, clust, threshold)
 	cluster = sp.Popen(cdhit_cmd, shell=True, stdout=log)
 	cluster.communicate()
-	print('Done.\nClustering took {} seconds\n'.format(round(time.time() - start_time, 2)))
+	logger.info('Clustering took {} seconds'.format(round(time.time() - start_time, 2)))
+	logger.info('')
 
 
 def parse_centroids(centroid_handle, sizes=None):
@@ -299,12 +297,10 @@ def parse_centroids(centroid_handle, sizes=None):
 
 
 def parse_clusters(cluster_handle, seq_db, args):
-	print('Parsing CD-HIT cluster file...', end='')
-	sys.stdout.flush()
+	logger.info('Parsing CD-HIT cluster file...')
 	clusters = [c.split('\n') for c in cluster_handle.read().split('\n>')]
-	print('Done.\n{} total clusters identified.\n'.format(len(clusters)))
-	print('Retrieving cluster sequences...', end='')
-	sys.stdout.flush()
+	logger.info('{} total clusters identified.\n'.format(len(clusters)))
+	logger.info('Retrieving cluster sequences...')
 	cluster_seqs = []
 	start = time.time()
 	lengths = []
@@ -313,9 +309,9 @@ def parse_clusters(cluster_handle, seq_db, args):
 		if len(cluster) >= args.min_seqs + 1:
 			cluster_ids = get_cluster_ids(cluster)
 			cluster_seqs.append(get_cluster_seqs(cluster_ids, seq_db))
-	print('Done.\n{} clusters meet the minimum size cutoff ({} sequences)'.format(len(cluster_seqs), args.min_seqs))
-	print('The average cluster contains {} sequences; the largest contains {} sequences.'.format(round(1. * sum(lengths) / len(lengths), 2), max(lengths)))
-	print('Cluster parsing and sequence retrieval took {} seconds\n'.format(round(time.time() - start, 2)))
+	logger.info('{} clusters meet the minimum size cutoff ({} sequences)'.format(len(cluster_seqs), args.min_seqs))
+	logger.info('The average cluster contains {} sequences; the largest contains {} sequences.'.format(round(1. * sum(lengths) / len(lengths), 2), max(lengths)))
+	logger.info('Cluster parsing and sequence retrieval took {} seconds\n'.format(round(time.time() - start, 2)))
 	return cluster_seqs, lengths
 
 
@@ -361,8 +357,7 @@ def get_cluster_seqs(seq_ids, seq_db):
 
 
 def get_uaid_centroids(uaid_clusters, args):
-	print('Calculating centroid sequences with USEARCH:')
-	sys.stdout.flush()
+	logger.info('Calculating centroid sequences with USEARCH:')
 	start_time = time.time()
 	centroids = []
 	singletons = [c[0] for c in uaid_clusters if len(c) == 1]
@@ -389,7 +384,7 @@ def get_uaid_centroids(uaid_clusters, args):
 			sizes.extend(size)
 		p.close()
 		p.join()
-		print('Centroids were calculated in {} seconds.'.format(round(time.time() - start_time), 2))
+		logger.info('Centroids were calculated in {} seconds.'.format(round(time.time() - start_time), 2))
 	return centroids, sizes
 
 
@@ -448,13 +443,12 @@ def do_usearch_centroid(uaid_group_seqs, args):
 
 
 def get_consensus(clusters, germs, args):
-	print('Building consensus sequences...')
-	sys.stdout.flush()
+	logger.info('Building consensus sequences...')
 	if args.debug:
-		consensus_seqs = [calculate_consensus(cluster, germs) for cluster in clusters]
+		consensus_seqs = [calculate_consensus(cluster, germs, args) for cluster in clusters]
 	else:
 		p = mp.Pool()
-		async_results = [p.apply_async(calculate_consensus, (cluster, germs)) for cluster in clusters]
+		async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
 		monitor_mp_jobs(async_results)
 		results = [a.get() for a in async_results]
 		p.close()
@@ -501,10 +495,13 @@ def calculate_consensus(cluster, germs, args):
 
 
 def consensus_alignment_input(cluster, germs, args):
-	try:
-		v_gene = vgene_lookup(cluster, args)
-		germ = '>{}\n{}'.format(v_gene, germs[v_gene])
-	except KeyError:
+	if germs is not None:
+		try:
+			v_gene = vgene_lookup(cluster, args)
+			germ = '>{}\n{}'.format(v_gene, germs[v_gene])
+		except KeyError:
+			germ = ''
+	else:
 		germ = ''
 	cluster.append(germ)
 	return '\n'.join(cluster)
@@ -537,6 +534,34 @@ def vgene_lookup(cluster, args):
 
 
 
+def _print_start_info(args):
+	logger.info('')
+	logger.info('')
+	logger.info('')
+	logger.info('-' * 25)
+	logger.info('ERROR CORRECTION')
+	logger.info('-' * 25)
+	_log_params(args)
+
+
+def _log_params(args):
+	logger.info('')
+	# logger.info('Parameters')
+	# logger.info('----------')
+	logger.info('INPUT DB: {}'.format(args.db))
+	logger.info('OUTPUT DIR: {}'.format(args.output))
+	logger.info('TEMP DIR: {}'.format(args.temp_dir))
+	logger.info('UAIDs: {}'.format(args.uaid))
+	if args.uaid == 0:
+		logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
+		logger.info('GERMLINES: {}'.format(args.germs))
+	else:
+		logger.info('PARSE UAIDS: {}'.format(args.parse_uaids))
+	logger.info('MIN SEQS: {}'.format(args.min_seqs))
+	logger.info('LARGEST CLUSTER ONLY: {}'.format(args.only_largest_cluster))
+
+
+
 def monitor_mp_jobs(results):
 	finished = 0
 	jobs = len(results)
@@ -557,18 +582,17 @@ def update_progress(finished, jobs, log, failed=None):
 	else:
 		prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
 	sys.stdout.write(prog_bar)
-	sys.stdout.flush()
 
 
 def write_output(collection, fastas, sizes, collection_start_time, args):
 	seq_type = 'consensus' if args.consensus else 'centroid'
-	logger.info('Writing {} sequences to output file...'.format(seq_type), end='')
-	sys.stdout.flush()
+	logger.info('Writing {} sequences to output file...'.format(seq_type))
 	write_fasta_output(collection, fastas, args)
 	write_stats_output(collection, sizes, args)
 	logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
-	logger.info('{} was processed in {} seconds.\n'.format(collection,
+	logger.info('{} was processed in {} seconds.'.format(collection,
 		round(time.time() - collection_start_time, 2)))
+	logger.info('')
 
 
 def write_fasta_output(collection, fastas, args):
@@ -596,10 +620,8 @@ def write_stats_output(collection, sizes, args):
 def print_collection_info(collection):
 	logger.info('')
 	logger.info('')
-	logger.info('-' * 25)
 	logger.info(collection)
-	logger.info('-' * 25)
-	logger.info('')
+	logger.info('-' * len(collection))
 
 
 def countdown(args):
@@ -629,6 +651,48 @@ def countdown(args):
 
 
 def run(**kwargs):
+	'''
+	Corrects antibody reads using UAIDs (molecular barcodes) or
+	identity-based clustering.
+
+	A MongoDB database (::db::)	is required, as are output and temp
+	directories (::output:: and ::temp::, respectively). If ::collection::
+	is not provided, all collections in ::db:: will be iteratively
+	processed.
+
+	By default, the output is centroid sequences. To calculate consensus
+	sequences instead, set ::consensus:: to True.
+
+	To correct using UAIDs (default), just set the minimum number
+	of reads required in each UAID cluster (::min_seqs:: -- default=1).
+
+	To use identity-based clustering, set ::uaid:: to False.
+	If UAIDs weren't parsed by AbStar (the MongoDB doesn't have a 'uaid'
+	field), UAIDs can be parsed by setting ::parse_uaids:: to the length
+	of the UAID. The default clustering threshold of 0.975 can be
+	adjusted with ::identity_threshold::. As with UAID-based clustering,
+	the minimum number of reads can be adjusted with ::min_seqs::
+
+	Defaults:
+	db=None
+	collection=None
+	output=None
+	log=None
+	temp=None
+	ip='localhost'
+	port=27017
+	user=None
+	password=None
+	min_seqs=1
+	identity_threshold=0.975
+	uaid=True
+	parse_uaids=0
+	consensus=False
+	only_largest_cluster=False
+	germs=None
+	sleep=0
+	debug=False
+	'''
 	args = Args(**kwargs)
 	global logger
 	logger = log.get_logger('abcorrect')
@@ -636,15 +700,20 @@ def run(**kwargs):
 
 
 def main(args):
+	_print_start_info(args)
 	if args.sleep:
 		countdown(args)
-	if args.consensus:
+	for d in [args.output, args.temp_dir]:
+		make_dir(d)
+	if args.consensus and args.germs:
 		germs = parse_germs(args.germs)
+	else:
+		germs = args.germs
 	db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
 	for collection in mongodb.get_collections(db, args.collection):
 		collection_start = time.time()
 		print_collection_info(collection)
-		seq_db = get_seqs(db, collection)
+		seq_db = get_seqs(db, collection, args)
 		if args.uaid:
 			uaid_clusters = cdhit_clustering(seq_db, args)
 			if args.consensus:
@@ -666,7 +735,7 @@ def main(args):
 				sequences = filtered_seqs
 				sizes = filtered_sizes
 		write_output(collection, sequences, sizes, collection_start, args)
-		remove_sqlite_db()
+		remove_sqlite_db(args)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@
 #
 # @version: 1.0.0
 # @author: Bryan Briney
-# @license: MIT (http://opensource.org/licenses/MIT) 
+# @license: MIT (http://opensource.org/licenses/MIT)
 #
 ###########################################################################
 
@@ -24,8 +24,8 @@ celery = Celery(include=['queue.tasks'])
 
 
 # import celery config file
-celery.config_from_object('celeryconfig')
+celery.config_from_object('abtools.queue.celeryconfig')
 
 
 if __name__ == '__main__':
-    celery.start()
+	celery.start()

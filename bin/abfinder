@@ -27,7 +27,7 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
-from abtools import _finder as finder
+from abtools import finder
 
 
 if __name__ == '__main__':

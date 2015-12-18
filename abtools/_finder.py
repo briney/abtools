@@ -118,13 +118,13 @@ class Args(object):
 				 debug=False):
 		super(Args, self).__init__()
 		if not all([db, output, temp, standard]):
-			print('\nERROR: You must provide a MongoDB database name, output and temp directories, \
-				and a file containing one or more comparison (standard) sequences.\n')
-			sys.exit(1)
+			err = 'You must provide a MongoDB database name, output and temp directories, \
+				and a file containing one or more comparison (standard) sequences in FASTA format.'
+			raise RuntimeError(err)
 		self.db = db
 		self.collection = collection
-		self.output = output
-		self.temp = temp
+		self.output_dir = output
+		self.temp_dir = temp
 		self.log = log
 		self.cluster = bool(cluster)
 		self.ip = ip
@@ -133,9 +133,9 @@ class Args(object):
 		self.password = password
 		self.standard = standard
 		if chain not in ['heavy', 'kappa', 'lambda', 'light']:
-			print('\nERROR: Please select an appropriate chain. \
-				Valid choices are: heavy, light, kappa and lambda.\n')
-			sys.exit(1)
+			err = 'Please select an appropriate chain. \
+				Valid choices are: heavy, light, kappa and lambda.'
+			raise RuntimeError(err)
 		self.chain = chain
 		self.update = bool(update)
 		self.is_aa = bool(is_aa)
@@ -159,7 +159,7 @@ class Args(object):
 def make_directories(args):
 	for d in [args.output_dir, args.temp_dir]:
 		if d:
-			_make_direc(args)
+			_make_direc(d, args)
 
 
 def _make_direc(d, args):
@@ -275,16 +275,21 @@ def update_db(db, standard, scores, collection, args):
 	start = time.time()
 	standard = standard.replace('.', '_')
 	g = scores.groupby('identity')
-	p = mp.Pool(processes=250)
-	async_results = []
 	groups = regroup(g.groups)
-	for group in groups:
-		async_results.append(p.apply_async(update, args=(db, collection, group, standard, args)))
-	monitor_update(async_results)
-	p.close()
-	p.join()
+	for i, group in enumerate(groups):
+		update(db, collection, group, standard, args)
+		update_progress(i + 1, len(groups))
+	print('')
+	# p = mp.Pool(processes=250)
+	# async_results = []
+	# for group in groups:
+	# 	async_results.append(p.apply_async(update, args=(db, collection, group, standard, args)))
+	# monitor_update(async_results)
+	# [a.get() for a in async_results]
+	# p.close()
+	# p.join()
 	run_time = time.time() - start
-	print('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
+	logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
 		round(len(scores) / run_time, 1)))
 
 
@@ -293,8 +298,11 @@ def update(db, collection, data, standard, args):
 	score = data[0]
 	ids = data[1]
 	mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
-	coll.update({'seq_id': {'$in': ids}},
-				{'$push': {mab_id_field: {standard.lower(): float(score)}}}, multi=True)
+	# r = coll.update_many({'seq_id': {'$in': ids}},
+	# 					 {'$push': {mab_id_field: {standard.lower(): float(score)}}})
+	coll.update_many({'seq_id': {'$in': ids}},
+					 {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
+
 
 
 def monitor_update(results):
@@ -303,8 +311,8 @@ def monitor_update(results):
 	while finished < jobs:
 		time.sleep(1)
 		finished = len([r for r in results if r.ready()])
-		update_progress(finished, jobs, sys.stdout)
-	sys.stdout.write('\n\n')
+		update_progress(finished, jobs)
+	sys.stdout.write('\n')
 
 
 def regroup(oldgs):
@@ -334,7 +342,7 @@ def regroup(oldgs):
 
 
 
-def make_figure(standard_id, scores, collection):
+def make_figure(standard_id, scores, collection, args):
 	print_fig_info()
 	fig_file = os.path.join(args.output_dir, '{0}_{1}_{2}.pdf'.format(args.db, collection, standard_id))
 	x = list(scores['germ_divergence'].values)
@@ -353,7 +361,7 @@ def make_figure(standard_id, scores, collection):
 	# plot params
 	plt.subplots_adjust(hspace=0.95)
 	plt.subplot(111)
-	plt.hexbin(x, y, bins='log', cmap=mpl.cm.jet, mincnt=3, gridsize=set_gridsize())
+	plt.hexbin(x, y, bins='log', cmap=mpl.cm.Blues, mincnt=3, gridsize=set_gridsize(args))
 	plt.title(standard_id, fontsize=18)
 
 	# set and label axes
@@ -370,7 +378,7 @@ def make_figure(standard_id, scores, collection):
 	plt.close()
 
 
-def set_gridsize():
+def set_gridsize(args):
 	if args.gridsize:
 		return args.gridsize
 	elif args.is_aa:
@@ -388,8 +396,16 @@ def set_gridsize():
 
 
 
-def print_standards_info(standards):
+def print_abfinder_start():
 	logger.info('')
+	logger.info('')
+	logger.info('')
+	logger.info('-' * 25)
+	logger.info('ABFINDER')
+	logger.info('-' * 25)
+
+
+def print_standards_info(standards):
 	logger.info('')
 	logger.info('Found {} standard sequence(s):'.format(len(standards)))
 	logger.info(', '.join([s.id for s in standards]))
@@ -402,21 +418,20 @@ def print_collections_info(collections):
 
 
 def print_single_standard(standard):
-	standard_id_string = 'Standard ID: {}'.format(standard.id)
-	logger.info('-' * len(standard_id_string))
+	standard_id_string = '{}'.format(standard.id)
+	# logger.info('-' * len(standard_id_string))
+	logger.info('')
 	logger.info(standard_id_string)
 	logger.info('-' * len(standard_id_string))
-	logger.info('')
+	# logger.info('')
 
 
 def print_single_collection(collection):
-	collection_string = '      Collection: {}      '.format(collection)
 	logger.info('')
 	logger.info('')
-	logger.info('=' * len(collection_string))
-	logger.info(collection_string)
-	logger.info('=' * len(collection_string))
-	logger.info('')
+	# logger.info('-' * len(collection))
+	logger.info(collection)
+	logger.info('-' * len(collection))
 
 
 def print_query_info():
@@ -424,6 +439,7 @@ def print_query_info():
 
 
 def print_remove_padding():
+	logger.info('')
 	logger.info('Removing MongoDB padding...')
 
 
@@ -432,7 +448,7 @@ def print_fig_info():
 
 
 def print_update_info():
-	logger.info('')
+	# logger.info('')
 	logger.info('Updating the MongoDB database with identity scores:')
 
 
@@ -447,7 +463,8 @@ def print_update_info():
 
 
 def run_jobs(files, standard, args):
-	logger.info.write('Running AbCompare...')
+	# logger.info('')
+	logger.info('Running AbCompare...')
 	if args.cluster:
 		return _run_jobs_via_celery(files, standard, args)
 	else:
@@ -470,7 +487,7 @@ def _run_jobs_via_multiprocessing(files, standard, args):
 			results.extend(a.get())
 		p.close()
 		p.join()
-	ids = [r[0] for r in results]
+	ids = ['_'.join(r[0].split('_')[:-1]) for r in results]
 	identities = pd.Series([r[1] for r in results], index=ids)
 	divergences = pd.Series([100. - r[2] for r in results], index=ids)
 	d = {'identity': identities, 'germ_divergence': divergences}
@@ -486,7 +503,7 @@ def monitor_mp_jobs(results):
 		ready = [ar for ar in results if ar.ready()]
 		finished = len(ready)
 		update_progress(finished, jobs)
-	logger.info('')
+	print('')
 
 
 def _run_jobs_via_celery(files, standard, args):
@@ -495,7 +512,7 @@ def _run_jobs_via_celery(files, standard, args):
 	for f in files:
 		async_results.append(identity.delay(f, standard, args.is_aa))
 	succeeded, failed = monitor_celery_jobs(async_results)
-	# retry any failed jobs
+	# # retry any failed jobs
 	# if failed:
 	# 	retry_results = []
 	# 	log.write('{} jobs failed and will be retried:\n'.format(len(failed)))
@@ -524,18 +541,19 @@ def monitor_celery_jobs(results):
 		failed = [ar for ar in results if ar.failed()]
 		finished = len(succeeded) + len(failed)
 		update_progress(finished, jobs, failed=len(failed))
-	logger.info('')
+	print('')
 	return succeeded, failed
 
 
-def update_progress(finished, jobs, failed=None):
+def update_progress(finished, jobs):
 	pct = int(100. * finished / jobs)
 	ticks = pct / 2
 	spaces = 50 - ticks
-	if failed:
-		prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
-	else:
-		prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
+	# if failed:
+	# 	prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
+	# else:
+		# prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
+	prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
 	sys.stdout.write(prog_bar)
 	sys.stdout.flush()
 
@@ -548,7 +566,8 @@ def run(**kwargs):
 
 
 def main(args):
-	db = mongo.get_db(args.db, args.ip, args.port,
+	print_abfinder_start()
+	db = mongodb.get_db(args.db, args.ip, args.port,
 		args.user, args.password)
 	# log = args.log if args.log else sys.stdout
 	make_directories(args)
@@ -559,16 +578,17 @@ def main(args):
 	for collection in collections:
 		indexed = False
 		print_single_collection(collection)
+		print_remove_padding()
 		mongodb.remove_padding(db, collection)
 		seq_files = get_sequences(db, collection, args.temp_dir, args)
 		for standard in standards:
 			print_single_standard(standard)
-			scores = run_jobs(seq_files, standard)
+			scores = run_jobs(seq_files, standard, args)
 			if args.output_dir:
-				make_figure(standard.id, scores, collection)
+				make_figure(standard.id, scores, collection, args)
 			if args.update:
 				if not indexed:
-					mongodb.index(db, collection, ['seq_id'])
+					mongodb.index(db, collection, 'seq_id')
 					indexed = True
 				update_db(db, standard.id, scores, collection, args)
 		clean_up(seq_files)
@@ -577,6 +597,6 @@ def main(args):
 if __name__ == '__main__':
 	args = parse_args()
 	logfile = args.log if args.log else os.path.join(args.output, 'abfinder.log')
-	log.setup_logging()
+	log.setup_logging(logfile)
 	logger = log.get_logger('abfinder')
 	main(args)

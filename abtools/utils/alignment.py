@@ -460,10 +460,10 @@ class NWAlignment(BaseAlignment):
 		super(NWAlignment, self).__init__(query, target, matrix,
 			match, mismatch, gap_open, gap_extend, aa)
 		self.alignment_type = 'global'
-		self._score_match = int(score_match) if score_match else None
-		self._score_mismatch = int(score_mismatch) if score_mismatch else None
-		self._score_gap_open = int(score_gap_open) if score_gap_open else None
-		self._score_gap_extend = int(score_gap_extend) if score_gap_extend else None
+		self._score_match = int(score_match) if score_match is not None else None
+		self._score_mismatch = int(score_mismatch) if score_mismatch is not None else None
+		self._score_gap_open = int(score_gap_open) if score_gap_open is not None else None
+		self._score_gap_extend = int(score_gap_extend) if score_gap_extend is not None else None
 		self._alignment = self._align()
 		self.aligned_query = self._alignment[0]
 		self.aligned_target = self._alignment[1]
@@ -471,14 +471,14 @@ class NWAlignment(BaseAlignment):
 		self.score = self._score_alignment()
 
 	def _align(self):
-		matrix = self._matrix
-		if matrix is None:
+		# matrix = self._matrix
+		if self._matrix is None:
 			matrix = self._build_matrix(match=self._match,
 										mismatch=self._mismatch)
-		elif matrix in ['blosum62', ]:
-			matrix = _get_builtin_matrix(matrix)
-		elif type(matrix) == dict:
-			matrix = self._build_matrix(matrix=matrix)
+		elif self._matrix in ['blosum62', ]:
+			matrix = _get_builtin_matrix(self._matrix)
+		elif type(self._matrix) == dict:
+			matrix = self._build_matrix(matrix=self._matrix)
 		aln = nw.global_align(self.query.sequence,
 							  self.target.sequence,
 							  gap_open=self._gap_open,
@@ -488,15 +488,17 @@ class NWAlignment(BaseAlignment):
 		return aln
 
 	def _score_alignment(self):
-		matrix = self._matrix
-		if all([self._score_match, self._score_mismatch]):
+		# matrix = self._matrix
+		if all([self._score_match is not None, self._score_mismatch is not None]):
 			matrix = self._build_matrix(match=self._score_match,
 										mismatch=self._score_mismatch)
-		elif matrix is None:
+		elif self._matrix in ['blosum62', ]:
+			matrix = _get_builtin_matrix(self._matrix)
+		elif self._matrix is None:
 			matrix = self._build_matrix(match=self._match,
 										mismatch=self._mismatch)
-		gap_open = self._score_gap_open if self._score_gap_open else self._gap_open
-		gap_extend = self._score_gap_extend if self._score_gap_extend else self._gap_extend
+		gap_open = self._score_gap_open if self._score_gap_open is not None else self._gap_open
+		gap_extend = self._score_gap_extend if self._score_gap_extend is not None else self._gap_extend
 		aln = nw.score_alignment(self.aligned_query,
 								self.aligned_target,
 								gap_open=gap_open,
@@ -584,3 +586,5 @@ B -2 -1  3  4 -3  0  1 -1  0 -3 -4  0 -3 -3 -2  0 -1 -4 -3 -3  4  1 -1 -4
 Z -1  0  0  1 -3  3  4 -2  0 -3 -3  1 -1 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4 
 X  0 -1 -1 -1 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -2  0  0 -2 -1 -1 -1 -1 -1 -4 
 * -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4  1 '''
+
+PAM250 = ''

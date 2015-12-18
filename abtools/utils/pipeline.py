@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# filename: log.py
+# filename: pipeline.py
 
 
 #
@@ -23,40 +23,35 @@
 #
 
 
-from __future__ import print_function
+import os
 
-import logging
-
-
-def setup_logging(logfile, print_log_location=True, debug=False):
-	fmt = '[%(levelname)s] %(name)s %(asctime)s %(message)s'
-	if debug:
-		logging.basicConfig(filename=logfile,
-							filemode='w',
-							format=fmt,
-							level=logging.DEBUG)
-	else:
-		logging.basicConfig(filename=logfile,
-							filemode='w',
-							format=fmt,
-							level=logging.INFO)
-	logger = logging.getLogger('log')
-	logger = add_stream_handler(logger)
-	if print_log_location:
-		logger.info('LOG LOCATION: {}'.format(logfile))
+from abtools.utils import log
 
 
-def get_logger(name=None):
-	logger = logging.getLogger(name)
-	if len(logger.handlers) == 0:
-		logger = add_stream_handler(logger)
+def initialize(log_file, project_dir=None, debug=False):
+	_print_splash()
+	log.setup_logging(log_file, print_log_location=False, debug=debug)
+	logger = log.get_logger('pipeline')
+	if project_dir is not None:
+		logger.info('PROJECT DIRECTORY: {}'.format(project_dir))
+		logger.info('')
+	logger.info('LOG LOCATION: {}'.format(log_file))
+	print('')
 	return logger
 
 
-def add_stream_handler(logger):
-	formatter = logging.Formatter("%(message)s")
-	ch = logging.StreamHandler()
-	ch.setFormatter(formatter)
-	ch.setLevel(logging.INFO)
-	logger.addHandler(ch)
-	return logger
+def make_dir(d):
+	if not os.path.exists(d):
+		os.makedirs(d)
+
+
+def _print_splash():
+	splash = '''     _    _   _____           _       ____  _            _ _            
+    / \  | |_|_   _|__   ___ | |___  |  _ \(_)_ __   ___| (_)_ __   ___ 
+   / _ \ | '_ \| |/ _ \ / _ \| / __| | |_) | | '_ \ / _ \ | | '_ \ / _ \\
+  / ___ \| |_) | | (_) | (_) | \__ \ |  __/| | |_) |  __/ | | | | |  __/
+ /_/   \_\_.__/|_|\___/ \___/|_|___/ |_|   |_| .__/ \___|_|_|_| |_|\___|
+                                             |_|                        '''
+	print('')
+	print(splash)
+	print('')
