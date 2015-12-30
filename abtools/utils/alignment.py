@@ -62,7 +62,7 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
 	::sequences:: can be one of four different things:
 		1) a FASTA-formatted string of sequences
 		2) a list of Biopython SeqRecord objects
-		3) a list of VaxTools Sequence objects
+		3) a list of AbTools Sequence objects
 		4) a list of lists/tuples, of the format (seq_id, sequence)
 
 	::fasta:: can be used to provide a FASTA-formatted file of sequences
@@ -116,7 +116,7 @@ def muscle(sequences=None, alignment_file=None, fasta=None,
 	::sequences:: can be one of four different things:
 		1) a FASTA-formatted string of sequences
 		2) a list of Biopython SeqRecord objects
-		3) a list of VaxTools Sequence objects
+		3) a list of AbTools Sequence objects
 		4) a list of lists/tuples, of the format (seq_id, sequence)
 
 	::fasta:: can be used to provide a FASTA-formatted file of sequences
@@ -199,7 +199,7 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matr
 	Sequences can be one of four things:
 		1) a nucleotide or amino acid sequence, as a string
 		2) a Biopython SeqRecord object
-		3) a VaxTools Sequence object
+		3) a AbTools Sequence object
 		4) an iterable of the format (seq_id, sequence)
 
 	::query:: a single sequence

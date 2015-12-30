@@ -35,8 +35,10 @@ class Sequence(object):
 	::seq:: can be one of several things:
 		1) a sequence, as a string
 		2) an iterable, formatted as (seq_id, sequence)
-		3) a Biopython SeqRecord object
-		4) an AbTools Sequence object
+		3) a dict, containing at least the name (with key = 'seq_id') and a
+			sequence (key = 'vdj_aa' if aa = True, else 'vdj_nt').
+		4) a Biopython SeqRecord object
+		5) an AbTools Sequence object
 
 	If ::seq:: is provided as a string, the sequence ID can optionally be
 	provided via ::id::.  If ::seq:: is a string and ::id:: is not provided,
@@ -52,12 +54,12 @@ class Sequence(object):
 		   because their IDs will have been randomly generated.
 		--
 	"""
-	def __init__(self, seq, id=None, qual=None):
+	def __init__(self, seq, id=None, qual=None, aa=False):
 		super(Sequence, self).__init__()
 		# self.__user_supplied_seq = seq
 		self.__user_supplied_id = id
 		# self.__user_supplied_qual = qual
-		self._process_input(seq, id, qual)
+		self._process_input(seq, id, qual, aa)
 		self._fasta = None
 		self._fastq = None
 
@@ -107,7 +109,7 @@ class Sequence(object):
 		return ''.join([rc.get(res, res) for res in self.sequence])
 
 
-	def _process_input(self, seq, id, qual):
+	def _process_input(self, seq, id, qual, aa):
 		if type(seq) in [str, unicode]:
 			self.sequence = str(seq).upper()
 			if id is None:
@@ -133,3 +135,8 @@ class Sequence(object):
 				self.qual = seq.letter_annotations['solexa_quality']
 			else:
 				self.qual = None
+		elif type(seq) == dict:
+			seq_key = 'vdj_aa' if aa else 'vdj_nt'
+			self.id = seq['seq_id']
+			self.sequence = seq[seq_key]
+			self.qual = qual

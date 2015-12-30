@@ -23,6 +23,7 @@
 #
 
 
+import glob
 import os
 
 from abtools.utils import log
@@ -43,6 +44,15 @@ def initialize(log_file, project_dir=None, debug=False):
 def make_dir(d):
 	if not os.path.exists(d):
 		os.makedirs(d)
+
+
+def list_files(d):
+	if os.path.isdir(d):
+		expanded_dir = os.path.expanduser(d)
+		files = sorted(glob.glob(expanded_dir + '/*'))
+	else:
+		files = [d, ]
+	return files
 
 
 def _print_splash():
