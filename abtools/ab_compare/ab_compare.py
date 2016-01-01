@@ -25,27 +25,26 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import math
-import uuid
-import time
-import random
-import urllib
-import sqlite3
-import tempfile
-import argparse
-import itertools
-import subprocess as sp
-import multiprocessing as mp
-from StringIO import StringIO
 from collections import Counter
+import itertools
+import math
+import multiprocessing as mp
+import os
+import random
+import sqlite3
+from StringIO import StringIO
+import subprocess as sp
+import sys
+import tempfile
+import time
+import urllib
+import uuid
 
 import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-mpl.use('Agg')
+# mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -53,49 +52,83 @@ from pymongo import MongoClient, ASCENDING
 
 
 
-parser = argparse.ArgumentParser("Compares two or more antibody repertoires.")
-parser.add_argument('-o', '--output', dest='output', required=True,
-					help="Output directory for figure and data files. Required.")
-parser.add_argument('-d', '--database', dest='db', required=True,
-					help="Name of the MongoDB database to query. Required.")
-parser.add_argument('-1', '--collection1', dest='collection1', default=None,
-					help="Name of the first MongoDB collection to query for comparison. \
-					If -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
-parser.add_argument('-2', '--collection2', dest='collection2', default=None,
-					help="Name of the second MongoDB collection to query for comparison. \
-					If not provided, the collection provided by -1 will be iteratively compared with all other collections in the database. \
-					If both -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
-parser.add_argument('--collection_prefix', dest='collection_prefix', default=None,
-					help="If supplied, will iteratively process only collections beginning with <collection_prefix>.\
-					if '-1' is also provided, it will be iteratively compared with all collections beginning with <collection_prefix>.")
-parser.add_argument('-i', '--ip', dest='ip', default='localhost',
-					help="IP address for the MongoDB server.  Defaults to 'localhost'.")
-parser.add_argument('-u', '--user', dest='user', default=None,
-					help="Username for the MongoDB server. Not used if not provided.")
-parser.add_argument('-p', '--password', dest='password', default=None,
-					help="Password for the MongoDB server. Not used if not provided.")
-parser.add_argument('-k', '--chunksize', dest='chunksize', type=int, default=100000,
-					help="Number of sequences to use for each similarity calculation. \
-					Default is 100,000.")
-parser.add_argument('-I', '--iterations', dest='iterations', type=int, default=1000,
-					help="Number of iterations of the similarity calculation to perform. \
-					Default is 10000.")
-parser.add_argument('-s', '--similarity_method', dest='method',
-					choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
-					default='marisita-horn',
-					help="The similarity calculation to use. \
-					Options are 'marisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
-					Note that kullback-leibler is actually a divergence measure (lower values indicate greater similarity) \
-					Default is 'marisita-horn'.")
-parser.add_argument('-c', '--control', dest='control_similarity', default=False, action='store_true',
-					help="Plot the control similarity of the two collections")
-parser.add_argument('-C', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda'],
-					help="Select the antibody chain to analyze. \
-					Options are 'heavy', 'kappa', and 'lambda'. \
-					Default is 'heavy'.")
-parser.add_argument('--debug', dest='debug', action='store_true', default=False,
-					help="If set, will run in debug mode.")
-args = parser.parse_args()
+def parse_args():
+	import argparse
+	parser = argparse.ArgumentParser("Compares two or more antibody repertoires.")
+	parser.add_argument('-o', '--output', dest='output', required=True,
+						help="Output directory for figure and data files. Required.")
+	parser.add_argument('-d', '--database', dest='db', required=True,
+						help="Name of the MongoDB database to query. Required.")
+	parser.add_argument('-1', '--collection1', dest='collection1', default=None,
+						help="Name of the first MongoDB collection to query for comparison. \
+						If -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('-2', '--collection2', dest='collection2', default=None,
+						help="Name of the second MongoDB collection to query for comparison. \
+						If not provided, the collection provided by -1 will be iteratively compared with all other collections in the database. \
+						If both -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('--collection_prefix', dest='collection_prefix', default=None,
+						help="If supplied, will iteratively process only collections beginning with <collection_prefix>.\
+						if '-1' is also provided, it will be iteratively compared with all collections beginning with <collection_prefix>.")
+	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
+						help="IP address for the MongoDB server.  Defaults to 'localhost'.")
+	parser.add_argument('-u', '--user', dest='user', default=None,
+						help="Username for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-p', '--password', dest='password', default=None,
+						help="Password for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-k', '--chunksize', dest='chunksize', type=int, default=100000,
+						help="Number of sequences to use for each similarity calculation. \
+						Default is 100,000.")
+	parser.add_argument('-I', '--iterations', dest='iterations', type=int, default=1000,
+						help="Number of iterations of the similarity calculation to perform. \
+						Default is 10000.")
+	parser.add_argument('-s', '--similarity_method', dest='method',
+						choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
+						default='marisita-horn',
+						help="The similarity calculation to use. \
+						Options are 'marisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
+						Note that kullback-leibler is actually a divergence measure (lower values indicate greater similarity) \
+						Default is 'marisita-horn'.")
+	parser.add_argument('-c', '--control', dest='control_similarity', default=False, action='store_true',
+						help="Plot the control similarity of the two collections")
+	parser.add_argument('-C', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda'],
+						help="Select the antibody chain to analyze. \
+						Options are 'heavy', 'kappa', and 'lambda'. \
+						Default is 'heavy'.")
+	parser.add_argument('--debug', dest='debug', action='store_true', default=False,
+						help="If set, will run in debug mode.")
+	return parser.parse_args()
+
+
+class Args(object):
+	"""docstring for Args"""
+	def __init__(self, output=None, db=None,
+				 collection1=None, collection2=None, collection_prefix=None,
+				 ip='localhost', user=None, password=None,
+				 chunksize=100000, iterations=10000,
+				 method='marisita-horn', control_similarity=False,
+				 chain='heavy', debug=False):
+		super(Args, self).__init__()
+		if not all([output, db]):
+			print("\nERROR: Ouput directory and MongoDB database name must be provided.\n")
+			sys.exit(1)
+		self.output = output
+		self.db = db
+		self.collection1 = collection1
+		self.collection2 = collection2
+		self.collection_prefix = collection_prefix
+		self.ip = str(ip)
+		self.user = user
+		self.password = password
+		self.chunksize = int(chunksize)
+		self.iterations = int(iterations)
+		self.method = method
+		self.control_similarity = control_similarity
+		if chain not in ['heavy', 'kappa', 'lambda']:
+			print('\nERROR: Please select an appropriate chain. \
+				Valid choices are: heavy, kappa and lambda.\n')
+			sys.exit(1)
+		self.chain = chain
+		self.debug = debug
 
 
 
@@ -107,7 +140,7 @@ args = parser.parse_args()
 
 
 
-def get_db():
+def get_db(args):
 	'''
 	Gets a MongoDB database connection object.
 	'''
@@ -120,7 +153,7 @@ def get_db():
 	return conn[args.db]
 
 
-def create_index(collection, fields):
+def create_index(db, collection, fields):
 	'''
 	Creates an index in collection on fields.
 
@@ -132,7 +165,7 @@ def create_index(collection, fields):
 	db[collection].create_index(index_fields)
 
 
-def get_collection_pairs():
+def get_collection_pairs(args):
 	if args.collection1 and args.collection2:
 		print_single_pair_info(args.collection1, args.collection2)
 		return [(args.collection1, args.collection2), ]
@@ -149,20 +182,20 @@ def get_collection_pairs():
 	return pairs
 
 
-def index_collections(pairs):
+def index_collections(db, pairs):
 	collections = sorted(list(set([c for tup in pairs for c in tup])))
 	fields = ['chain', 'prod']
 	print('\n\nCreating indexes...')
 	for c in collections:
 		print(c)
-		create_index(c, fields)
+		create_index(db, c, fields)
 
 
-def query(collection):
+def query(db, collection, chain):
 	print('\nGetting {} sequences from MongoDB...'.format(collection), end='')
 	sys.stdout.flush()
 	c = db[collection]
-	results = c.find({'chain': args.chain, 'prod': 'yes'},
+	results = c.find({'chain': chain, 'prod': 'yes'},
 					 {'_id': 0, 'v_gene.gene': 1, 'cdr3_len': 1})
 	seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
 	print('Done.\nFound {} sequences'.format(len(seqs)))
@@ -178,20 +211,10 @@ def query(collection):
 
 
 
-def random_sample_no_replacement(s1, s2, only_continuous, norm):
+def random_sample_no_replacement(s1, s2, only_continuous, norm, args):
 	chunksize = min(int(0.9 * len(s1)), int(0.9 * len(s2)), args.chunksize)
 	c1_indexes = []
 	c2_indexes = []
-	# while len(c1_indexes) < chunksize:
-	# 	index = random.randint(0, len(c1) - 1)
-	# 	if index not in c1_indexes:
-	# 		c1.indexes.append(index)
-	# while len(c2_indexes) < chunksize:
-	# 	index = random.randint(0, len(c2) - 1)
-	# 	if index not in c2_indexes:
-	# 		c2.indexes.append(index)
-	# c1 = [s1[i] for i in c1_indexes]
-	# c2 = [s2[i] for i in c2_indexes]
 	c1 = random.sample(s1, chunksize)
 	c2 = random.sample(s2, chunksize)
 	agg1 = aggregate(c1)
@@ -205,8 +228,8 @@ def random_sample_no_replacement(s1, s2, only_continuous, norm):
 	return df['s1'], df['s2']
 
 
-def get_vgenes(c1, prev_data=None):
-	data1 = query(c1)
+def get_vgenes(db, c1, chain, prev_data=None):
+	data1 = query(db, c1, chain)
 	v1 = [d['v_gene']['gene'] for d in data1]
 	if prev_data:
 		size = min(len(prev_data), len(v1))
@@ -247,7 +270,7 @@ def normalize(s1, s2):
 
 
 
-def simdif_method(sample1, sample2):
+def simdif_method(sample1, sample2, args):
 	'''
 	Determines the appropriate similarity/divergence method to use
 	based on user options.
@@ -273,20 +296,21 @@ def simdif_method(sample1, sample2):
  	s1, s2 = random_sample_no_replacement(sample1,
  										  sample2,
  										  continuous,
- 										  normalize)
+ 										  normalize,
+ 										  args)
  	return method(s1, s2)
 
 
-def calculate_similarities(s1, s2):
+def calculate_similarities(s1, s2, args):
 	if args.debug:
 		similarities = []
 		for i in xrange(args.iterations):
-			similarities.append(simdif_method(s1, s2))
+			similarities.append(simdif_method(s1, s2, args))
 	else:
 		async_results = []
 		p = mp.Pool()
 		for i in xrange(args.iterations):
-			async_results.append(p.apply_async(simdif_method, (s1, s2)))
+			async_results.append(p.apply_async(simdif_method, (s1, s2, args)))
 		monitor_mp_jobs(async_results, sys.stdout)
 		similarities = [a.get() for a in async_results]
 	median = np.median(similarities)
@@ -294,10 +318,10 @@ def calculate_similarities(s1, s2):
 	return median, counts, bins, similarities
 
 
-def calculate_control_similarities(s1, s2):
+def calculate_control_similarities(s1, s2, args):
 	pool = s1 + s2
 	random.shuffle(pool)
-	return calculate_similarities(pool, pool)
+	return calculate_similarities(pool, pool, args)
 
 
 def mh_similarity(sample1, sample2):
@@ -606,8 +630,8 @@ def update_scores(s1, s2, median, scores):
 
 
 
-def print_method():
-	print('\n\nmethod: {} {}'.format(args.method.title(),
+def print_method(method):
+	print('\n\nmethod: {} {}'.format(method.title(),
 								   'divergence' if args.method == 'kullback-leibler' else 'similarity'))
 
 
@@ -673,15 +697,16 @@ def print_final_results(scores, control=False):
 		print('')
 
 
+def run(**kwargs):
+	args = Args(**kwargs)
+	main(args)
 
 
-
-
-
-def main():
-	print_method()
-	pairs = get_collection_pairs()
-	index_collections(pairs)
+def main(args):
+	db = get_db(args)
+	print_method(args.method)
+	pairs = get_collection_pairs(args)
+	index_collections(db, pairs)
 	prev1 = None
 	scores = {}
 	cscores = {}
@@ -690,16 +715,20 @@ def main():
 		curr1 = s1
 		if prev1 != curr1:
 			print_collection_info(s1)
-			s1_all_vgenes = get_vgenes(s1)
+			s1_all_vgenes = get_vgenes(db, s1, chain)
 		print_pair_info(s1, s2)
-		s1_vgenes, s2_vgenes = get_vgenes(s2, prev_data=s1_all_vgenes)
+		s1_vgenes, s2_vgenes = get_vgenes(db, s2, args.chain, prev_data=s1_all_vgenes)
 		print('\nCalculating similarities...')
-		median, counts, bins, similarities = calculate_similarities(s1_vgenes, s2_vgenes)
+		median, counts, bins, similarities = calculate_similarities(s1_vgenes,
+																	s2_vgenes,
+																	args)
 		write_output(s1, s2, median, counts, bins, similarities)
 		scores = update_scores(s1, s2, median, scores)
 		if args.control_similarity:
 			print('\nCalculating control similarities...')
-			cmedian, ccounts, cbins, csimilarities = calculate_control_similarities(s1_vgenes, s2_vgenes)
+			cmedian, ccounts, cbins, csimilarities = calculate_control_similarities(s1_vgenes,
+																					s2_vgenes,
+																					args)
 			write_output(s1, s2, cmedian, ccounts, cbins, csimilarities)
 			cscores = update_scores(s1, s2, cmedian, cscores)
 		prev1 = s1
@@ -708,5 +737,5 @@ def main():
 
 
 if __name__ == '__main__':
-	db = get_db()
-	main()
+	args = parse_args()
+	main(args)

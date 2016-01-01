@@ -17,20 +17,19 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import uuid
-import time
-import math
-import shelve
-import urllib
-import sqlite3
-import tempfile
-import argparse
-import subprocess as sp
-import multiprocessing as mp
-from StringIO import StringIO
 from collections import Counter
+import math
+import multiprocessing as mp
+import os
+import shelve
+import sqlite3
+from StringIO import StringIO
+import subprocess as sp
+import sys
+import tempfile
+import time
+import urllib
+import uuid
 
 import numpy as np
 
@@ -41,46 +40,78 @@ from Bio import AlignIO
 from Bio.Align import AlignInfo
 
 
-parser = argparse.ArgumentParser("Clusters sequences using either an identity threshold or unique antibody identifiers (UAIDs). \
-								  Calculates either the centroid or consensus sequence for each identity/UAID cluster passing a cluster size threshold.")
-parser.add_argument('-d', '--database', dest='db', required=True,
-					help="Name of the MongoDB database to query. Required")
-parser.add_argument('-c', '--collection', dest='collection', default=None,
-					help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
-parser.add_argument('-o', '--output', dest='output', required=True,
-					help="Output directory for the FASTA files. Required")
-parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
-					help="Directory for temporary files, including the SQLite database. Required")
-parser.add_argument('-i', '--ip', dest='ip', default='localhost',
-					help="IP address for the MongoDB server.  Defaults to 'localhost'.")
-parser.add_argument('-u', '--user', dest='user', default=None,
-					help="Username for the MongoDB server. Not used if not provided.")
-parser.add_argument('-p', '--password', dest='password', default=None,
-					help="Password for the MongoDB server. Not used if not provided.")
-parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
-					help="Minimum number of sequences for finding centroids from a UAID group.  Defaults to 1.")
-parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
-					help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
-parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
-					help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
-					If the '--no_uaid' flag is also used, this option will be ignored. \
-					For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
-					Default is to not parse UAIDs.")
-parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
-					help="Generates consensus sequences for each UAID or homology cluster. Default is to identify cluster centroids.")
-parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
-					help="Identity threshold for sequence clustering. Not used for UAID-based correction. Default is 0.975.")
-parser.add_argument('--only-largest-cluster', default=False, action='store_true',
-					help="If set while calculating centroids using UAIDs, only the largest centroid for each UAID cluster is retained.")
-parser.add_argument('-g', '--germs', dest='germs', default=None,
-					help="Path to a FASTA-formatted file of germline V gene sequences. Required if building consensus sequences, not required for centroids.")
-parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
-					help="If set, will run in debug mode.")
-parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
-					help="Delay, in minutes, until the script starts executing. Default is 0.")
-args = parser.parse_args()
+def parse_args():
+	import argparse
+	parser = argparse.ArgumentParser("Clusters sequences using either an identity threshold or unique antibody identifiers (UAIDs). \
+									  Calculates either the centroid or consensus sequence for each identity/UAID cluster passing a cluster size threshold.")
+	parser.add_argument('-d', '--database', dest='db', required=True,
+						help="Name of the MongoDB database to query. Required")
+	parser.add_argument('-c', '--collection', dest='collection', default=None,
+						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('-o', '--output', dest='output', required=True,
+						help="Output directory for the FASTA files. Required")
+	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
+						help="Directory for temporary files, including the SQLite database. Required")
+	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
+						help="IP address for the MongoDB server.  Defaults to 'localhost'.")
+	parser.add_argument('-u', '--user', dest='user', default=None,
+						help="Username for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-p', '--password', dest='password', default=None,
+						help="Password for the MongoDB server. Not used if not provided.")
+	parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
+						help="Minimum number of sequences for finding centroids from a UAID group.  Defaults to 1.")
+	parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
+						help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
+	parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
+						help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
+						If the '--no_uaid' flag is also used, this option will be ignored. \
+						For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
+						Default is to not parse UAIDs.")
+	parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
+						help="Generates consensus sequences for each UAID or homology cluster. Default is to identify cluster centroids.")
+	parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
+						help="Identity threshold for sequence clustering. Not used for UAID-based correction. Default is 0.975.")
+	parser.add_argument('--only-largest-cluster', default=False, action='store_true',
+						help="If set while calculating centroids using UAIDs, only the largest centroid for each UAID cluster is retained.")
+	parser.add_argument('-g', '--germs', dest='germs', default=None,
+						help="Path to a FASTA-formatted file of germline V gene sequences. Required if building consensus sequences, not required for centroids.")
+	parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
+						help="If set, will run in debug mode.")
+	parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
+						help="Delay, in minutes, until the script starts executing. Default is 0.")
+	return parser.parse_args()
 
 
+class Args(object):
+	"""docstring for Args"""
+	def __init__(self, db=None, collection=None,
+				 output=None, temp=None,
+				 ip='localhost', user=None, password=None,
+				 min_seqs=1, identity_threshold=0.975,
+				 uaid=True, parse_uaids=0,
+				 consensus=False, only_largest_cluster=False, germs=None,
+				 debug=False, sleep=0):
+		super(Args, self).__init__()
+		if not all([db, output, temp]):
+			print('\nERROR: Output and temp directories must be provided, \
+				as well as a MongoDB database name.\n')
+			sys.exit(1)
+		self.db = db
+		self.collection = collection
+		self.output = output
+		self.temp = temp
+		self.ip = ip
+		self.user = user
+		self.password = password
+		self.min_seqs = int(min_seqs)
+		self.uaid = uaid
+		self.parse_uaids = int(parse_uaids)
+		self.consensus = consensus
+		self.identity_threshold = float(identity_threshold)
+		self.only_largest_cluster = only_largest_cluster
+		self.germs = germs
+		self.debug = debug
+		self.sleep = int(sleep)
 
 
 
@@ -92,7 +123,7 @@ args = parser.parse_args()
 
 
 
-def get_collections():
+def get_collections(args):
 	if args.collection:
 		return [args.collection, ]
 	conn = MongoClient(args.ip, 27017)
@@ -101,12 +132,12 @@ def get_collections():
 	return sorted(collections)
 
 
-def get_seqs(collection):
-	seqs = query(collection)
-	return build_seq_db(seqs)
+def get_seqs(collection, args):
+	seqs = query(collection, args)
+	return build_seq_db(seqs, args)
 
 
-def query(collection):
+def query(collection, args):
 	print('Getting sequences from MongoDB...', end='')
 	sys.stdout.flush()
 	if args.user and args.password:
@@ -137,7 +168,7 @@ def query(collection):
 	return seqs
 
 
-def build_seq_db(seqs):
+def build_seq_db(seqs, args):
 	print('Building a SQLite database of sequences...', end='')
 	sys.stdout.flush()
 	db_path = os.path.join(args.temp_dir, 'seq_db')
@@ -175,8 +206,8 @@ def remove_sqlite_db():
 	os.unlink(db_path)
 
 
-def parse_germs():
-	germ_handle = open(args.germs, 'r')
+def parse_germs(germ_file):
+	germ_handle = open(germ_file, 'r')
 	germs = {}
 	for seq in SeqIO.parse(germ_handle, 'fasta'):
 		germs[seq.id] = str(seq.seq).upper()
@@ -194,8 +225,8 @@ def parse_germs():
 
 
 
-def cdhit_clustering(seq_db, uaid=True, centroid=False):
-	infile = make_cdhit_input(seq_db, uaid=uaid)
+def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
+	infile = make_cdhit_input(seq_db, args, uaid=uaid)
 	outfile = os.path.join(args.temp_dir, 'clust')
 	logfile = open(os.path.join(args.temp_dir, 'log'), 'a')
 	threshold = 1.0 if uaid else args.identity_threshold
@@ -210,7 +241,7 @@ def cdhit_clustering(seq_db, uaid=True, centroid=False):
 			seqs = parse_centroids(cent_handle)
 	else:
 		clust_handle = open('{}.clstr'.format(outfile), 'r')
-		seqs, sizes = parse_clusters(clust_handle, seq_db)
+		seqs, sizes = parse_clusters(clust_handle, seq_db, args)
 	if not args.debug:
 		os.unlink(infile.name)
 		os.unlink(os.path.join(args.temp_dir, 'log'))
@@ -221,7 +252,7 @@ def cdhit_clustering(seq_db, uaid=True, centroid=False):
 	return seqs, sizes
 
 
-def make_cdhit_input(seq_db, uaid=True):
+def make_cdhit_input(seq_db, args, uaid=True):
 	infile = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
 	fastas = []
 	if uaid:
@@ -259,7 +290,7 @@ def parse_centroids(centroid_handle, sizes=None):
 	return centroids
 
 
-def parse_clusters(cluster_handle, seq_db):
+def parse_clusters(cluster_handle, seq_db, args):
 	print('Parsing CD-HIT cluster file...', end='')
 	sys.stdout.flush()
 	clusters = [c.split('\n') for c in cluster_handle.read().split('\n>')]
@@ -321,7 +352,7 @@ def get_cluster_seqs(seq_ids, seq_db):
 
 
 
-def get_uaid_centroids(uaid_clusters):
+def get_uaid_centroids(uaid_clusters, args):
 	print('Calculating centroid sequences with USEARCH:')
 	sys.stdout.flush()
 	start_time = time.time()
@@ -335,14 +366,14 @@ def get_uaid_centroids(uaid_clusters):
 	clusters = [c for c in uaid_clusters if len(c) > 1]
 	if args.debug:
 		for cluster in clusters:
-			centroid, size = do_usearch_centroid(cluster)
+			centroid, size = do_usearch_centroid(cluster, args)
 			centroids.extend(centroid)
 			sizes.extend(size)
 	else:
 		p = mp.Pool(maxtasksperchild=100)
 		async_results = []
 		for c in clusters:
-			async_results.append(p.apply_async(do_usearch_centroid, (c, )))
+			async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
 		monitor_mp_jobs(async_results)
 		for a in async_results:
 			centroid, size = a.get()
@@ -354,7 +385,7 @@ def get_uaid_centroids(uaid_clusters):
 	return centroids, sizes
 
 
-def do_usearch_centroid(uaid_group_seqs):
+def do_usearch_centroid(uaid_group_seqs, args):
 	'''
 	Clusters sequences at 90% identity using USEARCH.
 
@@ -408,14 +439,14 @@ def do_usearch_centroid(uaid_group_seqs):
 
 
 
-def get_consensus(clusters):
+def get_consensus(clusters, germs, args):
 	print('Building consensus sequences...')
 	sys.stdout.flush()
 	if args.debug:
-		consensus_seqs = [calculate_consensus(cluster) for cluster in clusters]
+		consensus_seqs = [calculate_consensus(cluster, germs) for cluster in clusters]
 	else:
 		p = mp.Pool()
-		async_results = [p.apply_async(calculate_consensus, (cluster, )) for cluster in clusters]
+		async_results = [p.apply_async(calculate_consensus, (cluster, germs)) for cluster in clusters]
 		monitor_mp_jobs(async_results)
 		results = [a.get() for a in async_results]
 		p.close()
@@ -428,10 +459,10 @@ def get_consensus(clusters):
 	return fastas, [r[1] for r in results]
 
 
-def calculate_consensus(cluster):
+def calculate_consensus(cluster, germs, args):
 	if len(cluster) == 1:
 		return (cluster[0].split('\n')[1].upper(), 1)
-	fasta_string = consensus_alignment_input(cluster)
+	fasta_string = consensus_alignment_input(cluster, germs, args)
 	if len(cluster) < 100:
 		muscle_cline = 'muscle -clwstrict'
 	elif len(cluster) < 1000:
@@ -452,9 +483,9 @@ def calculate_consensus(cluster):
 	return (consensus_string.upper(), len(cluster))
 
 
-def consensus_alignment_input(cluster):
+def consensus_alignment_input(cluster, germs, args):
 	try:
-		v_gene = vgene_lookup(cluster)
+		v_gene = vgene_lookup(cluster, args)
 		germ = '>{}\n{}'.format(v_gene, germs[v_gene])
 	except KeyError:
 		germ = ''
@@ -462,7 +493,7 @@ def consensus_alignment_input(cluster):
 	return '\n'.join(cluster)
 
 
-def vgene_lookup(cluster):
+def vgene_lookup(cluster, args):
 	v_genes = []
 	seq_ids = [seq.split('\n')[0].replace('>', '') for seq in cluster]
 	db_path = os.path.join(args.temp_dir, 'seq_db')
@@ -512,17 +543,17 @@ def update_progress(finished, jobs, log, failed=None):
 	sys.stdout.flush()
 
 
-def write_output(collection, fastas, sizes, collection_start_time):
+def write_output(collection, fastas, sizes, collection_start_time, args):
 	seq_type = 'consensus' if args.consensus else 'centroid'
 	print('\nWriting {} sequences to output file...'.format(seq_type), end='')
 	sys.stdout.flush()
-	write_fasta_output(collection, fastas)
-	write_stats_output(collection, sizes)
+	write_fasta_output(collection, fastas, args)
+	write_stats_output(collection, sizes, args)
 	print('Done. \n{} {} sequences were identified.'.format(len(fastas), seq_type))
 	print('{} was processed in {} seconds.\n'.format(collection, round(time.time() - collection_start_time, 2)))
 
 
-def write_fasta_output(collection, fastas):
+def write_fasta_output(collection, fastas, args):
 	seq_type = 'consensus' if args.consensus else 'centroids'
 	outfile = os.path.join(args.output, '{}_{}.fasta'.format(collection, seq_type))
 	out_handle = open(outfile, 'w')
@@ -530,7 +561,7 @@ def write_fasta_output(collection, fastas):
 	out_handle.close()
 
 
-def write_stats_output(collection, sizes):
+def write_stats_output(collection, sizes, args):
 	sizes = [int(s) for s in sizes]
 	bin_counts = np.bincount(sizes)[1:]
 	bins = range(1, len(bin_counts))
@@ -553,7 +584,7 @@ def print_collection_info(collection):
 	print('')
 
 
-def countdown():
+def countdown(args):
 	start = time.time()
 	h = int(args.sleep / 60)
 	m = int(args.sleep % 60)
@@ -579,38 +610,44 @@ def countdown():
 			done = True
 
 
-def main():
-	for collection in get_collections():
+def run(**kwargs):
+	args = Args(**kwargs)
+	main(args)
+
+
+def main(args):
+	if args.sleep:
+		countdown(args)
+	if args.consensus:
+		germs = parse_germs(args.germs)
+	for collection in get_collections(args):
 		collection_start = time.time()
 		print_collection_info(collection)
 		seq_db = get_seqs(collection)
 		if args.uaid:
-			uaid_clusters = cdhit_clustering(seq_db)
+			uaid_clusters = cdhit_clustering(seq_db, args)
 			if args.consensus:
-				sequences, sizes = get_consensus(uaid_clusters)
+				sequences, sizes = get_consensus(uaid_clusters, germs, args)
 			else:
-				sequences, sizes = get_uaid_centroids(uaid_clusters)
+				sequences, sizes = get_uaid_centroids(uaid_clusters, args)
 		else:
 			if args.consensus:
-				seq_clusters, sizes = cdhit_clustering(seq_db, uaid=False)
-				sequences, sizes = get_consensus(seq_clusters)
+				seq_clusters, sizes = cdhit_clustering(seq_db, args, uaid=False)
+				sequences, sizes = get_consensus(seq_clusters, germs, args)
 			else:
 				filtered_seqs = []
 				filtered_sizes = []
-				sequences, sizes = cdhit_clustering(seq_db, uaid=False, centroid=True)
+				sequences, sizes = cdhit_clustering(seq_db, args, uaid=False, centroid=True)
 				for seq, size in zip(sequences, sizes):
 					if size >= args.min_seqs:
 						filtered_seqs.append(seq)
 						filtered_sizes.append(size)
 				sequences = filtered_seqs
 				sizes = filtered_sizes
-		write_output(collection, sequences, sizes, collection_start)
+		write_output(collection, sequences, sizes, collection_start, args)
 		remove_sqlite_db()
 
 
 if __name__ == '__main__':
-	if args.sleep:
-		countdown()
-	if args.consensus:
-		germs = parse_germs()
-	main()
+	args = parse_args()
+	main(args)
