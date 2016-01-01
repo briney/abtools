@@ -98,6 +98,8 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
 	os.unlink(ffile)
 	if as_file:
 		return alignment_file
+	if os.stat(alignment_file).st_size == 0:
+		return None
 	aln = AlignIO.read(open(alignment_file), fmt)
 	os.unlink(alignment_file)
 	return aln
@@ -168,7 +170,7 @@ def _get_fasta_string(sequences):
 	if type(sequences) == str:
 		return sequences
 	elif all([type(s) == Sequence for s in sequences]):
-		return '\n'.join([s.fasta for s in seqeunces])
+		return '\n'.join([s.fasta for s in sequences])
 	else:
 		return '\n'.join([Sequence(s).fasta for s in sequences])
 	# elif type(sequences[0]) == SeqRecord:

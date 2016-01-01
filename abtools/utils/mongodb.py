@@ -78,7 +78,6 @@ def get_collections(db, collection=None, prefix=None, suffix=None):
 	return sorted(collections)
 
 
-
 def update(field, value, db, collection, match=None):
 	'''
 	Updates records to set ::field:: equal to ::value:: for all
@@ -91,8 +90,7 @@ def update(field, value, db, collection, match=None):
 	'''
 	c = db[collection]
 	match = match if match is not None else {}
-	c.update_many(match, {field: value}, multi=True)
-	conn.close()
+	c.update_many(match, {'$set': {field: value}})
 
 
 def mongoimport(json, database,
@@ -102,6 +100,14 @@ def mongoimport(json, database,
 				delim_occurance=1, delim1_occurance=1, delim2_occurance=1):
 	'''
 	Performs mongoimport on one or more json files.
+
+	Required inputs:
+		::json:: can be one of several things:
+			-- a single JSON file
+			-- an iterable (list or tuple) of one or more JSON files
+			-- a directory, containing one or more JSON files
+		::database:: is the name of the MongoDB database into which
+			the JSON files will be imported
 	'''
 	logger = log.get_logger('mongodb')
 	_print_mongoimport_info(logger)
@@ -189,6 +195,7 @@ def _print_mongoimport_info(logger):
 	logger.info('MONGOIMPORT')
 	logger.info('-' * 25)
 	logger.info('')
+
 
 def _print_remove_padding():
 	logger = log.get_logger('mongodb')
