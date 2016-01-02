@@ -111,10 +111,12 @@ def mongoimport(json, database,
 	'''
 	logger = log.get_logger('mongodb')
 	_print_mongoimport_info(logger)
-	if os.path.isdir(json):
+	if type(json) in (list, tuple):
+		pass
+	elif os.path.isdir(json):
 		from abtools.utils.pipeline import list_files
 		json = list_files(json)
-	if type(json) not in [list, tuple]:
+	else:
 		json = [json, ]
 	jsons = sorted([os.path.expanduser(j) for j in json if j.endswith('.json')])
 	collections = _get_import_collections(jsons, delim, delim_occurance,
