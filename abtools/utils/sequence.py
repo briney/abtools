@@ -100,14 +100,26 @@ class Sequence(object):
 				self._fastq = '@{}\n{}\n+\n{}'.format(self.id, self.sequence, self.qual)
 		return self._fastq
 
-
+	@property
 	def reverse_complement(self):
+		if self._reverse_complement is None:
+			self._reverse_complement = self._get_reverse_complement()
+		return self._reverse_complement
+
+
+
+	def region(self, start=0, end=None):
+		if end is None:
+			end = len(self.sequence)
+		return '>{}\n{}'.format(self.id, self.sequence[start:end])
+
+
+	def _get_reverse_complement(self):
 		rc = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',
 			  'Y': 'R', 'R': 'Y', 'S': 'S', 'W': 'W',
 			  'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
 			  'H': 'D', 'V': 'B', 'N': 'N'}
-		return ''.join([rc.get(res, res) for res in self.sequence])
-
+		return ''.join([rc.get(res, res) for res in self.sequence[::-1]])
 
 	def _process_input(self, seq, id, qual, aa):
 		if type(seq) in [str, unicode]:

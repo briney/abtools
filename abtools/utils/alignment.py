@@ -253,13 +253,14 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
 	'''
 	import nwalign as nw
 	if not target and not targets:
-		print('\nERROR: You must supply a target sequence (or sequences).\n')
-		sys.exit(1)
+		err = 'ERROR: You must supply a target sequence (or sequences).'
+		raise RuntimeError(err)
 	if target:
 		targets = [target, ]
 	if type(targets) not in (list, tuple):
-		print('\nERROR: ::targets:: requires an iterable (list or tuple).')
-		print('For a single sequence, use ::target::\n')
+		err = 'ERROR: ::targets:: requires an iterable (list or tuple).'
+		err += 'For a single sequence, use ::target::'
+		raise RuntimeError(err)
 	alignments = []
 	for t in targets:
 		alignment = NWAlignment(query=query,
