@@ -1,6 +1,7 @@
 include README.md
 include docs/*.txt
 include abtools/utils/*
+include abtools/utils/matrices/*
 include abtools/queue/*
 # include ab_finder/nw/*
 # include ab_finder/ssw/*

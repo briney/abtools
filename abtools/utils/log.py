@@ -28,7 +28,7 @@ from __future__ import print_function
 import logging
 
 
-def setup_logging(logfile, print_log_location=True, debug=False):
+def setup_logging(logfile, print_log_location=True, debug=False, print_debug=False):
 	fmt = '[%(levelname)s] %(name)s %(asctime)s %(message)s'
 	if debug:
 		logging.basicConfig(filename=logfile,
@@ -41,7 +41,8 @@ def setup_logging(logfile, print_log_location=True, debug=False):
 							format=fmt,
 							level=logging.INFO)
 	logger = logging.getLogger('log')
-	logger = add_stream_handler(logger)
+	print_level = logging.DEBUG if debug and print_debug else logging.INFO
+	logger = add_stream_handler(logger, print_level=print_level)
 	if print_log_location:
 		logger.info('LOG LOCATION: {}'.format(logfile))
 
@@ -53,7 +54,7 @@ def get_logger(name=None):
 	return logger
 
 
-def add_stream_handler(logger):
+def add_stream_handler(logger, print_level=logging.INFO):
 	formatter = logging.Formatter("%(message)s")
 	ch = logging.StreamHandler()
 	ch.setFormatter(formatter)

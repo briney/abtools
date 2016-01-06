@@ -56,12 +56,18 @@ class Sequence(object):
 	"""
 	def __init__(self, seq, id=None, qual=None, aa=False):
 		super(Sequence, self).__init__()
-		# self.__user_supplied_seq = seq
-		self.__user_supplied_id = id
-		# self.__user_supplied_qual = qual
-		self._process_input(seq, id, qual, aa)
+		self._input_sequence = None
+		self._input_id = id
+		self._input_qual = qual
+		self.id = None
+		self.sequence = None
+		self.qual = None
 		self._fasta = None
 		self._fastq = None
+		self._reverse_complement = None
+		self._strand = None
+
+		self._process_input(seq, id, qual, aa)
 
 
 	def __len__(self):
@@ -77,7 +83,12 @@ class Sequence(object):
 		return item in self.sequence
 
 	def __getitem__(self, key):
-		return self.sequence[key]
+		return Sequence(self.sequence[key],
+						id=self.id,
+						qual=self.qual)
+
+	def __setitem__(self, key, val):
+		self.sequence[key] = val
 
 	def __eq__(self, other):
 		if hasattr(other, 'sequence'):
@@ -93,7 +104,7 @@ class Sequence(object):
 
 	@property
 	def fastq(self):
-		if not self.qual:
+		if self.qual is None:
 			self._fastq = None
 		else:
 			if self._fastq is None:
@@ -106,6 +117,15 @@ class Sequence(object):
 			self._reverse_complement = self._get_reverse_complement()
 		return self._reverse_complement
 
+	@property
+	def strand(self):
+		if self._strand is None:
+			self._strand = 'plus'
+		return self._strand
+
+	@strand.setter
+	def strand(self, strand):
+		self._strand = strand
 
 
 	def region(self, start=0, end=None):
@@ -121,9 +141,16 @@ class Sequence(object):
 			  'H': 'D', 'V': 'B', 'N': 'N'}
 		return ''.join([rc.get(res, res) for res in self.sequence[::-1]])
 
+	def _clean_input_seq(self):
+		if type(seq) == Sequence:
+			return seq
+		else:
+			return Sequence(seq)
+
 	def _process_input(self, seq, id, qual, aa):
 		if type(seq) in [str, unicode]:
 			self.sequence = str(seq).upper()
+			self._input_sequence = self.sequence
 			if id is None:
 				id = uuid.uuid4()
 			self.id = id
@@ -131,14 +158,17 @@ class Sequence(object):
 		elif type(seq) == Sequence:
 			self.id = seq.id
 			self.sequence = seq.sequence
+			self._input_sequence = self.sequence
 			self.qual = seq.qual
 		elif type(seq) in [list, tuple]:
 			self.id = str(seq[0])
 			self.sequence = str(seq[1]).upper()
+			self._input_sequence = self.sequence
 			self.qual = qual
 		elif type(seq) == SeqRecord:
 			self.id = str(seq.id)
 			self.sequence = str(seq.seq).upper()
+			self._input_sequence = self.sequence
 			if qual:
 				self.qual = qual
 			elif 'phred_quality' in seq.letter_annotations:
@@ -151,4 +181,5 @@ class Sequence(object):
 			seq_key = 'vdj_aa' if aa else 'vdj_nt'
 			self.id = seq['seq_id']
 			self.sequence = seq[seq_key]
+			self._input_sequence = self.sequence
 			self.qual = qual
