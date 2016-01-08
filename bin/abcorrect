@@ -33,4 +33,4 @@ from abtools import _correct as correct
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 	args = correct.parse_args()
-	output_dir = correct.main(args)
+	correct.run_standalone(args)
