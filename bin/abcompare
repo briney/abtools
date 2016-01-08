@@ -33,4 +33,4 @@ from abtools import _compare as compare
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 	args = compare.parse_args()
-	output_dir = compare.main(args)
+	compare.run_standalone(args)

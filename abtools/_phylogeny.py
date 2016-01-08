@@ -191,6 +191,14 @@ def run(**kwargs):
 	main(args)
 
 
+def run_standalone(args):
+	logfile = args.log if args.log else os.path.join(args.output, 'abphylogeny.log')
+	log.setup_logging(logfile)
+	global logger
+	logger = log.get_logger('abphylogeny')
+	main(args)
+
+
 def main(args):
 	seqs, tps = parse_seqs(args)
 	timepoints = parse_timepoints(tps, args)

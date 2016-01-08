@@ -27,10 +27,10 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
-from abtools import finder
+from abtools import _finder as finder
 
 
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 	args = finder.parse_args()
-	output_dir = finder.main(args)
+	finder.run_standalone(args)

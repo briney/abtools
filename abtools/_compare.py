@@ -684,6 +684,14 @@ def run(**kwargs):
 	main(args)
 
 
+def run_standalone(args):
+	logfile = args.log if args.log else os.path.join(args.output, 'abcompare.log')
+	log.setup_logging(logfile)
+	global logger
+	logger = log.get_logger('abcompare')
+	main(args)
+
+
 def main(args):
 	db = mongodb.get_db(args.db, args.ip, args.port,
 						args.user, args.password)

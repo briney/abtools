@@ -33,4 +33,4 @@ from abtools import _stats as stats
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 	args = stats.parse_args()
-	output_dir = stats.main(args)
+	stats.run_standalone(args)

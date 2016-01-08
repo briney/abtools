@@ -699,6 +699,14 @@ def run(**kwargs):
 	main(args)
 
 
+def run_standalone(args):
+	logfile = args.log if args.log else os.path.join(args.output, 'abcorrect.log')
+	log.setup_logging(logfile)
+	global logger
+	logger = log.get_logger('abcorrect')
+	main(args)
+
+
 def main(args):
 	_print_start_info(args)
 	if args.sleep:
