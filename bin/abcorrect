@@ -32,5 +32,5 @@ from abtools import correct
 
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
-	args = correct.parse_arguments()
+	args = correct.parse_args()
 	output_dir = correct.main(args)

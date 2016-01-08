@@ -32,5 +32,5 @@ from abtools import finder
 
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
-	args = finder.parse_arguments()
+	args = finder.parse_args()
 	output_dir = finder.main(args)

@@ -32,5 +32,5 @@ from abtools import _phylogeny as phylogeny
 
 if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
-	args = phylogeny.parse_arguments()
+	args = phylogeny.parse_args()
 	output_dir = phylogeny.main(args)
