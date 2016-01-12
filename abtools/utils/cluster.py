@@ -111,8 +111,8 @@ class Cluster(object):
 						 FROM seqs
 						 WHERE seqs.id IN ({})'''.format(','.join('?' * len(chunk)))
 			seq_chunk = seq_db.execute(sql_cmd, chunk)
-		seqs.extend(seq_chunk)
-	return [Sequence(s) for s in seqs]
+			seqs.extend(seq_chunk)
+		return [Sequence(s) for s in seqs]
 
 	def _get_centroid(self):
 		for line in self.raw_cluster:

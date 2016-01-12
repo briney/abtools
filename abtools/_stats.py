@@ -382,6 +382,13 @@ def run(**kwargs):
 	main(args)
 
 
+def run_standalone(args):
+	logfile = args.log if args.log else os.path.join(args.output, 'abstats.log')
+	log.setup_logging(logfile)
+	global logger
+	logger = log.get_logger('abstats')
+	main(args)
+
 
 def main(args):
 	db = mongodb.get_db(args)

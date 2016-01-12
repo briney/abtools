@@ -84,6 +84,8 @@ def parse_args():
 						help="If set while calculating centroids using UAIDs, only the largest centroid for each UAID cluster is retained.")
 	parser.add_argument('-g', '--germs', dest='germs', default=None,
 						help="Path to a FASTA-formatted file of germline V gene sequences. Required if building consensus sequences, not required for centroids.")
+	parser.add_argument('--aa', dest='aa', action='store_true', default=False,
+						help="If set, use amino acid sequences for identity-based clustering.")
 	parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
 						help="If set, will run in debug mode.")
 	parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
@@ -99,7 +101,7 @@ class Args(object):
 				 min_seqs=1, identity_threshold=0.975,
 				 uaid=True, parse_uaids=0,
 				 consensus=False, only_largest_cluster=False, germs=None,
-				 debug=False, sleep=0):
+				 aa=False, debug=False, sleep=0):
 		super(Args, self).__init__()
 		if not all([db, output, temp]):
 			print('\nERROR: Output and temp directories must be provided, \
@@ -121,6 +123,7 @@ class Args(object):
 		self.identity_threshold = float(identity_threshold)
 		self.only_largest_cluster = only_largest_cluster
 		self.germs = germs
+		self.aa = aa
 		self.debug = debug
 		self.sleep = int(sleep)
 
@@ -157,13 +160,18 @@ def query(db, collection, args):
 	# else:
 	# 	conn = MongoClient(args.ip, 27017)
 	# db = conn[args.db]
+	query = {'prod': 'yes'}
+	project = {'_id': 0, 'seq_id': 1, 'raw_query': 1, 'uaid': 1, 'v_gene.full': 1}
+	vdj_field = 'vdj_aa' if args.aa else 'vdj_nt'
+	project[vdj_field] = 1
 	coll = db[collection]
-	results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, 'vdj_nt': 1, 'raw_query': 1})
+	# results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, 'vdj_nt': 1, 'raw_query': 1})
+	results = coll.find(query, project)
 	if args.uaid:
 		seqs = []
 		for r in results:
 			if 'uaid' in r:
-				seqs.append((r['seq_id'], r['uaid'], r['vdj_nt'], r['v_gene']['full']))
+				seqs.append((r['seq_id'], r['uaid'], r[vdj_field], r['v_gene']['full']))
 			elif args.parse_uaids:
 				seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r['vdj_nt'], r['v_gene']['full']))
 			else:
@@ -173,7 +181,7 @@ def query(db, collection, args):
 				or use the -u option for identity-based clustering.'
 				raise ValueError(err)
 	else:
-		seqs = [(r['seq_id'], r['vdj_nt'], r['v_gene']['full']) for r in results]
+		seqs = [(r['seq_id'], r[vdj_field], r['v_gene']['full']) for r in results]
 	logger.info('Found {} sequences\n'.format(len(seqs)))
 	return seqs
 

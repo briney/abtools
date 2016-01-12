@@ -78,6 +78,28 @@ def get_collections(db, collection=None, prefix=None, suffix=None):
 	return sorted(collections)
 
 
+def rename_collection(db, collection, new_name):
+	'''
+	Renames a MongoDB collection.
+
+	Inputs are a pymongo database connection object, the
+	name of the collection to be renamed, and the new name.
+
+	The new name can be provided either as a string or as a function
+	that will be applied to the old collection name. If a function is
+	provided and calling the function on the current collection name
+	results in an empty string, the collection will not be renamed.
+	'''
+	if isinstance(new_name, function):
+		_new = new_name(collection)
+		if _new == '':
+			return
+	else:
+		_new = new_name
+	c = db[collection]
+	c.rename(_new)
+
+
 def update(field, value, db, collection, match=None):
 	'''
 	Updates records to set ::field:: equal to ::value:: for all
@@ -90,7 +112,25 @@ def update(field, value, db, collection, match=None):
 	'''
 	c = db[collection]
 	match = match if match is not None else {}
-	c.update_many(match, {'$set': {field: value}})
+	c.update(match, {'$set': {field: value}}, multi=True)
+	# below is for MongoDB 3.0+
+	# c.update_many(match, {'$set': {field: value}})
+
+
+def unset(db, collection, field, match=None):
+	'''
+	Removes a field from all records in ::collection:: that meet
+	::match:: criteria
+
+	Inputs are a pymongo Database object, a collection name, and an optional
+	::match::, a dict of the format:
+		{'seq_id': {'$in': ['a', 'b', 'c']}, 'size': {'$gte': 25}, 'prod': 'yes'}
+	'''
+	c = db[collection]
+	match = match if match is not None else {}
+	c.update(match, {'$unset': {field: ''}}, multi=True)
+	# below is for MongoDB 3.0+
+	# c.update_many(match, {'$unset': {field: ''}})
 
 
 def mongoimport(json, database,
@@ -172,9 +212,9 @@ def remove_padding(db, collection, field='padding'):
 	Inputs are a pymongo Database object, a collection name, and an optional
 	padding ::field:: name (default is 'padding').
 	'''
-	c = db[collection]
-	# _print_remove_padding()
-	c.update({}, {'$unset': {field: ''}}, multi=True)
+	unset(db, collection, field=field)
+	# c = db[collection]
+	# c.update({}, {'$unset': {field: ''}}, multi=True)
 
 
 def _get_import_collections(jsons, delim, delim_occurance,

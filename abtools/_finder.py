@@ -565,6 +565,14 @@ def run(**kwargs):
 	main(args)
 
 
+def run_standalone(args):
+	logfile = args.log if args.log else os.path.join(args.output, 'abfinder.log')
+	log.setup_logging(logfile)
+	global logger
+	logger = log.get_logger('abfinder')
+	main(args)
+
+
 def main(args):
 	print_abfinder_start()
 	db = mongodb.get_db(args.db, args.ip, args.port,

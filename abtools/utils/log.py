@@ -41,8 +41,7 @@ def setup_logging(logfile, print_log_location=True, debug=False, print_debug=Fal
 							format=fmt,
 							level=logging.INFO)
 	logger = logging.getLogger('log')
-	print_level = logging.DEBUG if debug and print_debug else logging.INFO
-	logger = add_stream_handler(logger, print_level=print_level)
+	logger = add_stream_handler(logger)
 	if print_log_location:
 		logger.info('LOG LOCATION: {}'.format(logfile))
 
@@ -54,7 +53,7 @@ def get_logger(name=None):
 	return logger
 
 
-def add_stream_handler(logger, print_level=logging.INFO):
+def add_stream_handler(logger):
 	formatter = logging.Formatter("%(message)s")
 	ch = logging.StreamHandler()
 	ch.setFormatter(formatter)
