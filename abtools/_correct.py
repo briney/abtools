@@ -46,12 +46,15 @@ from abtools.utils.pipeline import make_dir
 
 def parse_args():
 	import argparse
-	parser = argparse.ArgumentParser("Clusters sequences using either an identity threshold or unique antibody identifiers (UAIDs). \
-									  Calculates either the centroid or consensus sequence for each identity/UAID cluster passing a cluster size threshold.")
+	parser = argparse.ArgumentParser("Clusters sequences using either an identity threshold or unique \
+									  antibody identifiers (UAIDs). \
+									  Calculates either the centroid or consensus sequence for each \
+									  identity/UAID cluster passing a cluster size threshold.")
 	parser.add_argument('-d', '--database', dest='db', required=True,
 						help="Name of the MongoDB database to query. Required")
 	parser.add_argument('-c', '--collection', dest='collection', default=None,
-						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
+						help="Name of the MongoDB collection to query. \
+						If not provided, all collections in the given database will be processed iteratively.")
 	parser.add_argument('-o', '--output', dest='output', required=True,
 						help="Output directory for the FASTA files. Required")
 	parser.add_argument('-l', '--log', dest='log',
@@ -68,7 +71,8 @@ def parse_args():
 	parser.add_argument('-p', '--password', dest='password', default=None,
 						help="Password for the MongoDB server. Not used if not provided.")
 	parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
-						help="Minimum number of sequences for finding centroids from a UAID group.  Defaults to 1.")
+						help="Minimum number of sequences for finding centroids from a UAID group. \
+						Defaults to 1.")
 	parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
 						help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
 	parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
@@ -77,13 +81,24 @@ def parse_args():
 						For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
 						Default is to not parse UAIDs.")
 	parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
-						help="Generates consensus sequences for each UAID or homology cluster. Default is to identify cluster centroids.")
+						help="Generates consensus sequences for each UAID or homology cluster. \
+						Default is to identify cluster centroids.")
 	parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
-						help="Identity threshold for sequence clustering. Not used for UAID-based correction. Default is 0.975.")
+						help="Identity threshold for sequence clustering. \
+						Not used for UAID-based correction. Default is 0.975.")
 	parser.add_argument('--only-largest-cluster', default=False, action='store_true',
-						help="If set while calculating centroids using UAIDs, only the largest centroid for each UAID cluster is retained.")
+						help="If set while calculating centroids using UAIDs, \
+						only the largest centroid for each UAID cluster is retained.")
+	parser.add_argument('--non-redundant', dest='non_redundant', action='store_true', default=False,
+						help='If set, will make a non-redundant FASTA file using Unix sort. \
+						This is much faster than CD-HIT, but can only remove exact duplicates. \
+						Note that this is not exactly equivalent to clustering with a threshold of 1.0, \
+						because sequences of different length that align perfectly for the entirety \
+						of the shorter sequence will be collapsed when using CD-HIT but will not be \
+						collapsed by Unix sort.')
 	parser.add_argument('-g', '--germs', dest='germs', default=None,
-						help="Path to a FASTA-formatted file of germline V gene sequences. Required if building consensus sequences, not required for centroids.")
+						help="Path to a FASTA-formatted file of germline V gene sequences. \
+						Required if building consensus sequences, not required for centroids.")
 	parser.add_argument('--aa', dest='aa', action='store_true', default=False,
 						help="If set, use amino acid sequences for identity-based clustering.")
 	parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
@@ -99,7 +114,7 @@ class Args(object):
 				 output=None, log=None, temp=None,
 				 ip='localhost', port=27017, user=None, password=None,
 				 min_seqs=1, identity_threshold=0.975,
-				 uaid=True, parse_uaids=0,
+				 uaid=True, parse_uaids=0, non_redundant=False,
 				 consensus=False, only_largest_cluster=False, germs=None,
 				 aa=False, debug=False, sleep=0):
 		super(Args, self).__init__()
@@ -117,11 +132,12 @@ class Args(object):
 		self.user = user
 		self.password = password
 		self.min_seqs = int(min_seqs)
-		self.uaid = uaid
+		self.uaid = False if non_redundant else uaid
 		self.parse_uaids = int(parse_uaids)
 		self.consensus = consensus
 		self.identity_threshold = float(identity_threshold)
 		self.only_largest_cluster = only_largest_cluster
+		self.non_redundant = non_redundant
 		self.germs = germs
 		self.aa = aa
 		self.debug = debug
@@ -146,42 +162,46 @@ class Args(object):
 # 	return sorted(collections)
 
 
-def get_seqs(db, collection, args):
+def get_seqs(db, collection, args, make_seq_db=True):
 	seqs = query(db, collection, args)
+	if not make_seq_db:
+		return seqs
 	return build_seq_db(seqs, args)
 
 
 def query(db, collection, args):
 	logger.info('Getting sequences from MongoDB...')
-	# if args.user and args.password:
-	# 	password = urllib.quote_plus(password)
-	# 	uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
-	# 	conn = MongoClient(uri)
-	# else:
-	# 	conn = MongoClient(args.ip, 27017)
-	# db = conn[args.db]
-	query = {'prod': 'yes'}
-	project = {'_id': 0, 'seq_id': 1, 'raw_query': 1, 'uaid': 1, 'v_gene.full': 1}
+
+	# query = {'prod': 'yes'}
 	vdj_field = 'vdj_aa' if args.aa else 'vdj_nt'
-	project[vdj_field] = 1
+	# if args.non_redundant:
+	# 	project = {'_id': 0, 'seq_id': 1, vdj_field: 1, 'raw_query': 1}
+	# else:
+	# 	project = {'_id': 0, 'seq_id': 1, 'raw_query': 1, vdj_field: 1, 'uaid': 1, 'v_gene.full': 1}
+	# 	if args.uaid is not None:
+	# 		project['uaid'] = 1
+	# 	if args.consensus:
+	# 		project['v_gene.full'] = 1
 	coll = db[collection]
-	# results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, 'vdj_nt': 1, 'raw_query': 1})
-	results = coll.find(query, project)
-	if args.uaid:
+	# results = coll.find(query, project)
+	results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, vdj_field: 1, 'raw_query': 1})
+	if args.non_redundant:
+		seqs = [(r['seq_id'], r[vdj_field], r['raw_query']) for r in results]
+	elif args.uaid:
 		seqs = []
 		for r in results:
 			if 'uaid' in r:
-				seqs.append((r['seq_id'], r['uaid'], r[vdj_field], r['v_gene']['full']))
+				seqs.append((r['seq_id'], r['uaid'], r[vdj_field], r['raw_query'], r['v_gene']['full']))
 			elif args.parse_uaids:
-				seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r['vdj_nt'], r['v_gene']['full']))
+				seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r[vdj_field], r['raw_query'], r['v_gene']['full']))
 			else:
 				err = 'UAID field was not found. '
-				err += 'Ensure that UAIDs are being parsed by AbStar, \
-				use the -parse_uaids option to parse the UAIDs from the raw query input, \
-				or use the -u option for identity-based clustering.'
+				err += 'Ensure that UAIDs are being parsed by AbStar, '
+				err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
+				err += 'or use the -u option for identity-based clustering.'
 				raise ValueError(err)
 	else:
-		seqs = [(r['seq_id'], r[vdj_field], r['v_gene']['full']) for r in results]
+		seqs = [(r['seq_id'], r[vdj_field], r['raw_query'], r['v_gene']['full']) for r in results]
 	logger.info('Found {} sequences\n'.format(len(seqs)))
 	return seqs
 
@@ -196,23 +216,20 @@ def build_seq_db(seqs, args):
 	c.execute('DROP TABLE IF EXISTS seqs')
 	c.execute(create_cmd)
 	c.executemany(insert_cmd, seqs)
-	# logger.info('Indexing the SQLite database...')
-	# start = time.time()
 	c.execute('CREATE INDEX seq_index ON seqs (seq_id)')
-	# logger.info('Indexing took {} seconds'.format(round(time.time() - start, 2)))
 	return c
 
 
 def get_seq_db_creation_cmd(args):
 	if args.uaid:
-		return '''CREATE TABLE seqs (seq_id text, uaid text, vdj_nt text, v_gene text)'''
-	return '''CREATE TABLE seqs (seq_id text, vdj_nt text, v_gene text)'''
+		return '''CREATE TABLE seqs (seq_id text, uaid text, vdj text, raw text, v_gene text)'''
+	return '''CREATE TABLE seqs (seq_id text, vdj text, raw text, v_gene text)'''
 
 
 def get_seq_db_insert_cmd(args):
 	if args.uaid:
-		return 'INSERT INTO seqs VALUES (?,?,?,?)'
-	return 'INSERT INTO seqs VALUES (?,?,?)'
+		return 'INSERT INTO seqs VALUES (?,?,?,?,?)'
+	return 'INSERT INTO seqs VALUES (?,?,?,?)'
 
 
 def remove_sqlite_db(args):
@@ -227,6 +244,47 @@ def parse_germs(germ_file):
 		germs[seq.id] = str(seq.seq).upper()
 	return germs
 
+
+
+
+
+# =========================================
+#
+#           CD-HIT CLUSTERING
+#
+# =========================================
+
+
+def unix_sort_unique(seqs, args):
+	sort_file = make_sort_input(seqs, args)
+	unique_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+	sort_unique_cmd = 'sort -k2,2 -u -o {} {}'.format(unique_file.name, sort_file)
+	p = sp.Popen(sort_unique_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+	p.communicate()
+	fastas = parse_unique_file(unique_file.name)
+	os.unlink(sort_file)
+	os.unlink(unique_file.name)
+	return fastas
+
+
+
+def make_sort_input(seqs, args):
+	sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+	seq_strings = [' '.join(s) for s in seqs]
+	sort_file.write('\n'.join(seq_strings))
+	sort_file.close()
+	return sort_file.name
+
+
+def parse_unique_file(unique_file):
+	fastas = []
+	with open(unique_file) as f:
+		for line in f:
+			if len(line.strip().split()) < 3:
+				continue
+			seq_id, vdj, raw = line.strip().split()
+			fastas.append('>{}\n{}'.format(seq_id, raw))
+	return fastas
 
 
 
@@ -346,7 +404,7 @@ def chunker(l, size=900):
 def get_cluster_seqs(seq_ids, seq_db):
 	seqs = []
 	for chunk in chunker(seq_ids):
-		seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.vdj_nt
+		seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.raw
 								   FROM seqs
 								   WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
 		seqs.extend(seq_chunk)
@@ -554,8 +612,6 @@ def _print_start_info(args):
 
 def _log_params(args):
 	logger.info('')
-	# logger.info('Parameters')
-	# logger.info('----------')
 	logger.info('INPUT DB: {}'.format(args.db))
 	logger.info('OUTPUT DIR: {}'.format(args.output))
 	logger.info('TEMP DIR: {}'.format(args.temp_dir))
@@ -596,7 +652,8 @@ def write_output(collection, fastas, sizes, collection_start_time, args):
 	seq_type = 'consensus' if args.consensus else 'centroid'
 	logger.info('Writing {} sequences to output file...'.format(seq_type))
 	write_fasta_output(collection, fastas, args)
-	write_stats_output(collection, sizes, args)
+	if sizes is not None:
+		write_stats_output(collection, sizes, args)
 	logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
 	logger.info('{} was processed in {} seconds.'.format(collection,
 		round(time.time() - collection_start_time, 2)))
@@ -729,14 +786,19 @@ def main(args):
 	for collection in mongodb.get_collections(db, args.collection):
 		collection_start = time.time()
 		print_collection_info(collection)
-		seq_db = get_seqs(db, collection, args)
-		if args.uaid:
+		if args.non_redundant:
+			seqs = get_seqs(db, collection, args, make_seq_db=False)
+			sequences = unix_sort_unique(seqs, args)
+			sizes = None
+		elif args.uaid:
+			seq_db = get_seqs(db, collection, args)
 			uaid_clusters = cdhit_clustering(seq_db, args)
 			if args.consensus:
 				sequences, sizes = get_consensus(uaid_clusters, germs, args)
 			else:
 				sequences, sizes = get_uaid_centroids(uaid_clusters, args)
 		else:
+			seq_db = get_seqs(db, collection, args)
 			if args.consensus:
 				seq_clusters, sizes = cdhit_clustering(seq_db, args, uaid=False)
 				sequences, sizes = get_consensus(seq_clusters, germs, args)
@@ -751,7 +813,8 @@ def main(args):
 				sequences = filtered_seqs
 				sizes = filtered_sizes
 		write_output(collection, sequences, sizes, collection_start, args)
-		remove_sqlite_db(args)
+		if not args.non_redundant:
+			remove_sqlite_db(args)
 
 
 if __name__ == '__main__':
