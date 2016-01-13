@@ -186,7 +186,8 @@ def query(db, collection, args):
 	# results = coll.find(query, project)
 	results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, vdj_field: 1, 'raw_query': 1})
 	if args.non_redundant:
-		seqs = [(r['seq_id'], r[vdj_field], r['raw_query']) for r in results]
+		# seqs = [(r['seq_id'], r[vdj_field], r['raw_query']) for r in results]
+		return results
 	elif args.uaid:
 		seqs = []
 		for r in results:
@@ -256,35 +257,43 @@ def parse_germs(germ_file):
 
 
 def unix_sort_unique(seqs, args):
-	sort_file = make_sort_input(seqs, args)
+	sort_file, input_count = make_sort_input(seqs, args)
+	logger.info('Found {} sequences'.format(input_count))
 	unique_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
 	sort_unique_cmd = 'sort -k2,2 -u -o {} {}'.format(unique_file.name, sort_file)
+	logger.info('Running sort/uniq...')
 	p = sp.Popen(sort_unique_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 	p.communicate()
-	fastas = parse_unique_file(unique_file.name)
+	# fastas = parse_unique_file(unique_file.name)
 	os.unlink(sort_file)
-	os.unlink(unique_file.name)
-	return fastas
+	# os.unlink(unique_file.name)
+	# return fastas
+	return unique_file.name
 
 
 
 def make_sort_input(seqs, args):
+	vdj_field = 'vdj_aa' if args.aa else 'vdj_nt'
 	sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
-	seq_strings = [' '.join(s) for s in seqs]
-	sort_file.write('\n'.join(seq_strings))
-	sort_file.close()
-	return sort_file.name
+	sort_handle = open(sort_file.name, 'a')
+	count = 0
+	for s in seqs:
+		sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[vdj_field], s['raw_query']))
+		count += 1
+	# seq_strings = [' '.join(s) for s in seqs]
+	# sort_file.write('\n'.join(seq_strings))
+	sort_handle.close()
+	return sort_file.name, count
 
 
-def parse_unique_file(unique_file):
-	fastas = []
-	with open(unique_file) as f:
-		for line in f:
-			if len(line.strip().split()) < 3:
-				continue
-			seq_id, vdj, raw = line.strip().split()
-			fastas.append('>{}\n{}'.format(seq_id, raw))
-	return fastas
+# def parse_unique_file(unique_file):
+# 	with open(unique_file) as f:
+# 		for line in f:
+# 			if len(line.strip().split()) < 3:
+# 				continue
+# 			seq_id, vdj, raw = line.strip().split()
+# 			fastas.append('>{}\n{}'.format(seq_id, raw))
+# 	return fastas
 
 
 
@@ -616,7 +625,12 @@ def _log_params(args):
 	logger.info('OUTPUT DIR: {}'.format(args.output))
 	logger.info('TEMP DIR: {}'.format(args.temp_dir))
 	logger.info('UAIDs: {}'.format(args.uaid))
-	if args.uaid == 0:
+	logger.info('CLUSTERING TYPE: {}'.format('sort/uniq' if args.non_redundant else 'CD-HIT'))
+	if args.non_redundant:
+		logger.info('IDENTITY THRESHOLD: 1.0')
+		logger.info('MIN SEQS: 1')
+		return
+	elif args.uaid == 0:
 		logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
 		logger.info('GERMLINES: {}'.format(args.germs))
 	else:
@@ -655,6 +669,25 @@ def write_output(collection, fastas, sizes, collection_start_time, args):
 	if sizes is not None:
 		write_stats_output(collection, sizes, args)
 	logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
+	logger.info('{} was processed in {} seconds.'.format(collection,
+		round(time.time() - collection_start_time, 2)))
+	logger.info('')
+
+
+def write_nr_output(collection, unique_file, collection_start_time, args):
+	logger.info('Writing non-redundant sequences to output file...')
+	outfile = os.path.join(args.output, '{}_nr.fasta'.format(collection))
+	open(outfile, 'w').write('')
+	ohandle = open(outfile, 'a')
+	count = 0
+	with open(unique_file) as f:
+		for line in f:
+			if len(line.strip().split()) != 3:
+				continue
+			seq_id, vdj, raw = line.strip().split()
+			ohandle.write('>{}\n{}\n'.format(seq_id, raw))
+			count += 1
+	logger.info('{} non-redundant sequences were identified.'.format(count))
 	logger.info('{} was processed in {} seconds.'.format(collection,
 		round(time.time() - collection_start_time, 2)))
 	logger.info('')
@@ -788,8 +821,8 @@ def main(args):
 		print_collection_info(collection)
 		if args.non_redundant:
 			seqs = get_seqs(db, collection, args, make_seq_db=False)
-			sequences = unix_sort_unique(seqs, args)
-			sizes = None
+			unique_file = unix_sort_unique(seqs, args)
+			write_nr_output(collection, unique_file, collection_start, args)
 		elif args.uaid:
 			seq_db = get_seqs(db, collection, args)
 			uaid_clusters = cdhit_clustering(seq_db, args)
@@ -812,8 +845,8 @@ def main(args):
 						filtered_sizes.append(size)
 				sequences = filtered_seqs
 				sizes = filtered_sizes
-		write_output(collection, sequences, sizes, collection_start, args)
 		if not args.non_redundant:
+			write_output(collection, sequences, sizes, collection_start, args)
 			remove_sqlite_db(args)
 
 
