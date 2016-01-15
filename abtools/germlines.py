@@ -13,9 +13,46 @@
 ###########################################################################
 
 
+import os
+import sys
 
-def germlines(species, gene, chain):
-	return germs[species][gene][chain]
+from Bio import SeqIO
+
+from abtools.sequence import Sequence
+
+
+def germline_names(species, segment, chain='all', resolution='allele'):
+	chain_prefixes = _get_chain_prefixes()
+	direc = os.path.dirname(os.path.abspath(__file__))
+	gg_file = os.path.join(direc, 'utils/germline_genes/{}_{}.fasta'.format(species, segment))
+	gene_names = [s.id for s in SeqIO.parse(open(gg_file, 'r'), 'fasta')]
+	gene_names = [g for g in gene_names if g[:3] in chain_prefixes]
+	if resolution == 'family':
+		gene_names = [g.split('-')[0] for g in gene_names]
+	if resolution == 'gene':
+		gene_names = [g.split('*')[0] for g in gene_names]
+	return gene_names
+
+
+def get_germline(gene, species):
+	gene = gene.upper()
+	segment = gene[3]
+	direc = os.path.dirname(os.path.abspath(__file__))
+	gg_file = os.path.join(direc, 'utils/germline_genes/{}_{}.fasta'.format(species, segment))
+	gene = [s for s in SeqIO.parse(open(gg_file, 'r'), 'fasta') if s.id == gene][0]
+	return Sequence(gene)
+
+
+def _get_chain_prefixes():
+	prefixes = {'heavy': ['IGH'],
+				'kappa': ['IGK'],
+				'lambda': ['IKL'],
+				'light': ['IGK', 'IGL'],
+				'all': ['IGH', 'IGK', 'IGL']}
+
+
+def germlines(species, segment, chain):
+	return germs[species][segment][chain]
 
 
 germs = {'human':

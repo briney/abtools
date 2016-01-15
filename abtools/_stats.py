@@ -39,7 +39,7 @@ import seaborn as sns
 
 from pymongo import MongoClient
 
-from abtools.utils import mongodb
+from abtools import mongodb
 
 
 

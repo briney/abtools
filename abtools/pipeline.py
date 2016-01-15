@@ -26,7 +26,7 @@
 import glob
 import os
 
-from abtools.utils import log
+from abtools import log
 
 
 def initialize(log_file, project_dir=None, debug=False):

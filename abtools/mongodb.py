@@ -31,7 +31,7 @@ import subprocess as sp
 
 from pymongo import MongoClient
 
-from abtools.utils import log
+from abtools import log
 
 
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
@@ -90,7 +90,7 @@ def rename_collection(db, collection, new_name):
 	provided and calling the function on the current collection name
 	results in an empty string, the collection will not be renamed.
 	'''
-	if isinstance(new_name, function):
+	if hasattr(new_name, '__call__'):
 		_new = new_name(collection)
 		if _new == '':
 			return

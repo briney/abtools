@@ -47,7 +47,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from abtools.utils import log, mongodb
+from abtools import log, mongodb
 
 
 

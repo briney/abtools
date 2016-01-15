@@ -39,9 +39,9 @@ from Bio import SeqIO
 from Bio import AlignIO
 from Bio.Align import AlignInfo
 
-from abtools.utils import log, mongodb
-from abtools.utils.alignment import muscle
-from abtools.utils.pipeline import make_dir
+from abtools import log, mongodb
+from abtools.alignment import muscle
+from abtools.pipeline import make_dir
 
 
 def parse_args():

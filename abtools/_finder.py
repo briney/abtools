@@ -42,7 +42,7 @@ from Bio import SeqIO
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from abtools.utils import log, mongodb
+from abtools import color, log, mongodb
 
 
 def parse_args():
@@ -70,7 +70,7 @@ def parse_args():
 	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
 						help="The IP address for the MongoDB server.  \
 						Defaults to 'localhost'.")
-	parser.add_argument('-p', '--port', dest='port', default=27017,
+	parser.add_argument('--port', dest='port', default=27017,
 						help="The port for the MongoDB server. Defaults to '27017'.")
 	parser.add_argument('-u', '--user', dest='user', default=None,
 						help="Username for the MongoDB server. Not used if not provided.")
@@ -86,8 +86,8 @@ def parse_args():
 						Options are 'heavy', 'kappa', 'lambda' and 'light'. \
 						Default is 'heavy'.")
 	parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
-						help="Does not update the MongoDB with ab_compare info. \
-						Can save some time if the idenentity calculations aren't needed again.")
+						help="Does not update the MongoDB with AbFinder info. \
+						Can save some time if the identity calculations aren't needed again.")
 	parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
 						help="Use nucleotide sequences for alignment. Default is amino acid sequences. \
 						Ensure standard format matches.")
@@ -100,8 +100,15 @@ def parse_args():
 	parser.add_argument('-Y', '--ymax', dest='y_max', type=int, default=101,
 						help="Maximum Y-axis (mAb identity) value for the AbCompare plot. Default is 101.")
 	parser.add_argument('-g', '--gridsize', dest='gridsize', type=int, default=0,
-						help="Gridsize for the AbCompare plot. \
+						help="Gridsize for the AbFinder hexbin plot. \
 						Default is 36 for amino acid sequences and 50 for nucleotide sequences.")
+	parser.add_argument('--colormap', dest='colormap', default='Blues',
+						help="Colormap to be used in the AbFinder hexbin plots. \
+						Can accept a matplotlib cmap or the name of one of matplotlib's builtin cmaps. \
+						Default is 'Blues'.")
+	parser.add_argument('--mincount', dest='mincount', default=3, type=int,
+						help="Minimum number of sequences in a hexbin for that hexbin to be colored. \
+						Default is 3.")
 	parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
 						help="If set, will write all failed/exception sequences to file \
 						and should give more informative errors.")
@@ -114,8 +121,8 @@ class Args(object):
 				 output=None, temp=None, log=None, cluster=False,
 				 ip='localhost', port=27017, user=None, password=None, update=True,
 				 standard=None, chain='heavy', is_aa=True,
-				 x_min=-1, x_max=35, y_min=65, y_max=101, gridsize=0,
-				 debug=False):
+				 x_min=-1, x_max=35, y_min=65, y_max=101, gridsize=0, mincount=3,
+				 colormap='Blues', debug=False):
 		super(Args, self).__init__()
 		if not all([db, output, temp, standard]):
 			err = 'You must provide a MongoDB database name, output and temp directories, \
@@ -144,6 +151,8 @@ class Args(object):
 		self.y_min = int(y_min)
 		self.y_max = int(y_max)
 		self.gridsize = int(gridsize)
+		mincount = int(mincount)
+		self.colormap = colormap
 		self.debug = bool(debug)
 
 
@@ -227,27 +236,6 @@ def clean_up(files):
 
 
 
-# def get_db(args):
-# 	'''
-# 	Gets a MongoDB database connection object.
-# 	'''
-# 	if args.user and args.password:
-# 		password = urllib.quote_plus(password)
-# 		uri = 'mongodb://{}:{}@{}'.format(args.user, password, args.ip)
-# 		conn = MongoClient(uri)
-# 	else:
-# 		conn = MongoClient(args.ip, 27017)
-# 	return conn[args.db]
-
-
-# def get_collections(db, args):
-# 	if not args.collection:
-# 		subjects = db.collection_names()
-# 		subjects.remove('system.indexes')
-# 		return sorted(subjects)
-# 	return [args.collection, ]
-
-
 def query(db, collection, args):
 	coll = db[collection]
 	chain = get_chain(args)
@@ -256,12 +244,6 @@ def query(db, collection, args):
 	iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
 	vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
 	return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
-
-
-# def ensure_index(db, collection, field):
-# 	print("Indexing '{}' on {}...".format(field, collection))
-# 	coll = db[collection]
-# 	coll.ensure_index(field)
 
 
 def chunker(l, n):
@@ -280,14 +262,6 @@ def update_db(db, standard, scores, collection, args):
 		update(db, collection, group, standard, args)
 		update_progress(i + 1, len(groups))
 	print('')
-	# p = mp.Pool(processes=250)
-	# async_results = []
-	# for group in groups:
-	# 	async_results.append(p.apply_async(update, args=(db, collection, group, standard, args)))
-	# monitor_update(async_results)
-	# [a.get() for a in async_results]
-	# p.close()
-	# p.join()
 	run_time = time.time() - start
 	logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
 		round(len(scores) / run_time, 1)))
@@ -298,8 +272,6 @@ def update(db, collection, data, standard, args):
 	score = data[0]
 	ids = data[1]
 	mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
-	# r = coll.update_many({'seq_id': {'$in': ids}},
-	# 					 {'$push': {mab_id_field: {standard.lower(): float(score)}}})
 	coll.update_many({'seq_id': {'$in': ids}},
 					 {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
 
@@ -326,12 +298,6 @@ def regroup(oldgs):
 	return newgs
 
 
-# def remove_padding(collection):
-# 	c = db[collection]
-# 	print_remove_padding()
-# 	c.update({}, {'$unset': {'padding': ''}}, multi=True)
-
-
 
 
 # ================================================
@@ -351,28 +317,24 @@ def make_figure(standard_id, scores, collection, args):
 	trunc_xy_vals = [v for v in xy_vals if v[0] <= args.x_max and v[1] >= args.y_min]
 	x = [v[0] for v in trunc_xy_vals]
 	y = [v[1] for v in trunc_xy_vals]
-
 	# To make sure the gridsize is correct (since it's based on the actual values)
 	# I need to add a single value near the max and min of each axis.
 	# They're added just outside the visible plot, so there's no effect on the plot.
 	x.extend([args.x_min - 1, args.x_max + 1])
 	y.extend([args.y_min - 1, args.y_max + 1])
-
 	# plot params
+	cmap = color.get_cmap(args.colormap)
 	plt.subplots_adjust(hspace=0.95)
 	plt.subplot(111)
-	plt.hexbin(x, y, bins='log', cmap=mpl.cm.Blues, mincnt=3, gridsize=set_gridsize(args))
+	plt.hexbin(x, y, bins='log', cmap=cmap, mincnt=3, gridsize=set_gridsize(args))
 	plt.title(standard_id, fontsize=18)
-
 	# set and label axes
 	plt.axis([args.x_min, args.x_max, args.y_min, args.y_max])
 	plt.xlabel('Germline divergence')
 	plt.ylabel('{0} identity'.format(standard_id))
-
 	# make and label the colorbar
 	cb = plt.colorbar()
 	cb.set_label('Sequence count (log10)', labelpad=10)
-
 	# save figure and close
 	plt.savefig(fig_file)
 	plt.close()
@@ -419,17 +381,14 @@ def print_collections_info(collections):
 
 def print_single_standard(standard):
 	standard_id_string = '{}'.format(standard.id)
-	# logger.info('-' * len(standard_id_string))
 	logger.info('')
 	logger.info(standard_id_string)
 	logger.info('-' * len(standard_id_string))
-	# logger.info('')
 
 
 def print_single_collection(collection):
 	logger.info('')
 	logger.info('')
-	# logger.info('-' * len(collection))
 	logger.info(collection)
 	logger.info('-' * len(collection))
 
@@ -448,7 +407,6 @@ def print_fig_info():
 
 
 def print_update_info():
-	# logger.info('')
 	logger.info('Updating the MongoDB database with identity scores:')
 
 
@@ -463,7 +421,6 @@ def print_update_info():
 
 
 def run_jobs(files, standard, args):
-	# logger.info('')
 	logger.info('Running AbCompare...')
 	if args.cluster:
 		return _run_jobs_via_celery(files, standard, args)
@@ -512,15 +469,6 @@ def _run_jobs_via_celery(files, standard, args):
 	for f in files:
 		async_results.append(identity.delay(f, standard, args.is_aa))
 	succeeded, failed = monitor_celery_jobs(async_results)
-	# # retry any failed jobs
-	# if failed:
-	# 	retry_results = []
-	# 	log.write('{} jobs failed and will be retried:\n'.format(len(failed)))
-	# 	files_to_retry = [f for i, f in enumerate(files) if async_results[i].failed()]
-	# 	for f in files_to_retry:
-	# 		retry_results.append(run_vdj.delay(f, standard))
-	# 	retry_succeeded, retry_failed = monitor_celery_jobs(retry_results, log)
-	# 	succeeded.extend(retry_succeeded)
 	scores = []
 	for s in succeeded:
 		scores.extend(s.get())
@@ -549,10 +497,6 @@ def update_progress(finished, jobs):
 	pct = int(100. * finished / jobs)
 	ticks = pct / 2
 	spaces = 50 - ticks
-	# if failed:
-	# 	prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
-	# else:
-		# prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
 	prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
 	sys.stdout.write(prog_bar)
 	sys.stdout.flush()
@@ -577,7 +521,6 @@ def main(args):
 	print_abfinder_start()
 	db = mongodb.get_db(args.db, args.ip, args.port,
 		args.user, args.password)
-	# log = args.log if args.log else sys.stdout
 	make_directories(args)
 	standards = get_standards(args)
 	print_standards_info(standards)

@@ -1,6 +1,7 @@
 include README.md
 include docs/*.txt
 include abtools/utils/*
+include abtools/utils/germline_genes/*
 include abtools/utils/matrices/*
 include abtools/queue/*
 # include ab_finder/nw/*

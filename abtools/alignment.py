@@ -38,8 +38,8 @@ import nwalign as nw
 from Bio import AlignIO
 from Bio.SeqRecord import SeqRecord
 
-from abtools.utils.pipeline import list_files
-from abtools.utils.sequence import Sequence
+from abtools.pipeline import list_files
+from abtools.sequence import Sequence
 
 
 
@@ -485,12 +485,12 @@ class NWAlignment(BaseAlignment):
 
 
 	def _get_matrix_file(self, match=None, mismatch=None, matrix=None):
-		matrix_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'matrices')
+		matrix_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'utils/matrices')
 		builtins = ['blosum62', 'match3mismatch2', 'match1mismatch0']
 		if self._matrix is not None:
 			matrix_name = self._matrix
 		else:
-			'match{}mismatch{}'.format(abs(match), abs(mismatch))
+			matrix_name = 'match{}mismatch{}'.format(abs(match), abs(mismatch))
 		if matrix_name.lower() in builtins:
 			return os.path.join(matrix_dir, matrix_name)
 		builtin_names = [os.path.basename(f) for f in list_files(matrix_dir)]

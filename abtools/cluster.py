@@ -36,9 +36,9 @@ import time
 from Bio import SeqIO
 from Bio.Align import AlignInfo
 
-from abtools.utils import log
-from abtools.utils.alignment import mafft
-from abtools.utils.sequence import Sequence
+from abtools import log
+from abtools.alignment import mafft
+from abtools.sequence import Sequence
 
 
 class Cluster(object):

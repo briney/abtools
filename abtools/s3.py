@@ -27,7 +27,7 @@ import os
 import subprocess as sp
 import tarfile
 
-from abtools.utils import log
+from abtools import log
 
 
 def compress_and_upload(data, compressed_file, s3_path,
