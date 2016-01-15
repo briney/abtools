@@ -26,8 +26,8 @@
 from Bio import SeqIO
 
 from abtools.queue.celery import celery
-from abtools.utils.alignment import global_alignment
-from abtools.utils.sequence import Sequence
+from abtools.alignment import global_alignment
+from abtools.sequence import Sequence
 
 
 @celery.task
