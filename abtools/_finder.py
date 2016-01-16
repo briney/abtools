@@ -310,6 +310,7 @@ def regroup(oldgs):
 
 def make_figure(standard_id, scores, collection, args):
 	print_fig_info()
+	sns.set_style('white')
 	fig_file = os.path.join(args.output_dir, '{0}_{1}_{2}.pdf'.format(args.db, collection, standard_id))
 	x = list(scores['germ_divergence'].values)
 	y = list(scores['identity'].values)
