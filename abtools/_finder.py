@@ -42,6 +42,8 @@ from Bio import SeqIO
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+
 from abtools import color, log, mongodb
 
 
