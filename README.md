@@ -42,6 +42,7 @@ Calculate consensus sequences using homology-based clustering, at a threshold of
   
 `abcorrect -d <database_name> -c <collection_name> -t <temp_dir> -o <output_dir> --identity 0.96 --no-uaids --consensus`  
   
+  
 ## AbFinder    
   
 To generate an identity/divergence plot using known antibody sequences in a file named 'known.fasta':    
@@ -55,5 +56,32 @@ Same as above, but without updating the MongoDB database with identity informati
 If known.fasta contains nucleotide sequences (default is amino acid):  
   
 `abfinder -d <database_name> -c <collection_name> -t <temp_dir> -o <output_dir> -d <path/to/known.fasta> --no-update --nucleotide`  
+  
+  
+## AbCompare    
+  
+To compare two MongoDB collections of sequences (collection1 and collection2):  
+  
+`abcompare -d <database_name> -1 collection1 -2 collection2 -o <output_dir>`  
+  
+To iteratively compare collection1 to every other collection in the database:  
+  
+`abcompare -d <database_name> -1 collection1 -o <output_dir>`  
+  
+To iteratively compare collection1 to every other collection in the database that starts with 'abcd':  
+  
+`abcompare -d <database_name> -1 collection1 --collection-prefix abcd -o <output_dir>`  
+  
+To compare two collections (collection1 and collection2) using Jensen-Shannon similarity (default is Marisita-Horn):  
+  
+`abcompare -d <database_name> -1 collection1 -2 collection2 -o <output_dir> --similarity-method jensen-shannon`  
+    
+  
+## AbPhylogeny  
+  
+Generate a phylogenic tree from a FASTA-formatted file of sequences (input.fasta), a root sequence (root.fasta):  
+  
+`abphylogeny -i <path/to/input.fasta> -r <path/to/root.fasta> -o <output_dir>`  
+  
   
   
