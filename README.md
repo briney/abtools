@@ -1,4 +1,4 @@
-# abtools  
+# AbTools  
   
 AbTools is a package of several tools for performing common antibody repertoire analysis functions:  
 `AbCorrect` corrects sequencing errors using either molecular barcodes or homology-based clustering  
