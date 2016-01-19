@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# filename: ab_finder.py
+# filename: _finder.py
 
 
 #
@@ -274,8 +274,11 @@ def update(db, collection, data, standard, args):
 	score = data[0]
 	ids = data[1]
 	mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
-	coll.update_many({'seq_id': {'$in': ids}},
-					 {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
+	# coll.update_many({'seq_id': {'$in': ids}},
+	# 				 {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
+	coll.update({'seq_id': {'$in': ids}},
+				{'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}},
+				multi=True)
 
 
 
@@ -513,7 +516,7 @@ def run(**kwargs):
 
 
 def run_standalone(args):
-	logfile = args.log if args.log else os.path.join(args.output, 'abfinder.log')
+	logfile = args.log if args.log else os.path.join(args.output_dir, 'abfinder.log')
 	log.setup_logging(logfile)
 	global logger
 	logger = log.get_logger('abfinder')
@@ -550,7 +553,7 @@ def main(args):
 
 if __name__ == '__main__':
 	args = parse_args()
-	logfile = args.log if args.log else os.path.join(args.output, 'abfinder.log')
+	logfile = args.log if args.log else os.path.join(args.output_dir, 'abfinder.log')
 	log.setup_logging(logfile)
 	logger = log.get_logger('abfinder')
 	main(args)

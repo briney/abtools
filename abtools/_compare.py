@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# filename: ab_compare.py
+# filename: _compare.py
 
 
 #
@@ -68,7 +68,7 @@ def parse_args():
 						help="Name of the second MongoDB collection to query for comparison. \
 						If not provided, the collection provided by -1 will be iteratively compared with all other collections in the database. \
 						If both -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
-	parser.add_argument('--collection_prefix', dest='collection_prefix', default=None,
+	parser.add_argument('--collection-prefix', dest='collection_prefix', default=None,
 						help="If supplied, will iteratively process only collections beginning with <collection_prefix>.\
 						if '-1' is also provided, it will be iteratively compared with all collections beginning with <collection_prefix>.")
 	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
@@ -83,7 +83,7 @@ def parse_args():
 	parser.add_argument('-I', '--iterations', dest='iterations', type=int, default=1000,
 						help="Number of iterations of the similarity calculation to perform. \
 						Default is 10000.")
-	parser.add_argument('-s', '--similarity_method', dest='method',
+	parser.add_argument('-s', '--similarity-method', dest='method',
 						choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
 						default='marisita-horn',
 						help="The similarity calculation to use. \

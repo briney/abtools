@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# filename: ab_correct.py
+# filename: _correct.py
 
 
 
@@ -101,6 +101,11 @@ def parse_args():
 						Required if building consensus sequences, not required for centroids.")
 	parser.add_argument('--aa', dest='aa', action='store_true', default=False,
 						help="If set, use amino acid sequences for identity-based clustering.")
+	parser.add_argument('--field', dest='field', default='vdj_nt',
+						help="The MongoDB field to be used for clustering. \
+						If using UAIDs, this is the field that will be used to calculate \
+						consensus/centroid sequences. \
+						Default is 'vdj_nt'.")
 	parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
 						help="If set, will run in debug mode.")
 	parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
@@ -116,7 +121,7 @@ class Args(object):
 				 min_seqs=1, identity_threshold=0.975,
 				 uaid=True, parse_uaids=0, non_redundant=False,
 				 consensus=False, only_largest_cluster=False, germs=None,
-				 aa=False, debug=False, sleep=0):
+				 aa=False, field='vdj_nt', debug=False, sleep=0):
 		super(Args, self).__init__()
 		if not all([db, output, temp]):
 			print('\nERROR: Output and temp directories must be provided, \
@@ -140,6 +145,7 @@ class Args(object):
 		self.non_redundant = non_redundant
 		self.germs = germs
 		self.aa = aa
+		self.field = field
 		self.debug = debug
 		self.sleep = int(sleep)
 
@@ -171,30 +177,28 @@ def get_seqs(db, collection, args, make_seq_db=True):
 
 def query(db, collection, args):
 	logger.info('Getting sequences from MongoDB...')
-
-	# query = {'prod': 'yes'}
-	vdj_field = 'vdj_aa' if args.aa else 'vdj_nt'
-	# if args.non_redundant:
-	# 	project = {'_id': 0, 'seq_id': 1, vdj_field: 1, 'raw_query': 1}
-	# else:
-	# 	project = {'_id': 0, 'seq_id': 1, 'raw_query': 1, vdj_field: 1, 'uaid': 1, 'v_gene.full': 1}
-	# 	if args.uaid is not None:
-	# 		project['uaid'] = 1
-	# 	if args.consensus:
-	# 		project['v_gene.full'] = 1
+	seq_field = args.field
 	coll = db[collection]
-	# results = coll.find(query, project)
-	results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, vdj_field: 1, 'raw_query': 1})
+	match = {'prod': 'yes'}
+	project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1}
+	if args.uaid is not None:
+		project['uaid'] = 1
+	if args.consensus:
+		project['v_gene.gene'] = 1
+	results = coll.find(match, project)
+	# results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
 	if args.non_redundant:
-		# seqs = [(r['seq_id'], r[vdj_field], r['raw_query']) for r in results]
 		return results
 	elif args.uaid:
 		seqs = []
 		for r in results:
 			if 'uaid' in r:
-				seqs.append((r['seq_id'], r['uaid'], r[vdj_field], r['raw_query'], r['v_gene']['full']))
+				seqs.append((r['seq_id'], r['uaid'], r[seq_field], r['raw_query'], r['v_gene']['full']))
 			elif args.parse_uaids:
-				seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r[vdj_field], r['raw_query'], r['v_gene']['full']))
+				if args.parse_uaids > 0:
+					seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r[seq_field], r['raw_query'], r['v_gene']['full']))
+				else:
+					seqs.append((r['seq_id'], r['raw_query'][args.parse_uaids:], r[seq_field], r['raw_query'], r['v_gene']['full']))
 			else:
 				err = 'UAID field was not found. '
 				err += 'Ensure that UAIDs are being parsed by AbStar, '
@@ -202,7 +206,7 @@ def query(db, collection, args):
 				err += 'or use the -u option for identity-based clustering.'
 				raise ValueError(err)
 	else:
-		seqs = [(r['seq_id'], r[vdj_field], r['raw_query'], r['v_gene']['full']) for r in results]
+		seqs = [(r['seq_id'], r[seq_field], r['raw_query'], r['v_gene']['full']) for r in results]
 	logger.info('Found {} sequences\n'.format(len(seqs)))
 	return seqs
 
@@ -223,8 +227,8 @@ def build_seq_db(seqs, args):
 
 def get_seq_db_creation_cmd(args):
 	if args.uaid:
-		return '''CREATE TABLE seqs (seq_id text, uaid text, vdj text, raw text, v_gene text)'''
-	return '''CREATE TABLE seqs (seq_id text, vdj text, raw text, v_gene text)'''
+		return '''CREATE TABLE seqs (seq_id text, uaid text, seq text, raw text, v_gene text)'''
+	return '''CREATE TABLE seqs (seq_id text, seq text, raw text, v_gene text)'''
 
 
 def get_seq_db_insert_cmd(args):
@@ -273,12 +277,12 @@ def unix_sort_unique(seqs, args):
 
 
 def make_sort_input(seqs, args):
-	vdj_field = 'vdj_aa' if args.aa else 'vdj_nt'
+	seq_field = args.field
 	sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
 	sort_handle = open(sort_file.name, 'a')
 	count = 0
 	for s in seqs:
-		sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[vdj_field], s['raw_query']))
+		sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[seq_field], s['raw_query']))
 		count += 1
 	# seq_strings = [' '.join(s) for s in seqs]
 	# sort_file.write('\n'.join(seq_strings))
@@ -317,9 +321,9 @@ def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
 		if not uaid:
 			clust_handle = open('{}.clstr'.format(outfile), 'r')
 			sizes = parse_cluster_sizes(clust_handle)
-			seqs = parse_centroids(cent_handle, sizes=sizes)
+			seqs = parse_centroids(cent_handle, seq_db, sizes=sizes)
 		else:
-			seqs = parse_centroids(cent_handle)
+			seqs = parse_centroids(cent_handle, seq_db)
 	else:
 		clust_handle = open('{}.clstr'.format(outfile), 'r')
 		seqs, sizes = parse_clusters(clust_handle, seq_db, args)
@@ -339,7 +343,7 @@ def make_cdhit_input(seq_db, args, uaid=True):
 	if uaid:
 		seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
 	else:
-		seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.vdj_nt FROM seqs''')
+		seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.seq FROM seqs''')
 	for s in seqs:
 		fastas.append('>{}\n{}'.format(s[0], s[1]))
 	infile.write('\n'.join(fastas))
@@ -359,16 +363,22 @@ def do_cdhit(fasta, clust, log, threshold, args):
 
 
 def parse_centroids(centroid_handle, sizes=None):
+	cent_ids = []
 	counter = 0
-	centroids = []
 	for seq in SeqIO.parse(centroid_handle, 'fasta'):
-		if sizes:
-			size = sizes[counter]
-			centroids.append('>{}_{}\n{}'.format(seq.id, size, str(seq.seq)))
-		else:
-			centroids.append('>{}\n{}'.format(seq.id, str(seq.seq)))
-		counter += 1
-	return centroids
+		seq_id = '{}_{}'.format(seq.id, sizes[counter]) if sizes is not None else seq.id
+		cent_ids.append(seq_id)
+	return get_cluster_seqs(cent_ids, seq_db)
+	# counter = 0
+	# centroids = []
+	# for seq in SeqIO.parse(centroid_handle, 'fasta'):
+	# 	if sizes:
+	# 		size = sizes[counter]
+	# 		centroids.append('>{}_{}\n{}'.format(seq.id, size, str(seq.seq)))
+	# 	else:
+	# 		centroids.append('>{}\n{}'.format(seq.id, str(seq.seq)))
+	# 	counter += 1
+	# return centroids
 
 
 def parse_clusters(cluster_handle, seq_db, args):
@@ -547,24 +557,9 @@ def calculate_consensus(cluster, germs, args):
 		alignment = muscle(fasta_string, maxiters=2)
 	else:
 		alignment = muscle(fasta_string, maxiters=1, diags=True)
-
-	# if len(cluster) < 100:
-	# 	alignment = muscle(fasta_string)
-	# elif len(cluster) < 1000:
-	# 	muscle_cline = 'muscle -clwstrict -maxiters 2'
-	# else:
-	# 	muscle_cline = 'muscle -clwstrict -maxiters 1 -diags'
-	# muscle = sp.Popen(str(muscle_cline),
-	# 				  stdin=sp.PIPE,
-	# 				  stdout=sp.PIPE,
-	# 				  stderr=sp.PIPE,
-	# 				  universal_newlines=True,
-	# 				  shell=True)
-	# alignment = muscle.communicate(input=fasta_string)[0]
-	# alignment_string = AlignIO.read(StringIO(alignment), 'clustal')
-
+	ambig = 'N' if 'nt' in args.field else 'X'
 	summary_align = AlignInfo.SummaryInfo(alignment)
-	consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
+	consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
 	consensus = str(consensus).replace('-', '')
 	return (consensus.upper(), len(cluster))
 

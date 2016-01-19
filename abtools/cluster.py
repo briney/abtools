@@ -141,11 +141,8 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
 	'''
 	Perform CD-HIT clustering on a set of sequences.
 
-	Inputs are an iterable of sequences, which can be any of the following:
-		1) a sequence, as a string
-		2) an iterable, formatted as (seq_id, sequence)
-		3) a Biopython SeqRecord object
-		4) an AbTools Sequence object
+	Inputs are an iterable of sequences, which can be in any format that abtools.sequence.Sequence
+	can handle.
 
 	Returns the centroid file name and cluster file name (from CD-HIT).
 	If ::make_db:: is True (default), a SQLite3 connection and database path are also returned.
@@ -165,7 +162,7 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
 																		  threshold)
 	cluster = sp.Popen(cdhit_cmd,
 					   shell=True,
-					   stdout=sp.Pipe,
+					   stdout=sp.PIPE,
 					   stderr=sp.PIPE)
 	stdout, stderr = cluster.communicate()
 	os.unlink(ifile)
@@ -173,27 +170,27 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
 	cfile = ofile + '.clstr'
 	if make_db:
 		logger.info('CD-HIT: building a SQLite3 database')
-		seq_db, db_path = _build_seq_db(seqs, temp_dir=temp_dir)
+		seq_db, db_path = _build_seq_db(seqs, direc=temp_dir)
 		return ofile, cfile, seq_db, db_path
 	return ofile, cfile
 
 
-def parse_clusters(clust_file, seq_db=None):
+def parse_clusters(clust_file, seq_db):
 	'''
 	Parses clustered sequences.
 
-	Inputs are a CD-HIT cluster file (ends with '.clstr') and, optionally a connection to a
+	Inputs are a CD-HIT cluster file (ends with '.clstr') and a connection to a
 	SQLite3 database of sequence IDs and sequences.
 
 	Returns a list of Cluster objects (one per cluster).
 	'''
 	raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
-	return [Cluster(_get_cluster_ids(rc)) for rc in raw_clusters]
+	return [Cluster(rc, seq_db) for rc in raw_clusters]
 
 
 def _make_cdhit_input(seqs, temp_dir):
 	ifile = tempfile.NamedTemporaryFile(dir=temp_dir, delete=False)
-	fastas = [s.fasta() for s in seqs]
+	fastas = [s.fasta for s in seqs]
 	ifile.write('\n'.join(fastas))
 	ifile.close()
 	return ifile.name
@@ -216,6 +213,6 @@ def _build_seq_db(seqs, direc=None):
 	insert_cmd = 'INSERT INTO seqs VALUES (?,?)'
 	c.execute('DROP TABLE IF EXISTS seqs')
 	c.execute(create_cmd)
-	c.executemany(insert_cmd, [(s.id, s.sequence) for s in seqs])
+	c.executemany(insert_cmd, [(str(s.id), str(s.sequence)) for s in seqs])
 	c.execute('CREATE INDEX seq_index ON seqs (id)')
 	return c, db_path
