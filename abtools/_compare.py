@@ -73,6 +73,8 @@ def parse_args():
 						if '-1' is also provided, it will be iteratively compared with all collections beginning with <collection_prefix>.")
 	parser.add_argument('-i', '--ip', dest='ip', default='localhost',
 						help="IP address for the MongoDB server.  Defaults to 'localhost'.")
+	parser.add_argument('--port', dest='port', default=27017, type=int,
+						help="Port for the MongoDB server.  Defaults to 27017.")
 	parser.add_argument('-u', '--user', dest='user', default=None,
 						help="Username for the MongoDB server. Not used if not provided.")
 	parser.add_argument('-p', '--password', dest='password', default=None,
@@ -105,7 +107,7 @@ class Args(object):
 	"""docstring for Args"""
 	def __init__(self, output=None, log=None, db=None,
 				 collection1=None, collection2=None, collection_prefix=None,
-				 ip='localhost', user=None, password=None,
+				 ip='localhost', port=27017, user=None, password=None,
 				 chunksize=100000, iterations=10000,
 				 method='marisita-horn', control_similarity=False,
 				 chain='heavy', debug=False):
@@ -120,6 +122,7 @@ class Args(object):
 		self.collection2 = collection2
 		self.collection_prefix = collection_prefix
 		self.ip = str(ip)
+		self.port = int(port)
 		self.user = user
 		self.password = password
 		self.chunksize = int(chunksize)
@@ -163,16 +166,15 @@ def get_collection_pairs(db, args):
 def index_collections(db, pairs):
 	collections = sorted(list(set([c for tup in pairs for c in tup])))
 	fields = ['chain', 'prod']
-	logging.info('')
-	logging.info('Creating indexes...')
+	logger.info('')
+	logger.info('Creating indexes...')
 	for c in collections:
 		print(c)
-
 		mongodb.index(db, c, fields)
 
 
 def query(db, collection, chain):
-	logger.info('Getting {} sequences from MongoDB...'.format(collection), end='')
+	logger.info('Getting {} sequences from MongoDB...'.format(collection))
 	sys.stdout.flush()
 	c = db[collection]
 	results = c.find({'chain': chain, 'prod': 'yes'},
@@ -528,7 +530,7 @@ def update_progress(finished, jobs, log, failed=None):
 
 
 
-def make_sim_plot(counts, bins, median, ofile):
+def make_sim_plot(counts, bins, median, ofile, output_dir):
 	sns.set_style('white')
 	bin_mdpt = (bins[1] - bins[0]) / 2
 	x = [str(round(b + bin_mdpt, 4)) for b in bins[:-1]]
@@ -563,11 +565,11 @@ def make_sim_plot(counts, bins, median, ofile):
 			color='r',
 			weight='semibold')
 	# save the final figure
-	plt.savefig(os.path.join(args.output, ofile))
+	plt.savefig(os.path.join(output_dir, ofile))
 	plt.close()
 
 
-def write_data(s1, s2, median, counts, bins, similarities, ofile):
+def write_data(s1, s2, median, counts, bins, similarities, ofile, args):
 	bin_midpoints = [b + (bins[1] - bins[0]) / 2 for b in bins]
 	ostring = 'samples: {} and {}'.format(s1, s2)
 	ostring += '\n' + ('=' * len(ostring)) + '\n\n'
@@ -584,13 +586,13 @@ def write_data(s1, s2, median, counts, bins, similarities, ofile):
 	open(ofile, 'w').write(ostring)
 
 
-def write_output(s1, s2, median, counts, bins, similarities, control=False):
+def write_output(s1, s2, median, counts, bins, similarities, args, control=False):
 	ctrl = 'control_' if control else ''
 	m = '{}'.format('divergences' if args.method == 'kullback-leibler' else 'similarities')
 	fig_file = os.path.join(args.output, '{}_{}_{}_{}{}.pdf'.format(s1, s2, args.method, ctrl, m))
 	data_file = os.path.join(args.output, '{}_{}_{}_{}data.txt'.format(s1, s2, args.method, ctrl))
-	make_sim_plot(counts, bins, median, fig_file)
-	write_data(s1, s2, median, counts, bins, similarities, data_file)
+	make_sim_plot(counts, bins, median, fig_file, args.output)
+	write_data(s1, s2, median, counts, bins, similarities, data_file, args)
 
 
 def update_scores(s1, s2, median, scores):
@@ -611,8 +613,7 @@ def update_scores(s1, s2, median, scores):
 
 
 def print_method(method):
-	logger.info('METHOD: {} {}'.format(method.title(),
-		'divergence' if args.method == 'kullback-leibler' else 'similarity'))
+	logger.info('METHOD: {}'.format(method.title()))
 
 
 def print_collection_info(collection):
@@ -696,7 +697,7 @@ def main(args):
 	db = mongodb.get_db(args.db, args.ip, args.port,
 						args.user, args.password)
 	print_method(args.method)
-	pairs = get_collection_pairs(args)
+	pairs = get_collection_pairs(db, args)
 	index_collections(db, pairs)
 	prev1 = None
 	scores = {}
@@ -706,7 +707,7 @@ def main(args):
 		curr1 = s1
 		if prev1 != curr1:
 			print_collection_info(s1)
-			s1_all_vgenes = get_vgenes(db, s1, chain)
+			s1_all_vgenes = get_vgenes(db, s1, args.chain)
 		print_pair_info(s1, s2)
 		s1_vgenes, s2_vgenes = get_vgenes(db, s2, args.chain, prev_data=s1_all_vgenes)
 		logger.info('')
@@ -714,7 +715,7 @@ def main(args):
 		median, counts, bins, similarities = calculate_similarities(s1_vgenes,
 																	s2_vgenes,
 																	args)
-		write_output(s1, s2, median, counts, bins, similarities)
+		write_output(s1, s2, median, counts, bins, similarities, args)
 		scores = update_scores(s1, s2, median, scores)
 		if args.control_similarity:
 			logger.info('')
@@ -722,7 +723,7 @@ def main(args):
 			cmedian, ccounts, cbins, csimilarities = calculate_control_similarities(s1_vgenes,
 																					s2_vgenes,
 																					args)
-			write_output(s1, s2, cmedian, ccounts, cbins, csimilarities)
+			write_output(s1, s2, cmedian, ccounts, cbins, csimilarities, args)
 			cscores = update_scores(s1, s2, cmedian, cscores)
 		prev1 = s1
 	print_final_results(scores)
