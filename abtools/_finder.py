@@ -277,7 +277,7 @@ def update(db, collection, data, standard, args):
 	# coll.update_many({'seq_id': {'$in': ids}},
 	# 				 {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
 	coll.update({'seq_id': {'$in': ids}},
-				{'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}},
+				{'$set': {mab_id_field: {standard.lower(): float(score)}}},
 				multi=True)
 
 
