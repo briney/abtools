@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-# mpl.use('Agg')
+mpl.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 import seaborn as sns
 

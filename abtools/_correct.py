@@ -366,7 +366,8 @@ def parse_centroids(centroid_handle, sizes=None):
 	cent_ids = []
 	counter = 0
 	for seq in SeqIO.parse(centroid_handle, 'fasta'):
-		seq_id = '{}_{}'.format(seq.id, sizes[counter]) if sizes is not None else seq.id
+		# seq_id = '{}_{}'.format(seq.id, sizes[counter]) if sizes is not None else seq.id
+		seq_id = seq.id
 		cent_ids.append(seq_id)
 	return get_cluster_seqs(cent_ids, seq_db)
 	# counter = 0
@@ -447,9 +448,9 @@ def get_uaid_centroids(uaid_clusters, args):
 	centroids = []
 	singletons = [c[0] for c in uaid_clusters if len(c) == 1]
 	for s in singletons:
-		seq_id = s.split('\n')[0]
+		seq_id = s.split('\n')[0].replace('>', '')
 		seq = s.split('\n')[1]
-		centroids.append('>{}_{}\n{}'.format(seq_id, 1, seq))
+		centroids.append('>{}\n{}'.format(seq_id, seq))
 	sizes = [1] * len(centroids)
 	clusters = [c for c in uaid_clusters if len(c) > 1]
 	if args.debug:
@@ -494,7 +495,7 @@ def do_usearch_centroid(uaid_group_seqs, args):
 			   '-maxaccepts', '0',
 			   '-maxrejects', '0',
 			   '-id', '0.9',
-			   '-sizeout',
+			   # '-sizeout',
 			   '-uc', results.name,
 			   '-centroids', centroids.name]
 	p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
@@ -542,7 +543,7 @@ def get_consensus(clusters, germs, args):
 	for r in results:
 		seq = r[0]
 		size = r[1]
-		fastas.append('>{}_{}\n{}'.format(uuid.uuid4(), size, seq))
+		fastas.append('>{}\n{}'.format(uuid.uuid4(), seq))
 	return fastas, [r[1] for r in results]
 
 
