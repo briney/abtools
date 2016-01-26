@@ -23,7 +23,8 @@ config = {
 				'bin/abcorrect',
 				'bin/abfinder',
 				'bin/abphylogeny',
-				'bin/abstats'],
+				'bin/abstats',
+				'bin/ssh_tunnel'],
 	'name': 'abtools',
 	'include_package_data': True
 }

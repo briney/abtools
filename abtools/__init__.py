@@ -1,5 +1,8 @@
+import warnings
+warnings.filterwarnings('ignore')
+
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('Agg', warn=False)
 
 # import _compare as compare
 from _correct import run as correct
