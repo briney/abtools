@@ -132,7 +132,7 @@ def parse_arguments():
 						help='private key file to use for SSH authentication')
 	parser.add_argument('--no-key', action='store_false', dest='look_for_keys', default=True,
 						help="don't look for or use a private key file")
-	parser.add_argument('-P', '--password', dest='readpass', default=False,
+	parser.add_argument('-P', '--password', dest='readpass', default=False, action='store_true',
 						help='Use a password for SSH.')
 	parser.add_argument('-r', '--remote', action='store', required=True, type=str, dest='remote',
 						default=None, metavar='host:port',
