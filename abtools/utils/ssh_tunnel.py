@@ -132,8 +132,8 @@ def parse_arguments():
 						help='private key file to use for SSH authentication')
 	parser.add_argument('--no-key', action='store_false', dest='look_for_keys', default=True,
 						help="don't look for or use a private key file")
-	parser.add_argument('-P', '--password', action='store_true', dest='readpass', default=False,
-						help='read password (for key or password auth) from stdin')
+	parser.add_argument('-P', '--password', dest='password', default=None,
+						help='SSH password')
 	parser.add_argument('-r', '--remote', action='store', required=True, type=str, dest='remote',
 						default=None, metavar='host:port',
 						help='remote host and port to forward to')
@@ -143,15 +143,15 @@ def parse_arguments():
 		parser.error('Remote address required (-r).')
 
 	server_host, server_port = get_host_port(args.ssh_server[0], SSH_PORT)
-	remote_host, remote_port = get_host_port(args.remote, SSH_PORT)
+	remote_host, remote_port = get_host_port(args.remote, args.port)
 	return args, (server_host, server_port), (remote_host, remote_port)
 
 
 def main():
 	args, server, remote = parse_arguments()
-	password = None
-	if args.readpass:
-		password = getpass.getpass('Enter SSH password: ')
+	password = args.password
+	# if args.readpass:
+	# 	password = getpass.getpass('Enter SSH password: ')
 
 	client = paramiko.SSHClient()
 	client.load_system_host_keys()
