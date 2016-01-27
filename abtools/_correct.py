@@ -495,7 +495,7 @@ def do_usearch_centroid(uaid_group_seqs, args):
 			   '-maxaccepts', '0',
 			   '-maxrejects', '0',
 			   '-id', '0.9',
-			   # '-sizeout',
+			   '-sizeout',
 			   '-uc', results.name,
 			   '-centroids', centroids.name]
 	p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
@@ -505,7 +505,7 @@ def do_usearch_centroid(uaid_group_seqs, args):
 	for cent in SeqIO.parse(open(centroids.name, 'r'), 'fasta'):
 		seq_id = cent.id.split(';')[0]
 		size = int(cent.id.split(';')[1].replace('size=', ''))
-		centroid_seqs.append('>{}_{}\n{}'.format(seq_id, size, str(cent.seq)))
+		centroid_seqs.append('>{}\n{}'.format(seq_id, str(cent.seq)))
 		sizes.append(size)
 	if args.only_largest_cluster:
 		cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
