@@ -28,4 +28,4 @@ celery.config_from_object('abtools.queue.celeryconfig')
 
 
 if __name__ == '__main__':
-	celery.start()
+    celery.start()

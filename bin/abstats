@@ -31,6 +31,6 @@ from abtools import _stats as stats
 
 
 if __name__ == '__main__':
-	warnings.filterwarnings("ignore")
-	args = stats.parse_args()
-	stats.run_standalone(args)
+    warnings.filterwarnings("ignore")
+    args = stats.parse_args()
+    stats.run_standalone(args)

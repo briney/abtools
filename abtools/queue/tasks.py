@@ -32,26 +32,26 @@ from abtools.sequence import Sequence
 
 @celery.task
 def identity(f, standard, is_aa, debug=False):
-	seqs = [s for s in SeqIO.parse(open(f, 'r'), 'fasta')]
-	scores = []
-	for s in seqs:
-		seq_id = '_'.join(s.id.split('_')[:-1])
-		germ_identity = float(s.id.split('_')[-1])
-		seq = str(s.seq).upper()
-		matrix = 'blosum62' if is_aa else None
-		aln = global_alignment(seq,
-							  str(standard.seq.upper()),
-							  matrix=matrix,
-							  gap_open=-15,
-							  gap_extend=-2,
-							  score_match=1,
-							  score_mismatch=0,
-							  score_gap_open=0,
-							  score_gap_extend=0,
-							  aa=is_aa)
-		score = aln.score
-		aln_length = min(len(aln.aligned_query.strip('-')), len(aln.aligned_target.strip('-')))
-		norm_score = 100. * score / aln_length
-		norm_score = round(norm_score, 1)
-		scores.append((seq_id, norm_score, germ_identity))
-	return scores
+    seqs = [s for s in SeqIO.parse(open(f, 'r'), 'fasta')]
+    scores = []
+    for s in seqs:
+        seq_id = '_'.join(s.id.split('_')[:-1])
+        germ_identity = float(s.id.split('_')[-1])
+        seq = str(s.seq).upper()
+        matrix = 'blosum62' if is_aa else None
+        aln = global_alignment(seq,
+                              str(standard.seq.upper()),
+                              matrix=matrix,
+                              gap_open=-15,
+                              gap_extend=-2,
+                              score_match=1,
+                              score_mismatch=0,
+                              score_gap_open=0,
+                              score_gap_extend=0,
+                              aa=is_aa)
+        score = aln.score
+        aln_length = min(len(aln.aligned_query.strip('-')), len(aln.aligned_target.strip('-')))
+        norm_score = 100. * score / aln_length
+        norm_score = round(norm_score, 1)
+        scores.append((seq_id, norm_score, germ_identity))
+    return scores

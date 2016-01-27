@@ -31,6 +31,6 @@ from abtools import _phylogeny as phylogeny
 
 
 if __name__ == '__main__':
-	warnings.filterwarnings("ignore")
-	args = phylogeny.parse_args()
-	phylogeny.run_standalone(args)
+    warnings.filterwarnings("ignore")
+    args = phylogeny.parse_args()
+    phylogeny.run_standalone(args)

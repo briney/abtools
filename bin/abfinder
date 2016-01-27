@@ -31,6 +31,6 @@ from abtools import _finder as finder
 
 
 if __name__ == '__main__':
-	warnings.filterwarnings("ignore")
-	args = finder.parse_args()
-	finder.run_standalone(args)
+    warnings.filterwarnings("ignore")
+    args = finder.parse_args()
+    finder.run_standalone(args)

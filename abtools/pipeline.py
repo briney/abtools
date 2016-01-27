@@ -30,38 +30,38 @@ from abtools import log
 
 
 def initialize(log_file, project_dir=None, debug=False):
-	_print_splash()
-	log.setup_logging(log_file, print_log_location=False, debug=debug)
-	logger = log.get_logger('pipeline')
-	if project_dir is not None:
-		logger.info('PROJECT DIRECTORY: {}'.format(project_dir))
-		logger.info('')
-	logger.info('LOG LOCATION: {}'.format(log_file))
-	print('')
-	return logger
+    _print_splash()
+    log.setup_logging(log_file, print_log_location=False, debug=debug)
+    logger = log.get_logger('pipeline')
+    if project_dir is not None:
+        logger.info('PROJECT DIRECTORY: {}'.format(project_dir))
+        logger.info('')
+    logger.info('LOG LOCATION: {}'.format(log_file))
+    print('')
+    return logger
 
 
 def make_dir(d):
-	if not os.path.exists(d):
-		os.makedirs(d)
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 
 def list_files(d):
-	if os.path.isdir(d):
-		expanded_dir = os.path.expanduser(d)
-		files = sorted(glob.glob(expanded_dir + '/*'))
-	else:
-		files = [d, ]
-	return files
+    if os.path.isdir(d):
+        expanded_dir = os.path.expanduser(d)
+        files = sorted(glob.glob(expanded_dir + '/*'))
+    else:
+        files = [d, ]
+    return files
 
 
 def _print_splash():
-	splash = '''     _    _   _____           _       ____  _            _ _            
+    splash = '''     _    _   _____           _       ____  _            _ _            
     / \  | |_|_   _|__   ___ | |___  |  _ \(_)_ __   ___| (_)_ __   ___ 
    / _ \ | '_ \| |/ _ \ / _ \| / __| | |_) | | '_ \ / _ \ | | '_ \ / _ \\
   / ___ \| |_) | | (_) | (_) | \__ \ |  __/| | |_) |  __/ | | | | |  __/
  /_/   \_\_.__/|_|\___/ \___/|_|___/ |_|   |_| .__/ \___|_|_|_| |_|\___|
                                              |_|                        '''
-	print('')
-	print(splash)
-	print('')
+    print('')
+    print(splash)
+    print('')
