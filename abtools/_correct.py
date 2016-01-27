@@ -180,11 +180,11 @@ def query(db, collection, args):
 	seq_field = args.field
 	coll = db[collection]
 	match = {'prod': 'yes'}
-	project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1}
+	project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.gene': 1}
 	if args.uaid is not None:
 		project['uaid'] = 1
-	if args.consensus:
-		project['v_gene.gene'] = 1
+	# if args.consensus:
+	# 	project['v_gene.gene'] = 1
 	results = coll.find(match, project)
 	# results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
 	if args.non_redundant:
