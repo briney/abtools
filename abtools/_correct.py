@@ -180,7 +180,7 @@ def query(db, collection, args):
 	seq_field = args.field
 	coll = db[collection]
 	match = {'prod': 'yes'}
-	project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.gene': 1}
+	project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
 	if args.uaid is not None:
 		project['uaid'] = 1
 	# if args.consensus:
