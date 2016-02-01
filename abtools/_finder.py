@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-from abtools import color, log, mongodb
+from abtools import color, log, mongodb, progbar
 
 
 def parse_args():
@@ -263,9 +263,19 @@ def update_db(db, standard, scores, collection, args):
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
-    for i, group in enumerate(groups):
-        update(db, collection, group, standard, mongo_version, args)
-        update_progress(i + 1, len(groups))
+
+
+
+    p = mp.Pool(processes=250)
+    async_results = []
+    for group in groups:
+        async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
+    monitor_update(async_results)
+    p.close()
+    p.join()
+    # for i, group in enumerate(groups):
+    #     update(db, collection, group, standard, mongo_version, args)
+    #     update_progress(i + 1, len(groups))
     print('')
     run_time = time.time() - start
     logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
@@ -297,8 +307,8 @@ def monitor_update(results):
     while finished < jobs:
         time.sleep(1)
         finished = len([r for r in results if r.ready()])
-        update_progress(finished, jobs)
-    sys.stdout.write('\n')
+        progbar.progress_bar(finished, jobs)
+    progbar.progress_bar(finished, jobs)
 
 
 def regroup(oldgs):
