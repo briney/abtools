@@ -246,7 +246,7 @@ def query(db, collection, args):
     print_query_info()
     iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
     vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
-    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
+    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1}).limit(1000)
 
 
 def chunker(l, n):
@@ -264,19 +264,13 @@ def update_db(db, standard, scores, collection, args):
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
-
-
-
-    p = mp.Pool(processes=250)
+    p = mp.Pool(processes=25)
     async_results = []
     for group in groups:
         async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
     monitor_update(async_results)
     p.close()
     p.join()
-    # for i, group in enumerate(groups):
-    #     update(db, collection, group, standard, mongo_version, args)
-    #     update_progress(i + 1, len(groups))
     print('')
     run_time = time.time() - start
     logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
@@ -289,15 +283,14 @@ def update(db, collection, data, standard, version, args):
     ids = data[1]
     mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
     if int(version.split('.')[0]) < 3:
-        coll.update({'seq_id': {'$in': ids}},
+        result = coll.update({'seq_id': {'$in': ids}},
                     {'$set': {mab_id_field: {standard.lower(): float(score)}}},
                     multi=True)
     else:
         result = coll.update_many({'seq_id': {'$in': ids}},
                          {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
+
         if args.debug:
-            print('')
-            print(ids)
             print('matched: {}'.format(result.matched_count))
             print('modified: {}'.format(result.modified_count))
 
@@ -307,7 +300,7 @@ def monitor_update(results):
     jobs = len(results)
     while finished < jobs:
         time.sleep(1)
-        finished = len([r for r in results if r.ready()])
+        finished = len([r for r in results if r.successful()])
         progbar.progress_bar(finished, jobs)
     progbar.progress_bar(finished, jobs)
 
