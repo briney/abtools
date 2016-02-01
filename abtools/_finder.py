@@ -251,7 +251,7 @@ def query(db, collection, args):
     print_query_info()
     iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
     vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
-    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1}).limit(5000)
+    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
 
 
 def chunker(l, n):
