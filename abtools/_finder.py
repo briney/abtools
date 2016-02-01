@@ -44,7 +44,8 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-from abtools import color, log, mongodb, progbar
+from abtools import color, log, mongodb
+from abtools.utils import progbar
 
 
 def parse_args():
