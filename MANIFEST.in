@@ -10,3 +10,5 @@ include abtools/queue/*
 # include ab_finder/ssw/isotypes/*
 # include ab_correct/germ_dbs/*.db
 # include ab_correct/germ_dbs/fastas/*
+include abtools/phylogeny/*
+include abtools/phylogeny/utils/*

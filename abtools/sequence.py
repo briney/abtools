@@ -32,29 +32,37 @@ class Sequence(object):
     """
     Container for biological (RNA and DNA) sequences.
 
-    ::seq:: can be one of several things:
-        1) a sequence, as a string
+    <seq> can be one of several things:
+        1) a raw sequence, as a string
         2) an iterable, formatted as (seq_id, sequence)
-        3) a dict, containing at least the name (with key = 'seq_id') and a
-            sequence (key = 'vdj_aa' if aa = True, else 'vdj_nt').
+        3) a dict, containing at least the ID (default key = 'seq_id') and a
+            sequence (default key = 'vdj_nt'). Alternate <id_key> and <seq_key>
+            can be provided.
         4) a Biopython SeqRecord object
         5) an AbTools Sequence object
 
-    If ::seq:: is provided as a string, the sequence ID can optionally be
-    provided via ::id::.  If ::seq:: is a string and ::id:: is not provided,
+    If <seq> is provided as a string, the sequence ID can optionally be
+    provided via <id>.  If <seq> is a string and <id> is not provided,
     a random sequence ID will be generated with uuid.uuid4().
 
-    Quality scores can be supplied with ::qual:: or as part of the SeqRecord object.
-    If providing a SeqRecord object with quality scores and quality scores via ::qual::,
-    the ::qual:: scores will override the SeqRecord quality scores.
+    Quality scores can be supplied with <qual> or as part of the SeqRecord object.
+    If providing a SeqRecord object with quality scores and quality scores via <qual>,
+    the <qual> scores will override the SeqRecord quality scores.
 
-    A few notes for comparing Sequence objects:
-        -- Sequence objects are equal only if their sequences and IDs are identical.
-           This means that two sequences without user-supplied IDs won't be equal,
-           because their IDs will have been randomly generated.
-        --
+    If <seq> is a dictionary, typically the result of a MongoDB query, the dictionary
+    can be accessed directly from the Sequence instance. To retrive the value
+    for 'junc_aa' in the instantiating dictionary, you would simply:
+
+        s = Sequence(dict)
+        junc = s['junc_aa']
+
+    A note on comparing Sequence objects:
+    Sequence objects are equal only if their sequences and IDs are identical.
+    This means that two Sequence objects with identical sequences but without
+    user-supplied IDs won't be equal, because their IDs will have been randomly
+    generated.
     """
-    def __init__(self, seq, id=None, qual=None, aa=False):
+    def __init__(self, seq, id=None, qual=None, id_key='seq_id', seq_key='vdj_nt'):
         super(Sequence, self).__init__()
         self._input_sequence = None
         self._input_id = id
@@ -62,12 +70,15 @@ class Sequence(object):
         self.id = None
         self.sequence = None
         self.qual = None
+        self._mongo = None
         self._fasta = None
         self._fastq = None
         self._reverse_complement = None
         self._strand = None
+        self.id_key = id_key
+        self.seq_key = seq_key
 
-        self._process_input(seq, id, qual, aa)
+        self._process_input(seq, id, qual)
 
 
     def __len__(self):
@@ -83,12 +94,10 @@ class Sequence(object):
         return item in self.sequence
 
     def __getitem__(self, key):
-        return Sequence(self.sequence[key],
-                        id=self.id,
-                        qual=self.qual)
+        return self.mongo.get(key, None)
 
     def __setitem__(self, key, val):
-        self.sequence[key] = val
+        self.mongo[key] = val
 
     def __eq__(self, other):
         if hasattr(other, 'sequence'):
@@ -118,6 +127,16 @@ class Sequence(object):
         return self._reverse_complement
 
     @property
+    def mongo(self):
+        if self._mongo is None:
+            self._mongo = {}
+        return self._mongo
+
+    @mongo.setter
+    def mongo(self, val):
+        self._mongo = val
+
+    @property
     def strand(self):
         if self._strand is None:
             self._strand = 'plus'
@@ -141,13 +160,8 @@ class Sequence(object):
               'H': 'D', 'V': 'B', 'N': 'N'}
         return ''.join([rc.get(res, res) for res in self.sequence[::-1]])
 
-    def _clean_input_seq(self):
-        if type(seq) == Sequence:
-            return seq
-        else:
-            return Sequence(seq)
 
-    def _process_input(self, seq, id, qual, aa):
+    def _process_input(self, seq, id, qual):
         if type(seq) in [str, unicode]:
             self.sequence = str(seq).upper()
             self._input_sequence = self.sequence
@@ -178,8 +192,8 @@ class Sequence(object):
             else:
                 self.qual = None
         elif type(seq) == dict:
-            seq_key = 'vdj_aa' if aa else 'vdj_nt'
-            self.id = seq['seq_id']
-            self.sequence = seq[seq_key]
+            self.id = seq[self.id_key]
+            self.sequence = seq[self.seq_key]
             self._input_sequence = self.sequence
             self.qual = qual
+            self._mongo = seq
