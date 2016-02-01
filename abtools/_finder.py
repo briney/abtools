@@ -92,6 +92,8 @@ def parse_args():
     parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
                         help="Does not update the MongoDB with AbFinder info. \
                         Can save some time if the identity calculations aren't needed again.")
+    parser.add_argument('--single-process-update', dest='single_process_update', action='store_true', default=False,
+                        help="Perform the MongoDB update using a single process (without multiprocessing).")
     parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
                         help="Use nucleotide sequences for alignment. Default is amino acid sequences. \
                         Ensure standard format matches.")
@@ -268,7 +270,7 @@ def update_db(db, standard, scores, collection, args):
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
-    if platform.system().lower() == 'darwin':
+    if platform.system().lower() == 'darwin' or args.debug or args.single_process_update:
         for group in groups:
             update(db, collection, group, standard, mongo_version, args)
     else:
