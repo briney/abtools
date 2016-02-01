@@ -26,6 +26,7 @@
 from __future__ import print_function
 
 import multiprocessing as mp
+import platform
 import os
 import subprocess as sp
 import sys
@@ -112,6 +113,8 @@ def parse_args():
     parser.add_argument('--mincount', dest='mincount', default=3, type=int,
                         help="Minimum number of sequences in a hexbin for that hexbin to be colored. \
                         Default is 3.")
+    parser.add_argument('--skip-padding', dest='remove_padding', default=True, action='store_false',
+                        help="If set, will not remove padding field from MongoDB.")
     parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
                         help="If set, will write all failed/exception sequences to file \
                         and should give more informative errors.")
@@ -246,7 +249,7 @@ def query(db, collection, args):
     print_query_info()
     iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
     vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
-    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1}).limit(1000)
+    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1}).limit(5000)
 
 
 def chunker(l, n):
@@ -256,6 +259,7 @@ def chunker(l, n):
 
 
 def update_db(db, standard, scores, collection, args):
+    db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
     print_update_info()
     start = time.time()
     conn = mongodb.get_connection(args.ip, args.port,
@@ -264,20 +268,25 @@ def update_db(db, standard, scores, collection, args):
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
-    p = mp.Pool(processes=25)
-    async_results = []
-    for group in groups:
-        async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
-    monitor_update(async_results)
-    p.close()
-    p.join()
-    print('')
+    if platform.system().lower() == 'darwin':
+        for group in groups:
+            update(db, collection, group, standard, mongo_version, args)
+    else:
+        p = mp.Pool(processes=25)
+        async_results = []
+        for group in groups:
+            async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
+        monitor_update(async_results)
+        p.close()
+        p.join()
+        print('')
     run_time = time.time() - start
     logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
         round(len(scores) / run_time, 1)))
 
 
 def update(db, collection, data, standard, version, args):
+    db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
     coll = db[collection]
     score = data[0]
     ids = data[1]
@@ -300,7 +309,7 @@ def monitor_update(results):
     jobs = len(results)
     while finished < jobs:
         time.sleep(1)
-        finished = len([r for r in results if r.successful()])
+        finished = len([r for r in results if r.ready()])
         progbar.progress_bar(finished, jobs)
     progbar.progress_bar(finished, jobs)
 
@@ -548,8 +557,9 @@ def main(args):
     for collection in collections:
         indexed = False
         print_single_collection(collection)
-        print_remove_padding()
-        mongodb.remove_padding(db, collection)
+        if args.remove_padding:
+            print_remove_padding()
+            mongodb.remove_padding(db, collection)
         seq_files = get_sequences(db, collection, args.temp_dir, args)
         for standard in standards:
             print_single_standard(standard)

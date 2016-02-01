@@ -26,6 +26,7 @@
 from __future__ import print_function
 
 import logging
+import platform
 import os
 import subprocess as sp
 
@@ -48,12 +49,16 @@ def get_connection(ip='localhost', port=27017, user=None, password=None):
     Note that ::user:: and ::password:: are only required when connecting to a
     MongoDB database that has authentication enabled.
     '''
+    if platform.system().lower() == 'darwin':
+    	connect = False
+    else:
+    	connect = True
     if user and password:
     	import urllib
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
-        return MongoClient(uri)
-    return MongoClient(ip, port)
+        return MongoClient(uri, connect=connect)
+    return MongoClient(ip, port, connect=connect)
 
 
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
@@ -70,13 +75,17 @@ def get_db(db, ip='localhost', port=27017, user=None, password=None):
     Note that ::user:: and ::password:: are only required when connecting to a
     MongoDB database that has authentication enabled.
     '''
+    if platform.system().lower() == 'darwin':
+    	connect = False
+    else:
+    	connect = True
     if user and password:
     	import urllib
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
-        conn = MongoClient(uri)
+        conn = MongoClient(uri, connect=connect)
     else:
-        conn = MongoClient(ip, port)
+        conn = MongoClient(ip, port, connect=connect)
     return conn[db]
 
 
