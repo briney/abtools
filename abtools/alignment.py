@@ -276,7 +276,7 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
                                 matrix=matrix,
                                 aa=aa)
         alignments.append(alignment)
-    if len(alignments) == 1:
+    if target is not None:
         return alignments[0]
     return alignments
 
@@ -377,7 +377,7 @@ class BaseAlignment(object):
     def _process_sequence(sequence, aa):
         if type(sequence) == Sequence:
             return sequence
-        return Sequence(sequence, aa=aa)
+        return Sequence(sequence)
 
     def _alignment_midline(self):
         midline = ''

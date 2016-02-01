@@ -34,6 +34,28 @@ from pymongo import MongoClient
 from abtools import log
 
 
+def get_connection(ip='localhost', port=27017, user=None, password=None):
+    '''
+    Returns a pymongo MongoClient object.
+
+    Inputs are the (optional) connection options.
+    Default connection options are:
+        ip: "localhost"
+        port: 27017
+        user: None
+        password: None
+
+    Note that ::user:: and ::password:: are only required when connecting to a
+    MongoDB database that has authentication enabled.
+    '''
+    if user and password:
+    	import urllib
+        pwd = urllib.quote_plus(password)
+        uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
+        return MongoClient(uri)
+    return MongoClient(ip, port)
+
+
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
     '''
     Returns a pymongo Database object.
@@ -48,8 +70,8 @@ def get_db(db, ip='localhost', port=27017, user=None, password=None):
     Note that ::user:: and ::password:: are only required when connecting to a
     MongoDB database that has authentication enabled.
     '''
-    import urllib
     if user and password:
+    	import urllib
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
         conn = MongoClient(uri)

@@ -245,7 +245,7 @@ def query(db, collection, args):
     print_query_info()
     iden_field = 'aa_identity.v' if args.is_aa else 'nt_identity.v'
     vdj_field = 'vdj_aa' if args.is_aa else 'vdj_nt'
-    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1})
+    return coll.find({'chain': {'$in': chain}, 'prod': 'yes'}, {'_id': 0, 'seq_id': 1, iden_field: 1, vdj_field: 1}).limit(1000)
 
 
 def chunker(l, n):
@@ -257,11 +257,14 @@ def chunker(l, n):
 def update_db(db, standard, scores, collection, args):
     print_update_info()
     start = time.time()
+    conn = mongodb.get_connection(args.ip, args.port,
+        args.user, args.password)
+    mongo_version = conn.server_info()['version']
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
     for i, group in enumerate(groups):
-        update(db, collection, group, standard, args)
+        update(db, collection, group, standard, mongo_version, args)
         update_progress(i + 1, len(groups))
     print('')
     run_time = time.time() - start
@@ -269,17 +272,23 @@ def update_db(db, standard, scores, collection, args):
         round(len(scores) / run_time, 1)))
 
 
-def update(db, collection, data, standard, args):
+def update(db, collection, data, standard, version, args):
     coll = db[collection]
     score = data[0]
     ids = data[1]
     mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
-    # coll.update_many({'seq_id': {'$in': ids}},
-    #                  {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
-    coll.update({'seq_id': {'$in': ids}},
-                {'$set': {mab_id_field: {standard.lower(): float(score)}}},
-                multi=True)
-
+    if int(version.split('.')[0]) < 3:
+        coll.update({'seq_id': {'$in': ids}},
+                    {'$set': {mab_id_field: {standard.lower(): float(score)}}},
+                    multi=True)
+    else:
+        result = coll.update_many({'seq_id': {'$in': ids}},
+                         {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}})
+        if args.debug:
+            print('')
+            print(ids)
+            print('matched: {}'.format(result.matched_count))
+            print('modified: {}'.format(result.modified_count))
 
 
 def monitor_update(results):
@@ -450,7 +459,7 @@ def _run_jobs_via_multiprocessing(files, standard, args):
             results.extend(a.get())
         p.close()
         p.join()
-    ids = ['_'.join(r[0].split('_')[:-1]) for r in results]
+    ids = [r[0] for r in results]
     identities = pd.Series([r[1] for r in results], index=ids)
     divergences = pd.Series([100. - r[2] for r in results], index=ids)
     d = {'identity': identities, 'germ_divergence': divergences}
