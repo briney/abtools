@@ -271,8 +271,9 @@ def update_db(db, standard, scores, collection, args):
     g = scores.groupby('identity')
     groups = regroup(g.groups)
     if platform.system().lower() == 'darwin' or args.debug or args.single_process_update:
-        for group in groups:
+        for i, group in enumerate(groups):
             update(db, collection, group, standard, mongo_version, args)
+            progbar.progress_bar(i, len(groups))
     else:
         p = mp.Pool(processes=25)
         async_results = []
@@ -281,7 +282,7 @@ def update_db(db, standard, scores, collection, args):
         monitor_update(async_results)
         p.close()
         p.join()
-        print('')
+    print('')
     run_time = time.time() - start
     logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
         round(len(scores) / run_time, 1)))
