@@ -1,10 +1,10 @@
 from setuptools import setup
 
 config = {
-    'description': 'AbTools',
+    'description': 'Analysis of antibody NGS data',
     'author': 'Bryan Briney',
     'url': 'www.github.com/briney/abtools/',
-    'download_url': 'www.github.com/briney/abtools/',
+    # 'download_url': 'www.github.com/briney/abtools/',
     'author_email': 'briney@scripps.edu',
     'version': '0.1.0',
     'install_requires': ['nose',
