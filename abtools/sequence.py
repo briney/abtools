@@ -45,7 +45,7 @@ class Sequence(object):
     provided via <id>.  If <seq> is a string and <id> is not provided,
     a random sequence ID will be generated with uuid.uuid4().
 
-    Quality scores can be supplied with <qual> or as part of the SeqRecord object.
+    Quality scores can be supplied with <qual> or as part of a SeqRecord object.
     If providing a SeqRecord object with quality scores and quality scores via <qual>,
     the <qual> scores will override the SeqRecord quality scores.
 
@@ -55,6 +55,23 @@ class Sequence(object):
 
         s = Sequence(dict)
         junc = s['junc_aa']
+
+    If <seq> is a dictionary, an optional <id_key> and <seq_key> can be provided,
+    which tells the Sequence object which field to use to populate Sequence.id and
+    Sequence.sequence. Defaults are id_key='seq_id' and seq_key='vdj_nt'.
+
+    If the Sequence is instantiated with a dictionary, calls to __contains__() will
+    return True if the supplied item is a key in the dictionary. In non-dict instantiations,
+    __contains__() will look in the Sequence.sequence field directly (essentially a
+    motif search). For example:
+
+        dict_seq = Sequence({'seq_id': 'seq1', 'vdj_nt': 'ACGT'})
+        'seq_id' in dict_seq --> TRUE
+        'ACG' in dict_seq --> FALSE
+
+        str_seq = Sequence('ACGT', id='seq1')
+        'ACG' in str_seq --> TRUE
+        'seq_id' in str_seq --> FALSE
 
     A note on comparing Sequence objects:
     Sequence objects are equal only if their sequences and IDs are identical.
@@ -91,6 +108,8 @@ class Sequence(object):
         return ''.join(reversed(self.sequence))
 
     def __contains__(self, item):
+        if self._mongo is not None:
+            return item in self._mongo.keys()
         return item in self.sequence
 
     def __getitem__(self, key):
@@ -101,7 +120,7 @@ class Sequence(object):
 
     def __eq__(self, other):
         if hasattr(other, 'sequence'):
-            return self.sequence == other.sequence
+            return all([self.sequence == other.sequence, self.id == other.id])
         return False
 
 
@@ -151,6 +170,18 @@ class Sequence(object):
         if end is None:
             end = len(self.sequence)
         return '>{}\n{}'.format(self.id, self.sequence[start:end])
+
+
+    def keys(self):
+        return self.mongo.keys()
+
+
+    def values(self):
+        return self.mongo.values()
+
+
+    def get(self, key, default=None):
+        return self.mongo.get(key, default)
 
 
     def _get_reverse_complement(self):

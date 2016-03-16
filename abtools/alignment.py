@@ -30,6 +30,7 @@ import os
 from StringIO import StringIO
 import subprocess as sp
 import tempfile
+import traceback
 
 from skbio.alignment import StripedSmithWaterman
 
@@ -38,6 +39,7 @@ import nwalign as nw
 from Bio import AlignIO
 from Bio.SeqRecord import SeqRecord
 
+from abtools import log
 from abtools.pipeline import list_files
 from abtools.sequence import Sequence
 
@@ -232,15 +234,18 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matr
         targets = [target, ]
     alignments = []
     for t in targets:
-        alignment = SSWAlignment(query=query,
-                                 target=t,
-                                 match=match,
-                                 mismatch=mismatch,
-                                 matrix=matrix,
-                                 gap_open=gap_open_penalty,
-                                 gap_extend=gap_extend_penalty,
-                                 aa=aa)
-        alignments.append(alignment)
+        try:
+            alignment = SSWAlignment(query=query,
+                                     target=t,
+                                     match=match,
+                                     mismatch=mismatch,
+                                     matrix=matrix,
+                                     gap_open=gap_open_penalty,
+                                     gap_extend=gap_extend_penalty,
+                                     aa=aa)
+            alignments.append(alignment)
+        except IndexError:
+            continue
     if len(alignments) == 1:
         return alignments[0]
     return alignments

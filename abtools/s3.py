@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# filename: scpcr_demultiplexing.py
+# filename: s3.py
 
 
 #
