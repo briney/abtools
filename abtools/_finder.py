@@ -296,7 +296,7 @@ def update(db, collection, data, standard, version, args):
     mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
     if int(version.split('.')[0]) < 3:
         result = coll.update({'seq_id': {'$in': ids}},
-                    {'$set': {mab_id_field: {standard.lower(): float(score)}}},
+                    {'$set': {'{}.{}'.format(mab_id_field, standard.lower()): float(score)}},
                     multi=True)
     else:
         result = coll.update_many({'seq_id': {'$in': ids}},

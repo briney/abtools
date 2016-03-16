@@ -20,7 +20,10 @@ from celery import Celery
 
 
 # instantiate Celery object
-celery = Celery(include=['queue.tasks'])
+celery = Celery(include=['queue.tasks',
+                         'abstar.utils.vdj',
+                         'clonify.clonify.clonify_map',
+                         'clonify.clonify.clonify_reduce', ])
 
 
 # import celery config file
