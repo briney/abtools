@@ -23,6 +23,7 @@
 #
 
 
+from collections import OrderedDict
 import uuid
 
 from Bio.SeqRecord import SeqRecord
@@ -205,6 +206,7 @@ class Sequence(object):
             self.sequence = seq.sequence
             self._input_sequence = self.sequence
             self.qual = seq.qual
+            self._mongo = seq._mongo
         elif type(seq) in [list, tuple]:
             self.id = str(seq[0])
             self.sequence = str(seq[1]).upper()
@@ -222,7 +224,7 @@ class Sequence(object):
                 self.qual = seq.letter_annotations['solexa_quality']
             else:
                 self.qual = None
-        elif type(seq) == dict:
+        elif type(seq) in [dict, OrderedDict]:
             self.id = seq[self.id_key]
             self.sequence = seq[self.seq_key]
             self._input_sequence = self.sequence
