@@ -46,12 +46,18 @@ def make_dir(d):
         os.makedirs(d)
 
 
-def list_files(d):
+def list_files(d, extension=None):
     if os.path.isdir(d):
         expanded_dir = os.path.expanduser(d)
         files = sorted(glob.glob(expanded_dir + '/*'))
     else:
         files = [d, ]
+    if extension is not None:
+        if type(extension) in [str, unicode]:
+            extension = [extension, ]
+        files = [f for f in files if any([f.split('.')[-1] in extension,
+                                          f.split('.')[-1].upper() in extension,
+                                          f.split('.')[-1].lower() in extension])]
     return files
 
 

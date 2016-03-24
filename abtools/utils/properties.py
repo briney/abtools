@@ -32,4 +32,13 @@ def lazy_property(fn):
             setattr(self, attr_name, fn(self))
         return getattr(self, attr_name)
 
+    @_lazy_property.deleter
+    def _lazyprop(self):
+        if hasattr(self, attr_name):
+            delattr(self, attr_name)
+
+    @_lazy_property.setter
+    def _lazyprop(self, value):
+        setattr(self, attr_name, value)
+
     return _lazy_property
