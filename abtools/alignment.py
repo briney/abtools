@@ -36,7 +36,7 @@ from skbio.alignment import StripedSmithWaterman
 
 import nwalign as nw
 
-from Bio import AlignIO
+from Bio import AlignIO, pairwise2
 from Bio.SeqRecord import SeqRecord
 
 from abtools import log
@@ -194,7 +194,7 @@ def _get_fasta_string(sequences):
 
 
 def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matrix=None,
-    gap_open_penalty=5, gap_extend_penalty=2, aa=False):
+        gap_open_penalty=5, gap_extend_penalty=2, aa=False):
     '''
     Wrapper for SSWAlignment, which performs fast Striped Smith-Waterman local pairwise alignment
 
@@ -251,6 +251,62 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matr
     return alignments
 
 
+def local_alignment_biopython(query, target=None, targets=None, match=3, mismatch=-2, matrix=None,
+        gap_open_penalty=-5, gap_extend_penalty=-2, aa=False):
+    '''
+    Wrapper for Biopython's pairwise2 local alignment
+
+    Input: query and target sequences
+    Returns: a single BiopythonAlignment object or a list of multiple BiopythonAlignment objects
+
+    Sequences can be one of four things:
+        1) a nucleotide or amino acid sequence, as a string
+        2) a Biopython SeqRecord object
+        3) a AbTools Sequence object
+        4) an iterable of the format (seq_id, sequence)
+
+    ::query:: a single sequence
+
+    ::target:: a single sequence, as a string
+        or
+    ::targets:: an iterable containing one or more sequences as strings
+
+    default scoring parameters:
+        match = 3
+        mismatch = -2
+        gap_open = -5
+        gap_extend = -2
+    Note that mismatch, gap_open and gap_extend penalties should all be negative.
+
+    For protein sequences, set ::aa:: to True and optionally provide a scoring matrix.
+    ::matrix:: can be one of two things:
+        1) the name of a built-in matrix (current options are 'blosum62' and 'pam250')
+        2) a 2D dict containing match scores for each residue pair (either aa or nt)
+    '''
+    if not target and not targets:
+        err = 'ERROR: You must supply a target sequence (or sequences).'
+        raise RuntimeError(err)
+    if target:
+        targets = [target, ]
+    alignments = []
+    for t in targets:
+        try:
+            alignment = alignment = BiopythonAlignment(query=query,
+                                                       target=t,
+                                                       match=match,
+                                                       mismatch=mismatch,
+                                                       matrix=matrix,
+                                                       gap_open=gap_open_penalty,
+                                                       gap_extend=gap_extend_penalty,
+                                                       aa=aa)
+            alignments.append(alignment)
+        except IndexError:
+            continue
+    if len(alignments) == 1:
+        return alignments[0]
+    return alignments
+
+
 def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap_open=-5, gap_extend=-2,
         score_match=None, score_mismatch=None, score_gap_open=None,
         score_gap_extend=None, matrix=None, aa=False):
@@ -289,7 +345,7 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
 class BaseAlignment(object):
     """docstring for BaseAlignment"""
     def __init__(self, query, target, matrix,
-        match, mismatch, gap_open, gap_extend, aa):
+            match, mismatch, gap_open, gap_extend, aa):
         super(BaseAlignment, self).__init__()
         self.query = self._process_sequence(query, aa=aa)
         self.target = self._process_sequence(target, aa=aa)
@@ -418,7 +474,7 @@ class SSWAlignment(BaseAlignment):
     local_aln == global_aln and local_aln > global_aln.
     """
     def __init__(self, query, target, match=3, mismatch=-2, matrix=None,
-        gap_open=5, gap_extend=2, aa=False):
+            gap_open=5, gap_extend=2, aa=False):
         super(SSWAlignment, self).__init__(query, target, matrix,
             match, mismatch, gap_open, gap_extend, aa)
 
@@ -442,6 +498,44 @@ class SSWAlignment(BaseAlignment):
                                        substitution_matrix=self._matrix,
                                        protein=self._aa)
         return aligner(self.target.sequence)
+
+
+class BiopythonAlignment(BaseAlignment):
+    """docstring for BiopythonAlignment"""
+    def __init__(self, query, target, match=3, mismatch=-2, matrix=None,
+            gap_open=5, gap_extend=2, aa=False):
+        super(BiopythonAlignment, self).__init__(query, target, matrix,
+            match, mismatch, gap_open, gap_extend, aa)
+
+        self.alignment_type = 'local'
+        self._aln = self._align()
+        aln_query, aln_target, score, begin, end = self._aln
+        self.aligned_query = aln_query[begin:end]
+        self.aligned_target = aln_target[begin:end]
+        self.alignment_midline = self._alignment_midline()
+        self.score = score
+        self.query_begin = self._get_begin_pos(aln_query, begin)
+        self.query_end = self._get_end_pos(aln_query, end)
+        self.target_begin = self._get_begin_pos(aln_target, begin)
+        self.target_end = self._get_end_pos(aln_target, end)
+
+    def _align(self):
+        aln = pairwise2.align.localms(self.query.sequence,
+                                      self.target.sequence,
+                                      self._match,
+                                      self._mismatch,
+                                      self._gap_open,
+                                      self._gap_extend)
+        return aln[0]
+
+
+    def _get_begin_pos(self, seq, begin):
+        dashes = seq.count('-', 0, begin)
+        return begin - dashes
+
+
+    def _get_end_pos(self, seq, end):
+        return len(seq[:end].replace('-', ''))
 
 
 class NWAlignment(BaseAlignment):
