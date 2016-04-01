@@ -597,11 +597,11 @@ class NWAlignment(BaseAlignment):
             return os.path.join(matrix_dir, matrix_name)
         builtin_names = [os.path.basename(f) for f in list_files(matrix_dir)]
         if self._matrix is not None:
-            if self._matrix.lower() in builtin_namess:
+            if self._matrix.lower() in builtin_names:
                 return os.path.join(matrix_dir, self._matrix.lower())
             else:
-                err = 'The supplied matrix name ({}) does not exist.'.format(matrix)
-                err += 'Built-in matrices are: '.format(', '.join(builtins))
+                err = 'The supplied matrix name ({}) does not exist. '.format(matrix)
+                err += 'Built-in matrices are: {}'.format(', '.join(builtins))
                 raise RuntimeError(err)
         else:
             self._build_matrix_from_params(match, mismatch)
