@@ -109,7 +109,8 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
 
 
 def muscle(sequences=None, alignment_file=None, fasta=None,
-    fmt='fasta', as_file=False, maxiters=None, diags=False):
+    fmt='fasta', as_file=False, maxiters=None, diags=False,
+    gap_open=None, gap_extend=None):
     '''
     Performs multiple sequence alignment with MUSCLE
 
@@ -144,6 +145,8 @@ def muscle(sequences=None, alignment_file=None, fasta=None,
         muscle_cline += ' -maxiters {}'.format(maxiters)
     if diags:
         muscle_cline += ' -diags'
+    if all([gap_open is not None, gap_extend is not None]):
+        muscle_cline += ' -gapopen {} -gapextend {}'.format(gap_open, gap_extend)
     muscle = sp.Popen(str(muscle_cline),
                       stdin=sp.PIPE,
                       stdout=sp.PIPE,

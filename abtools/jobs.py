@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# filename: properties.py
+# filename: alignment.py
 
 
 #
@@ -22,23 +22,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+from __future__ import print_function
 
-def lazy_property(fn):
-    attr_name = '_lazy_' + fn.__name__
+from abtools.utils import progbar
 
-    @property
-    def _lazy_property(self):
-        if not hasattr(self, attr_name):
-            setattr(self, attr_name, fn(self))
-        return getattr(self, attr_name)
 
-    @_lazy_property.deleter
-    def _lazyprop(self):
-        if hasattr(self, attr_name):
-            delattr(self, attr_name)
+def monitor_mp_jobs(results):
+    finished = 0
+    jobs = len(results)
+    while finished < jobs:
+        time.sleep(1)
+        ready = [ar for ar in results if ar.ready()]
+        finished = len(ready)
+        progbar.progress_bar(finished, jobs)
+    print('')
 
-    @_lazy_property.setter
-    def _lazyprop(self, value):
-        setattr(self, attr_name, value)
 
-    return _lazy_property
+def monitor_celery_jobs(results):
+    finished = 0
+    jobs = len(results)
+    while finished < jobs:
+        time.sleep(1)
+        succeeded = [ar for ar in results if ar.successful()]
+        failed = [ar for ar in results if ar.failed()]
+        finished = len(succeeded) + len(failed)
+        progbar.progress_bar(finished, jobs)
+    print('')

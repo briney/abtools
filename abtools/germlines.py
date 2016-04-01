@@ -22,7 +22,7 @@ from abtools.sequence import Sequence
 
 
 def germline_names(species, segment, chain='all', resolution='allele'):
-    chain_prefixes = _get_chain_prefixes()
+    chain_prefixes = _get_chain_prefixes(chain)
     direc = os.path.dirname(os.path.abspath(__file__))
     gg_file = os.path.join(direc, 'utils/germline_genes/{}_{}.fasta'.format(species, segment))
     gene_names = [s.id for s in SeqIO.parse(open(gg_file, 'r'), 'fasta')]
@@ -43,12 +43,13 @@ def get_germline(gene, species):
     return Sequence(gene)
 
 
-def _get_chain_prefixes():
+def _get_chain_prefixes(chain):
     prefixes = {'heavy': ['IGH'],
                 'kappa': ['IGK'],
                 'lambda': ['IKL'],
                 'light': ['IGK', 'IGL'],
                 'all': ['IGH', 'IGK', 'IGL']}
+    return prefixes[chain]
 
 
 def germlines(species, segment, chain):
