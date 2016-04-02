@@ -209,7 +209,7 @@ def mongoimport(json, database,
         stdout, stderr = mongo.communicate()
 
 
-def index(db, collection, fields, directions=None, desc=False):
+def index(db, collection, fields, directions=None, desc=False, background=False):
     '''
     Builds a simple (single field) or complex (multiple fields) index
     on a single collection in a MongoDB database.
@@ -233,7 +233,7 @@ def index(db, collection, fields, directions=None, desc=False):
         directions = [_dir] * len(fields)
     field_tuples = zip(fields, directions)
     coll = db[collection]
-    coll.create_index(field_tuples)
+    coll.create_index(field_tuples, background=background)
 
 
 def remove_padding(db, collection, field='padding'):
