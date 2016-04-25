@@ -55,29 +55,40 @@ from abtools.sequence import Sequence
 
 def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=-1, as_file=False):
     '''
-    Performs multiple sequence alignment with MAFFT
+    Performs multiple sequence alignment with MAFFT.
 
-    MAFFT must be installed for this to work
+    MAFFT is a required dependency.
 
-    Input: sequences to be aligned, or a FASTA file of sequences to be aligned
-    Returns: A biopython AlignIO object, or path to the alignment file (if ::as_file::)
+    Args:
 
-    ::sequences:: can be one of four different things:
-        1) a FASTA-formatted string of sequences
-        2) a list of Biopython SeqRecord objects
-        3) a list of AbTools Sequence objects
-        4) a list of lists/tuples, of the format (seq_id, sequence)
+        sequences (list): Sequences to be aligned. ``sequences`` can be one of four things:
 
-    ::fasta:: can be used to provide a FASTA-formatted file of sequences
-    instead of providing ::sequences::
+            1. a FASTA-formatted string
+            2. a list of BioPython ``SeqRecord`` objects
+            3. a list of AbTools ``Sequence`` objects
+            4 a list of lists/tuples, of the format ``[sequence_id, sequence]``
 
-    ::threads:: is the number of threads that MAFFT should use.
-    Default is -1, which uses all available cores.
+        alignment_file (str): Path for the output alignment file. If not supplied,
+            a name will be generated using ``tempfile.NamedTemporaryFile()``.
 
-    If a name for the alignment file is not provided (via ::alignment_file::),
-    a NamedTemporaryFile will be used
+        fasta (str): Path to a FASTA-formatted file of sequences. Used as an
+            alternative to ``sequences`` when suppling a FASTA file.
 
-    Options for alignment output format (::fmt::) are "fasta" and "clustal".
+        fmt (str): Format of the alignment. Options are 'fasta' and 'clustal'. Default
+            is 'fasta'.
+
+        threads (int): Number of threads for MAFFT to use. Default is ``-1``, which
+            results in MAFFT using ``multiprocessing.cpu_count()`` threads.
+
+        as_file (bool): If ``True``, returns a path to the alignment file. If ``False``,
+            returns a BioPython ``MultipleSeqAlignment`` object (obtained by calling
+            ``Bio.AlignIO.read()`` on the alignment file).
+
+    Returns:
+
+        Returns a BioPython ``MultipleSeqAlignment`` object, unless ``as_file`` is ``True``,
+            in which case the path to the alignment file is returned.
+
     '''
     if sequences:
         fasta_string = _get_fasta_string(sequences)
@@ -112,26 +123,49 @@ def muscle(sequences=None, alignment_file=None, fasta=None,
     fmt='fasta', as_file=False, maxiters=None, diags=False,
     gap_open=None, gap_extend=None):
     '''
-    Performs multiple sequence alignment with MUSCLE
+    Performs multiple sequence alignment with MUSCLE.
 
-    MUSCLE must be installed for this to work
+    MUSCLE is a required dependency.
 
-    Input: sequences to be aligned, or a FASTA file of sequences to be aligned
-    Returns: A biopython AlignIO object, or path to the alignment file (if ::as_file::)
+    Args:
 
-    ::sequences:: can be one of four different things:
-        1) a FASTA-formatted string of sequences
-        2) a list of Biopython SeqRecord objects
-        3) a list of AbTools Sequence objects
-        4) a list of lists/tuples, of the format (seq_id, sequence)
+        sequences (list): Sequences to be aligned. ``sequences`` can be one of four things:
 
-    ::fasta:: can be used to provide a FASTA-formatted file of sequences
-    instead of providing ::sequences::
+            1. a FASTA-formatted string
+            2. a list of BioPython ``SeqRecord`` objects
+            3. a list of AbTools ``Sequence`` objects
+            4 a list of lists/tuples, of the format ``[sequence_id, sequence]``
 
-    If a name for the alignment file is not provided (via ::alignment_file::),
-    a NamedTemporaryFile will be used
+        alignment_file (str): Path for the output alignment file. If not supplied,
+            a name will be generated using ``tempfile.NamedTemporaryFile()``.
 
-    Options for alignment output format (::fmt::) are "fasta" and "clustal".
+        fasta (str): Path to a FASTA-formatted file of sequences. Used as an
+            alternative to ``sequences`` when suppling a FASTA file.
+
+        fmt (str): Format of the alignment. Options are 'fasta' and 'clustal'. Default
+            is 'fasta'.
+
+        threads (int): Number of threads for MAFFT to use. Default is ``-1``, which
+            results in MAFFT using ``multiprocessing.cpu_count()`` threads.
+
+        as_file (bool): If ``True``, returns a path to the alignment file. If ``False``,
+            returns a BioPython ``MultipleSeqAlignment`` object (obtained by calling
+            ``Bio.AlignIO.read()`` on the alignment file).
+
+        maxiters (int): Passed directly to MUSCLE using the ``-maxiters`` flag.
+
+        diags (int): Passed directly to MUSCLE using the ``-diags`` flag.
+
+        gap_open (float): Passed directly to MUSCLE using the ``-gapopen`` flag. Ignored
+            if ``gap_extend`` is not also provided.
+
+        gap_extend (float): Passed directly to MUSCLE using the ``-gapextend`` flag. Ignored
+            if ``gap_open`` is not also provided.
+
+    Returns:
+
+        Returns a BioPython ``MultipleSeqAlignment`` object, unless ``as_file`` is ``True``,
+            in which case the path to the alignment file is returned.
     '''
     if sequences:
         fasta_string = _get_fasta_string(sequences)
@@ -196,36 +230,57 @@ def _get_fasta_string(sequences):
 
 
 
-def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matrix=None,
-        gap_open_penalty=5, gap_extend_penalty=2, aa=False):
+def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
+        gap_open_penalty=5, gap_extend_penalty=2, matrix=None, aa=False):
     '''
-    Wrapper for SSWAlignment, which performs fast Striped Smith-Waterman local pairwise alignment
+    Striped Smith-Waterman local pairwise alignment.
 
-    Input: query and target sequences
-    Returns: a single SSWAlignment object or a list of multiple SSWAlignment objects
+    Args:
 
-    Sequences can be one of four things:
-        1) a nucleotide or amino acid sequence, as a string
-        2) a Biopython SeqRecord object
-        3) a AbTools Sequence object
-        4) an iterable of the format (seq_id, sequence)
+        query: Query sequence. ``query`` can be one of four things:
 
-    ::query:: a single sequence
+            1. a nucleotide or amino acid sequence, as a string
+            2. a Biopython ``SeqRecord`` object
+            3. an AbTools ``Sequence`` object
+            4. a list/tuple of the format ``[seq_id, sequence]``
 
-    ::target:: can be one of two things:
-        1) a single sequence, as a string
-        2) an iterable containing one or more sequences as strings
+        target: A single target sequence. ``target`` can be anything that
+            ``query`` accepts.
 
-    default scoring parameters:
-        match = 3
-        mismatch = -2
-        gap_open = 5
-        gap_extend = 2
+        targets (list): A list of target sequences, to be proccssed iteratively.
+            Each element in the ``targets`` list can be anything accepted by
+            ``query``.
 
-    For protein sequences, set ::aa:: to True and optionally provide a scoring matrix.
-    ::matrix:: can be one of two things:
-        1) the name of a built-in matrix (current options are 'blosum62' and 'pam250')
-        2) a 2D dict containing match scores for each residue pair (either aa or nt)
+        match (int): Match score. Should be a positive integer. Default is 3.
+
+        mismatch (int): Mismatch score. Should be a negative integer. Default is -2.
+
+        gap_open_penalty (int): Penalty for opening gaps. Should be a positive integer.
+            Default is 5.
+
+        gap_extend_penalty (int): Penalty for extending gaps. Should be a positive
+            integer. Default is 2.
+
+        matrix (str, dict): Alignment scoring matrix. Two options for passing the
+            alignment matrix:
+
+                1. The name of a built-in matrix. Current options are ``blosum62``
+                    and ``pam250``.
+
+                2. A nested dictionary, giving an alignment score for each residue
+                    pair. Should be formatted such that retrieving the alignment
+                    score for A and G is accomplished by::
+
+                        matrix['A']['G']
+
+        aa (bool): Must be set to ``True`` if aligning amino acid sequences. Default
+            is ``False``.
+
+    Returns:
+
+        If a single target sequence is provided (via ``target``), a single ``SSWAlignment``
+        object will be returned. If multiple target sequences are supplied (via ``targets``),
+        a list of ``SSWAlignment`` objects will be returned.
     '''
     if aa and not matrix:
         err = 'ERROR: You must supply a scoring matrix for amino acid alignments'
@@ -256,36 +311,6 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2, matr
 
 def local_alignment_biopython(query, target=None, targets=None, match=3, mismatch=-2, matrix=None,
         gap_open_penalty=-5, gap_extend_penalty=-2, aa=False):
-    '''
-    Wrapper for Biopython's pairwise2 local alignment
-
-    Input: query and target sequences
-    Returns: a single BiopythonAlignment object or a list of multiple BiopythonAlignment objects
-
-    Sequences can be one of four things:
-        1) a nucleotide or amino acid sequence, as a string
-        2) a Biopython SeqRecord object
-        3) a AbTools Sequence object
-        4) an iterable of the format (seq_id, sequence)
-
-    ::query:: a single sequence
-
-    ::target:: a single sequence, as a string
-        or
-    ::targets:: an iterable containing one or more sequences as strings
-
-    default scoring parameters:
-        match = 3
-        mismatch = -2
-        gap_open = -5
-        gap_extend = -2
-    Note that mismatch, gap_open and gap_extend penalties should all be negative.
-
-    For protein sequences, set ::aa:: to True and optionally provide a scoring matrix.
-    ::matrix:: can be one of two things:
-        1) the name of a built-in matrix (current options are 'blosum62' and 'pam250')
-        2) a 2D dict containing match scores for each residue pair (either aa or nt)
-    '''
     if not target and not targets:
         err = 'ERROR: You must supply a target sequence (or sequences).'
         raise RuntimeError(err)
@@ -314,7 +339,103 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
         score_match=None, score_mismatch=None, score_gap_open=None,
         score_gap_extend=None, matrix=None, aa=False):
     '''
+    Needleman-Wunch global pairwise alignment.
 
+    With ``global_alignment``, you can score an alignment using different
+    paramaters than were used to compute the alignment. This allows you to
+    compute pure identity scores (match=1, mismatch=0) on pairs of sequences
+    for which those alignment parameters would be unsuitable. For example::
+
+        seq1 = 'ATGCAGC'
+        seq2 = 'ATCAAGC'
+
+    using identity scoring params (match=1, all penalties are 0) for both alignment
+    and scoring produces the following alignment::
+
+        ATGCA-GC
+        || || ||
+        AT-CAAGC
+
+    with an alignment score of 6 and an alignment length of 8 (identity = 75%). But
+    what if we want to calculate the identity of a gapless alignment? Using::
+
+        global_alignment(seq1, seq2,
+                         gap_open=20,
+                         score_match=1,
+                         score_mismatch=0,
+                         score_gap_open=10,
+                         score_gap_extend=1)
+
+    we get the following alignment::
+
+        ATGCAGC
+        ||  |||
+        ATCAAGC
+
+    which has an score of 5 and an alignment length of 7 (identity = 71%). Obviously,
+    this is an overly simple example (it would be much easier to force gapless alignment
+    by just iterating over each sequence and counting the matches), but there are several
+    real-life cases in which different alignment and scoring paramaters are desirable.
+
+    Args:
+
+        query: Query sequence. ``query`` can be one of four things:
+
+            1. a nucleotide or amino acid sequence, as a string
+            2. a Biopython ``SeqRecord`` object
+            3. an AbTools ``Sequence`` object
+            4. a list/tuple of the format ``[seq_id, sequence]``
+
+        target: A single target sequence. ``target`` can be anything that
+            ``query`` accepts.
+
+        targets (list): A list of target sequences, to be proccssed iteratively.
+            Each element in the ``targets`` list can be anything accepted by
+            ``query``.
+
+        match (int): Match score for alignment. Should be a positive integer. Default is 3.
+
+        mismatch (int): Mismatch score for alignment. Should be a negative integer. Default is -2.
+
+        gap_open (int): Penalty for opening gaps in alignment. Should be a negative integer.
+            Default is -5.
+
+        gap_extend (int): Penalty for extending gaps in alignment. Should be a negative
+            integer. Default is -2.
+
+        score_match (int): Match score for scoring the alignment. Should be a positive integer.
+            Default is to use the score from ``match`` or ``matrix``, whichever is provided.
+
+        score_mismatch (int): Mismatch score for scoring the alignment. Should be a negative
+            integer. Default is to use the score from ``mismatch`` or ``matrix``, whichever
+            is provided.
+
+        score_gap_open (int): Gap open penalty for scoring the alignment. Should be a negative
+            integer. Default is to use ``gap_open``.
+
+        score_gap_extend (int): Gap extend penalty for scoring the alignment. Should be a negative
+            integer. Default is to use ``gap_extend``.
+
+        matrix (str, dict): Alignment scoring matrix. Two options for passing the
+            alignment matrix:
+
+                1. The name of a built-in matrix. Current options are ``blosum62``
+                    and ``pam250``.
+
+                2. A nested dictionary, giving an alignment score for each residue
+                    pair. Should be formatted such that retrieving the alignment
+                    score for A and G is accomplished by::
+
+                        matrix['A']['G']
+
+        aa (bool): Must be set to ``True`` if aligning amino acid sequences. Default
+            is ``False``.
+
+    Returns:
+
+        If a single target sequence is provided (via ``target``), a single ``NWAlignment``
+        object will be returned. If multiple target sequences are supplied (via ``targets``),
+        a list of ``NWAlignment`` objects will be returned.
     '''
     if not target and not targets:
         err = 'ERROR: You must supply a target sequence (or sequences).'
@@ -346,7 +467,37 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
 
 
 class BaseAlignment(object):
-    """docstring for BaseAlignment"""
+    """
+    Base class for local and global pairwise alignments.
+
+    .. note::
+
+        All comparisons between ``BaseAlignments``
+        are done on the ``score`` attribute (which must be implemented
+        by any classes that subclass ``BaseAlignment``). This was done
+        so that sorting alignments like so::
+
+            alignments = [list of alignments]
+            alignments.sort(reverse=True)
+
+        results in a sorted list of alignments from the highest alignment
+        score to the lowest.
+
+    Attributes:
+
+        query (Sequence): The input query sequence, as an AbTools
+            ``Sequence`` object.
+
+        target (Sequence): The input target sequence, as an AbTools
+            ``Sequence`` object.
+
+        target_id (str): ID of the target sequence.
+
+        raw_query: The raw query, before conversion to a ``Sequence``.
+
+        raw_target: The raw target, before conversion to a ``Sequence``.
+
+    """
     def __init__(self, query, target, matrix,
             match, mismatch, gap_open, gap_extend, aa):
         super(BaseAlignment, self).__init__()
@@ -455,26 +606,52 @@ class BaseAlignment(object):
 
 class SSWAlignment(BaseAlignment):
     """
-    Stucture for performing and analyzing a Smith-Waterman alignment
-    using the skbio StripedSmithWaterman method.
+    Structure for performing and analyzing a Smith-Waterman local alignment.
 
-    Inputs are fairly straight-forward, with a few notable things:
-        1) Sequences (::query:: and ::target::) can be one of several things:
-            -- just the raw sequence, as a string
-            -- an iterable, of the format (sequence ID, sequence)
-            -- a Biopython SeqRecord object
-            -- a VaxTools Sequence object
-        2) ::match:: should be a POSITIVE integer, ::mismatch:: should be a NEGATIVE integer
-        3) both gap penalties (gap_open and gap_extend) should be POSITIVE integers
-        4) more complex scoring matrices can be specified by name with ::matrix::
-            built-in matrices are 'blosum62' and 'pam250'
-        5) if you'd like to align using one set of scoring parameters and score using
-            a different set, provide all of the 'score_*' parameters
+    .. note:
 
-    Exposed properties and convenience methods are the same as NWAlignment objects, so local
-    and global alignments can be handled the same way. In fact, since comparisons are made
-    based on score, local and global alignments can be directly compared with constructions like
-    local_aln == global_aln and local_aln > global_aln.
+        Exposed attributes and methods are the same as ``NWAlignment``, so
+        local and global alignmnts can be handled in the same way. In fact,
+        since comparisons are made based on score, local and global alignments
+        can be directly compared with constructions like::
+
+            local_aln == global_aln
+            local_aln > global_aln
+            alignments = sorted([global_aln, local_aln])
+
+    Attributes:
+
+        alignment_type (str): Is 'local' for all ``SSWAlignment`` objects.
+
+        aligned_query (str): The aligned query sequence (including gaps).
+
+        aligned_target (str): The aligned target sequence (including gaps).
+
+        alignment_midline (str): Midline for the aligned query/target
+            sequences, with ``|`` indicating matches and a gap indicating
+            mismatches::
+
+            print('\n'.join([aln.aligned_query,
+                             aln.alignment_midline,
+                             aln.aligned_target]))
+
+            # ATGC
+            # || |
+            # ATCC
+
+        score (int): Alignment score.
+
+        query_begin (int): Position in the raw query sequence at which
+            the optimal alignment begins.
+
+        query_end (int): Position in the raw query sequence at which the
+            optimal alignment ends.
+
+        target_begin (int): Position in the raw target sequence at which
+            the optimal alignment begins.
+
+        target_end (int): Position in the raw target sequence at which the
+            optimal alignment ends.
     """
     def __init__(self, query, target, match=3, mismatch=-2, matrix=None,
             gap_open=5, gap_extend=2, aa=False):
@@ -504,7 +681,6 @@ class SSWAlignment(BaseAlignment):
 
 
 class BiopythonAlignment(BaseAlignment):
-    """docstring for BiopythonAlignment"""
     def __init__(self, query, target, match=3, mismatch=-2, matrix=None,
             gap_open=5, gap_extend=2, aa=False):
         super(BiopythonAlignment, self).__init__(query, target, matrix,
@@ -543,29 +719,53 @@ class BiopythonAlignment(BaseAlignment):
 
 class NWAlignment(BaseAlignment):
     """
-    Stucture for performing and analyzing a Needleman-Wunch alignment
-    using the nwalign package.
+    Structure for performing and analyzing a Needleman-Wunch global alignment.
 
-    Inputs are fairly straight-forward, with a few notable things:
-        1) Sequences (::query:: and ::target::) can be one of several things:
-            -- just the raw sequence, as a string
-            -- an iterable, of the format (sequence ID, sequence)
-            -- a Biopython SeqRecord object
-            -- a VaxTools Sequence object
-        2) ::match:: (and ::score_match::) should be POSITIVE integers. ::mismatch:: (and
-            ::score_mismatch::) should be NEGATIVE integers or 0.
-        2) Gap penalties (gap_open, gap_extend) should be NEGATIVE integers or 0.
-        3) more complex scoring matrices can be specified by name with ::matrix::
-            built-in matrices are 'blosum62' and 'pam250'
-        4) if you'd like to align using one set of scoring parameters and score using
-            a different set, provide all of the 'score_*' parameters
+    .. note:
 
-    Exposed properties and convenience methods are the same as SWAlignment objects, so local
-    and global alignments can be handled the same way. In fact, since comparisons are made
-    based on score, local and global alignments can be directly compared with constructions like
-    local_aln == global_aln and local_aln > global_aln.
+        Exposed attributes and methods are the same as ``SSWAlignment``, so
+        local and global alignmnts can be handled in the same way. In fact,
+        since comparisons are made based on score, local and global alignments
+        can be directly compared with constructions like::
+
+            local_aln == global_aln
+            local_aln > global_aln
+            alignments = sorted([global_aln, local_aln])
+
+    Attributes:
+
+        alignment_type (str): Is 'global' for all ``NWAlignment`` objects.
+
+        aligned_query (str): The aligned query sequence (including gaps).
+
+        aligned_target (str): The aligned target sequence (including gaps).
+
+        alignment_midline (str): Midline for the aligned query/target
+            sequences, with ``|`` indicating matches and a gap indicating
+            mismatches::
+
+            print('\n'.join([aln.aligned_query,
+                             aln.alignment_midline,
+                             aln.aligned_target]))
+
+            # ATGC
+            # || |
+            # ATCC
+
+        score (int): Alignment score.
+
+        query_begin (int): Position in the raw query sequence at which
+            the optimal alignment begins.
+
+        query_end (int): Position in the raw query sequence at which the
+            optimal alignment ends.
+
+        target_begin (int): Position in the raw target sequence at which
+            the optimal alignment begins.
+
+        target_end (int): Position in the raw target sequence at which the
+            optimal alignment ends.
     """
-
     def __init__(self, query, target, match=3, mismatch=-2,
         gap_open=-5, gap_extend=-2,
         score_match=None, score_mismatch=None,
@@ -607,40 +807,17 @@ class NWAlignment(BaseAlignment):
             self._build_matrix_from_params(match, mismatch)
 
     def _align(self):
-        # matrix = self._matrix
-        # if self._matrix_file is not None:
-        #     matrix = self._matrix_file
-        # if self._matrix is None:
-        #     matrix = self._build_matrix(match=self._match,
-        #                                 mismatch=self._mismatch)
-        # elif type(self._matrix) in [str, unicode]:
-        #     self._delete_score_matrix = False
-        #     matrix = self._get_builtin_matrix(self._matrix)
-        # elif type(self._matrix) == dict:
-        #     matrix = self._build_matrix(matrix=self._matrix)
         matrix = self._get_matrix_file(match=self._match,
-                                        mismatch=self._mismatch,
-                                        matrix=self._matrix)
+                                       mismatch=self._mismatch,
+                                       matrix=self._matrix)
         aln = nw.global_align(self.query.sequence,
                               self.target.sequence,
                               gap_open=self._gap_open,
                               gap_extend=self._gap_extend,
                               matrix=matrix)
-        # if self._delete_score_matrix:
-        #     os.unlink(matrix)
         return aln
 
     def _score_alignment(self):
-        # matrix = self._matrix
-        # if all([self._score_match is not None, self._score_mismatch is not None]):
-        #     matrix = self._build_matrix(match=self._score_match,
-        #                                 mismatch=self._score_mismatch)
-        # elif type(self._matrix) in [str, unicode]:
-        #     self._delete_score_matrix = False
-        #     matrix = self._get_builtin_matrix(self._matrix)
-        # elif self._matrix is None:
-        #     matrix = self._build_matrix(match=self._match,
-        #                                 mismatch=self._mismatch)
         if all([self._score_match is not None, self._score_mismatch is not None]):
             matrix = self._get_matrix_file(match=self._score_match,
                                            mismatch=self._score_mismatch)
@@ -658,31 +835,10 @@ class NWAlignment(BaseAlignment):
                                 matrix=matrix)
         return aln
 
-    # def _build_matrix(self, match=None, mismatch=None, matrix=None):
-    #     if matrix:
-    #         return self._build_matrix_from_dict(matrix)
-    #     return self._build_matrix_from_params(match, mismatch)
-
-    # @staticmethod
-    # def _build_matrix_from_dict(matrix):
-    #     matrix_file = tempfile.NamedTemporaryFile(delete=False)
-    #     residues = sorted(matrix.keys())
-    #     header = '   ' + '  '.join(residues)
-    #     matlist = [header, ]
-    #     for r1 in residues:
-    #         resline = [r1, ]
-    #         for r2 in residues:
-    #             s = str(matrix[r1][r2])
-    #             sstring = ' {}'.format(s) if len(s) == 1 else s
-    #         matlist.append(' '.join(resline))
-    #     matrix_file.write('\n'.join(matlist))
-    #     return matrix_file.name
-
     @staticmethod
     def _build_matrix_from_params(match, mismatch, matrix_file):
         mstring = ' {}'.format(match) if len(str(match)) == 1 else str(match)
         mmstring = ' {}'.format(mismatch) if len(str(mismatch)) == 1 else str(mismatch)
-        # matrix_file = tempfile.NamedTemporaryFile(delete=False)
         residues = ['A', 'C', 'D', 'E', 'F',
                     'G', 'H', 'I', 'K', 'L',
                     'M', 'N', 'P', 'Q', 'R',
@@ -697,7 +853,6 @@ class NWAlignment(BaseAlignment):
         open(matrix_file, 'w').write('\n'.join(matlist))
         return matrix_file
 
-
     @staticmethod
     def _get_builtin_matrix(matrix_name):
         matrix_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'matrices')
@@ -707,41 +862,3 @@ class NWAlignment(BaseAlignment):
             err += 'Built in matrices are: {}'.format(', '.join(matrices))
             raise RuntimeError()
         return os.path.join(matrix_dir, matrix_name.lower())
-        # matrix_file = tempfile.NamedTemporaryFile(delete=False)
-        # matrix_file.write(matrices[matrix_name])
-        # return matrix_file.name
-
-
-# BLOSUM62 = '''#  Matrix made by matblas from blosum62.iij
-# #  * column uses minimum score
-# #  BLOSUM Clustered Scoring Matrix in 1/2 Bit Units
-# #  Blocks Database = /data/blocks_5.0/blocks.dat
-# #  Cluster Percentage: >= 62
-# #  Entropy =   0.6979, Expected =  -0.5209
-#    A  R  N  D  C  Q  E  G  H  I  L  K  M  F  P  S  T  W  Y  V  B  Z  X  * 
-# A  4 -1 -2 -2  0 -1 -1  0 -2 -1 -1 -1 -1 -2 -1  1  0 -3 -2  0 -2 -1  0 -4 
-# R -1  5  0 -2 -3  1  0 -2  0 -3 -2  2 -1 -3 -2 -1 -1 -3 -2 -3 -1  0 -1 -4 
-# N -2  0  6  1 -3  0  0  0  1 -3 -3  0 -2 -3 -2  1  0 -4 -2 -3  3  0 -1 -4 
-# D -2 -2  1  6 -3  0  2 -1 -1 -3 -4 -1 -3 -3 -1  0 -1 -4 -3 -3  4  1 -1 -4 
-# C  0 -3 -3 -3  9 -3 -4 -3 -3 -1 -1 -3 -1 -2 -3 -1 -1 -2 -2 -1 -3 -3 -2 -4 
-# Q -1  1  0  0 -3  5  2 -2  0 -3 -2  1  0 -3 -1  0 -1 -2 -1 -2  0  3 -1 -4 
-# E -1  0  0  2 -4  2  5 -2  0 -3 -3  1 -2 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4 
-# G  0 -2  0 -1 -3 -2 -2  6 -2 -4 -4 -2 -3 -3 -2  0 -2 -2 -3 -3 -1 -2 -1 -4 
-# H -2  0  1 -1 -3  0  0 -2  8 -3 -3 -1 -2 -1 -2 -1 -2 -2  2 -3  0  0 -1 -4 
-# I -1 -3 -3 -3 -1 -3 -3 -4 -3  4  2 -3  1  0 -3 -2 -1 -3 -1  3 -3 -3 -1 -4 
-# L -1 -2 -3 -4 -1 -2 -3 -4 -3  2  4 -2  2  0 -3 -2 -1 -2 -1  1 -4 -3 -1 -4 
-# K -1  2  0 -1 -3  1  1 -2 -1 -3 -2  5 -1 -3 -1  0 -1 -3 -2 -2  0  1 -1 -4 
-# M -1 -1 -2 -3 -1  0 -2 -3 -2  1  2 -1  5  0 -2 -1 -1 -1 -1  1 -3 -1 -1 -4 
-# F -2 -3 -3 -3 -2 -3 -3 -3 -1  0  0 -3  0  6 -4 -2 -2  1  3 -1 -3 -3 -1 -4 
-# P -1 -2 -2 -1 -3 -1 -1 -2 -2 -3 -3 -1 -2 -4  7 -1 -1 -4 -3 -2 -2 -1 -2 -4 
-# S  1 -1  1  0 -1  0  0  0 -1 -2 -2  0 -1 -2 -1  4  1 -3 -2 -2  0  0  0 -4 
-# T  0 -1  0 -1 -1 -1 -1 -2 -2 -1 -1 -1 -1 -2 -1  1  5 -2 -2  0 -1 -1  0 -4 
-# W -3 -3 -4 -4 -2 -2 -3 -2 -2 -3 -2 -3 -1  1 -4 -3 -2 11  2 -3 -4 -3 -2 -4 
-# Y -2 -2 -2 -3 -2 -1 -2 -3  2 -1 -1 -2 -1  3 -3 -2 -2  2  7 -1 -3 -2 -1 -4 
-# V  0 -3 -3 -3 -1 -2 -2 -3 -3  3  1 -2  1 -1 -2 -2  0 -3 -1  4 -3 -2 -1 -4 
-# B -2 -1  3  4 -3  0  1 -1  0 -3 -4  0 -3 -3 -2  0 -1 -4 -3 -3  4  1 -1 -4 
-# Z -1  0  0  1 -3  3  4 -2  0 -3 -3  1 -1 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4 
-# X  0 -1 -1 -1 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -2  0  0 -2 -1 -1 -1 -1 -1 -4 
-# * -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4  1 '''
-
-# PAM250 = ''

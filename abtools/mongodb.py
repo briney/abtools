@@ -39,22 +39,31 @@ def get_connection(ip='localhost', port=27017, user=None, password=None):
     '''
     Returns a pymongo MongoClient object.
 
-    Inputs are the (optional) connection options.
-    Default connection options are:
-        ip: "localhost"
-        port: 27017
-        user: None
-        password: None
+    .. note:
 
-    Note that ::user:: and ::password:: are only required when connecting to a
-    MongoDB database that has authentication enabled.
+        Both ``user`` and ``password`` are required when connecting to a MongoDB
+        database that has authentication enabled.
+
+    Arguments:
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username, if authentication is enabled on the MongoDB database.
+            Default is ``None``, which results in requesting the connection
+            without authentication.
+
+        password (str): Password, if authentication is enabled on the MongoDB database.
+            Default is ``None``, which results in requesting the connection
+            without authentication.
     '''
     if platform.system().lower() == 'darwin':
-    	connect = False
+        connect = False
     else:
-    	connect = True
+        connect = True
     if user and password:
-    	import urllib
+        import urllib
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
         return MongoClient(uri, connect=connect)
@@ -65,22 +74,33 @@ def get_db(db, ip='localhost', port=27017, user=None, password=None):
     '''
     Returns a pymongo Database object.
 
-    Inputs are the database name (::db::) and optional connection options.
-    Default connection options are:
-        ip: "localhost"
-        port: 27017
-        user: None
-        password: None
+    .. note:
 
-    Note that ::user:: and ::password:: are only required when connecting to a
-    MongoDB database that has authentication enabled.
+        Both ``user`` and ``password`` are required when connecting to a MongoDB
+        database that has authentication enabled.
+
+    Arguments:
+
+        db (str): Name of the MongoDB database. Required.
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username, if authentication is enabled on the MongoDB database.
+            Default is ``None``, which results in requesting the connection
+            without authentication.
+
+        password (str): Password, if authentication is enabled on the MongoDB database.
+            Default is ``None``, which results in requesting the connection
+            without authentication.
     '''
     if platform.system().lower() == 'darwin':
-    	connect = False
+        connect = False
     else:
-    	connect = True
+        connect = True
     if user and password:
-    	import urllib
+        import urllib
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
         conn = MongoClient(uri, connect=connect)
@@ -91,20 +111,36 @@ def get_db(db, ip='localhost', port=27017, user=None, password=None):
 
 def get_collections(db, collection=None, prefix=None, suffix=None):
     '''
-    Returns a sorted list of collection names found in ::db::
+    Returns a sorted list of collection names found in ``db``.
 
-    Inputs are a pymongo Database object (::db::) and, optionally,
-    a prefix and/or suffix.
+    Arguments:
 
-    If prefix or suffix are provided, only collections
-    containing the prefix/suffix will be returned.
+        db (Database): A pymongo Database object. Can be obtained
+            with ``get_db``.
+
+        collection (str): Name of a collection. If the collection is
+            present in the MongoDB database, a single-element list will
+            be returned with the collecion name. If not, an empty list
+            will be returned. This option is primarly included to allow
+            for quick checking to see if a collection name is present.
+            Default is None, which results in this option being ignored.
+
+        prefix (str): If supplied, only collections that begin with
+            ``prefix`` will be returned.
+
+        suffix (str): If supplied, only collections that end with
+            ``suffix`` will be returned.
+
+    Returns:
+
+        list: A sorted list of collection names.
     '''
     if collection is not None:
         return [collection, ]
     collections = db.collection_names(include_system_collections=False)
-    if prefix:
+    if prefix is not None:
         collections = [c for c in collections if c.startswith(prefix)]
-    if suffix:
+    if suffix is not None:
         collections = [c for c in collections if c.endswith(prefix)]
     return sorted(collections)
 
@@ -113,13 +149,20 @@ def rename_collection(db, collection, new_name):
     '''
     Renames a MongoDB collection.
 
-    Inputs are a pymongo database connection object, the
-    name of the collection to be renamed, and the new name.
+    Arguments:
 
-    The new name can be provided either as a string or as a function
-    that will be applied to the old collection name. If a function is
-    provided and calling the function on the current collection name
-    results in an empty string, the collection will not be renamed.
+        db (Database): A pymongo Database object. Can be obtained
+            with ``get_db``.
+
+        collection (str): Name of the collection to be renamed.
+
+        new_name (str, func): ``new_name`` can be one of two things::
+
+            1. The new collection name, as a string.
+            2. A function which, when passed the current collection name,
+                returns the new collection name. If the function
+                returns an empty string, the collection will not be
+                renamed.
     '''
     if hasattr(new_name, '__call__'):
         _new = new_name(collection)
@@ -133,35 +176,58 @@ def rename_collection(db, collection, new_name):
 
 def update(field, value, db, collection, match=None):
     '''
-    Updates records to set ::field:: equal to ::value:: for all
-    records that meet ::match:: criteria.
+    Updates MongoDB documents.
 
-    ::db:: should be a pymongo Database object.
-    ::collection:: should be the name of a collection in db, as a string
-    ::match:: should be a dict containing the pymongo query criteria, like:
-        {'seq_id': {'$in': ['a', 'b', 'c']}, 'size': {'$gte': 25}, 'prod': 'yes'}
+    Sets ``field`` equal to ``value`` for all documents that
+    meet ``match`` criteria.
+
+    Arguments:
+
+        field (str): Field to update.
+
+        value (str): Update value.
+
+        db (Database): A pymongo Database object.
+
+        collection (str): Collection name.
+
+        match (dict): A dictionary containing the match criteria, for example::
+
+            {'seq_id': {'$in': ['a', 'b', 'c']}, 'cdr3_len': {'$gte': 18}}
     '''
     c = db[collection]
     match = match if match is not None else {}
-    c.update(match, {'$set': {field: value}}, multi=True)
-    # below is for MongoDB 3.0+
-    # c.update_many(match, {'$set': {field: value}})
+    # check MongoDB version to use appropriate update command
+    if db.client.server_info()['version'].startswith('2'):
+        c.update(match, {'$set': {field: value}}, multi=True)
+    else:
+        c.update_many(match, {'$set': {field: value}})
 
 
 def unset(db, collection, field, match=None):
     '''
-    Removes a field from all records in ::collection:: that meet
-    ::match:: criteria
+    Removes ``field`` from all records in ``collection`` that meet
+    ``match`` criteria.
 
-    Inputs are a pymongo Database object, a collection name, and an optional
-    ::match::, a dict of the format:
-        {'seq_id': {'$in': ['a', 'b', 'c']}, 'size': {'$gte': 25}, 'prod': 'yes'}
+    Arguments:
+
+        field (str): Field to be removed.
+
+        db (Database): A pymongo Database object.
+
+        collection (str): Collection name.
+
+        match (dict): A dictionary containing the match criteria, for example::
+
+            {'seq_id': {'$in': ['a', 'b', 'c']}, 'cdr3_len': {'$gte': 18}}
     '''
     c = db[collection]
     match = match if match is not None else {}
-    c.update(match, {'$unset': {field: ''}}, multi=True)
-    # below is for MongoDB 3.0+
-    # c.update_many(match, {'$unset': {field: ''}})
+    # check MongoDB version to use appropriate update command
+    if db.client.server_info()['version'].startswith('2'):
+        c.update(match, {'$unset': {field: ''}}, multi=True)
+    else:
+        c.update_many(match, {'$unset': {field: ''}})
 
 
 def mongoimport(json, database,
@@ -172,13 +238,44 @@ def mongoimport(json, database,
     '''
     Performs mongoimport on one or more json files.
 
-    Required inputs:
-        ::json:: can be one of several things:
-            -- a single JSON file
-            -- an iterable (list or tuple) of one or more JSON files
-            -- a directory, containing one or more JSON files
-        ::database:: is the name of the MongoDB database into which
-            the JSON files will be imported
+    Args:
+
+        json: Can be one of several things:
+
+            - path to a single JSON file
+            - an iterable (list or tuple) of one or more JSON file paths
+            - path to a directory containing one or more JSON files
+
+        database (str): Name of the database into which the JSON files
+            will be imported
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB database. Default is ``27017``.
+
+        user (str): Username for the MongoDB database, if authentication is enabled.
+            Default is ``None``, which results in attempting connection without
+            authentication.
+
+        password (str): Password for the MongoDB database, if authentication is enabled.
+            Default is ``None``, which results in attempting connection without
+            authentication.
+
+        delim (str): Delimiter, when generating collection names using a single delimiter.
+            Default is ``_``
+
+        delim_occurance (int): Occurance at which to split filename when using a
+            single delimiter. Default is ``1``
+
+        delim1 (str): Left delimiter when splitting with two delimiters. Default is None.
+
+        delim1_occurance (int): Occurance of ``delim1`` at which to split filename.
+            Default is ``1``
+
+        delim2 (str): Right delimiter when splitting with two delimiters. Default is None.
+
+        delim2_occurance (int): Occurance of ``delim2`` at which to split filename.
+            Default is ``1``
     '''
     logger = log.get_logger('mongodb')
     _print_mongoimport_info(logger)
@@ -214,16 +311,30 @@ def index(db, collection, fields, directions=None, desc=False, background=False)
     Builds a simple (single field) or complex (multiple fields) index
     on a single collection in a MongoDB database.
 
-    ::db:: should be a pymongo connection object to the desired MongoDB database
-    ::collection:: should be the name of the collection to be indexed
-    ::fields:: is the field(s) to be indexed, and can be one of two things:
-        1) a single field, as a string
-        2) one or more fields, as an iterable (list or tuple)
+    Args:
 
-    By default, all fields will be indexed in ascending order. Setting ::desc:: to True
-    will result in the index being built in DESCENDING order. For multi-directional indexes,
-    a list of pymongo direction objects (pymongo.ASCENDING and pymongo.DESCENDING) can be provided,
-    in the same order as the list of fields to be indexed.
+        db (Database): A pymongo Database object.
+
+        collection (str): Collection name.
+
+        fields: Can be one of two things:
+
+            - the name of a single field, as a string
+            - an iterable (list/tuple) of one or more field names
+
+        desc (bool): If ``True``, all indexes will be created in descending order.
+            Default is ``False``.
+
+        directions (list): For complex indexes for which you'd like to have
+            different indexing directions (ascending for some fields, descending
+            for others), you can pass a list of pymongo direction objects (
+            pymongo.ASCENDING and pymongo.DESCENDING), in the same order as the
+            list of fields to be indexed. Must be the same length as the list
+            of index fields. Default is ``None``.
+
+        background (bool): If ``True``, the indexing operation will be processed
+            in the background. When performing background indexes, the MongoDB
+            database will not be locked.
     '''
     import pymongo
     if type(fields) == str:
@@ -238,10 +349,15 @@ def index(db, collection, fields, directions=None, desc=False, background=False)
 
 def remove_padding(db, collection, field='padding'):
     '''
-    Removes a padding field from all records in ::collection::
+    Removes a padding field.
 
-    Inputs are a pymongo Database object, a collection name, and an optional
-    padding ::field:: name (default is 'padding').
+    Args:
+
+        db (Database): A pymongo Database object.
+
+        collection (str): Collection name
+
+        field (str): Name of the padding field. Default is ``padding``
     '''
     unset(db, collection, field=field)
     # c = db[collection]

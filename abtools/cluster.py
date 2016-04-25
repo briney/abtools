@@ -39,83 +39,96 @@ from Bio.Align import AlignInfo
 from abtools import log
 from abtools.alignment import mafft
 from abtools.sequence import Sequence
+from abtools.utils.decorators import lazy_property
 
 
 class Cluster(object):
     """
-    Contains a single CD-HIT cluster of sequences.
+    Data and methods for a cluster of sequences.
 
-    Input is a raw cluster (a list of lines from the CD-HIT output
-    that contain the information from a single cluster), as well as
-    a connection to a SQLite3 sequence database (created by default
-    when running cluster.cdhit())
+    All public attributes are evaluated lazily, so attributes that
+    require significant processing time are only computed when needed.
+    In addition, attributes are only calculated once, so if you
+    change the Cluster object after accessing attributes, the
+    attributes will not update. Setters are provided for all attributes,
+    however, so you can update them manually if necessary::
 
-    cluster.sequences returns a list of abtools Sequence objects for
-    each sequence in the cluster
+        seqs = [Sequence1, Sequence2, ... SequenceN]
+        clust = cluster(seqs)
 
-    both cluster.centroid and cluster.consensus return abtools Sequence
-    objects for the cluster centroid or consensus, respectively.
+        # calculate the consensus
+        consensus = clust.consensus
+
+        # add sequences to the Cluster
+        more_sequences = [SequenceA, SequenceB, SequenceC]
+        clust.sequences += more_sequences
+
+        # need to recompute the consensus manually
+        clust.consensus = clust._make_consensus()
+
+
+    Attributes:
+
+        ids (list): A list of all sequence IDs in the Cluster
+
+        size (int): Number of sequences in the Cluster
+
+        sequences (list): A list of all sequences in the Cluster,
+            as AbTools ``Sequence`` objects.
+
+        consensus (Sequence): Consensus sequence, calculated by
+            aligning all sequences with MAFFT and computing the
+            ``Bio.Align.AlignInfo.SummaryInfo.gap_consensus()``
+
+        centroid (Sequence): Centroid sequence, as calculated by
+            CD-HIT.
     """
     def __init__(self, raw_cluster, seq_db):
         super(Cluster, self).__init__()
-        self.raw_cluster = raw_cluster
-        self._ids = None
-        self._size = None
-        self._sequences = None
-        self._consensus = None
-        self._centroid = None
+        self._raw_cluster = raw_cluster
+        self._seq_db = seq_db
 
 
-    @property
+    @lazy_property
     def ids(self):
-        if self._ids is None:
-            self._ids = self._get_ids()
-        return self._ids
+        return self._get_ids()
 
-    @property
+    @lazy_property
     def size(self):
-        if self._size is None:
-            self._size = len(self.ids)
-        return self._size
+        return len(self.ids)
 
-    @property
-    def sequences(self, db=None):
-        if self._sequences is None:
-            self._sequences = self._get_sequences
-        return self._sequences
+    @lazy_property
+    def sequences(self):
+        return self._get_sequences()
 
-    @property
+    @lazy_property
     def consensus(self):
-        if self._consensus is None:
-            self._consensus = self._make_consensus()
-        return self._consensus
+        return self._make_consensus()
 
-    @property
+    @lazy_property
     def centroid(self):
-        if self._centroid is None:
-            self._centroid = self._get_centroid()
-        return self._centroid
+        return self._get_centroid()
 
 
     def _get_ids(self):
         ids = []
-        for c in self.raw_cluster[1:]:
+        for c in self._raw_cluster[1:]:
             if c:
                 ids.append(c.split()[2][1:-3])
         return ids
 
     def _get_sequences(self):
         seqs = []
-        for chunk in self._chunker(seq_ids):
+        for chunk in self._chunker(self.seq_ids):
             sql_cmd = '''SELECT seqs.id, seqs.sequence
                          FROM seqs
                          WHERE seqs.id IN ({})'''.format(','.join('?' * len(chunk)))
-            seq_chunk = seq_db.execute(sql_cmd, chunk)
+            seq_chunk = self._seq_db.execute(sql_cmd, chunk)
             seqs.extend(seq_chunk)
         return [Sequence(s) for s in seqs]
 
     def _get_centroid(self):
-        for line in self.raw_cluster:
+        for line in self._raw_cluster:
             if '*' in line:
                 centroid_id = line.split()[2][1:-3]
                 break
@@ -136,22 +149,51 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
+def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True):
+    '''
+    Perform sequence clustering with CD-HIT.
+
+    Args:
+
+        seqs (list): An iterable of sequences, in any format that abtools.sequence.Sequence()
+            can handle
+
+        threshold (float): Clustering identity threshold. Default is 0.975.
+
+        out_file (str): Path to the clustering output file. Default is to use
+            tempfile.NamedTempraryFile to generate an output file name.
+
+        temp_dir (str): Path to the temporary directory. If not provided, '/tmp' is used.
+
+        make_db (bool): Whether to build a SQlite database of sequence information. Required
+            if you want to calculate consensus/centroid sequences for the resulting
+            clusters or if you need to access the clustered sequences (not just sequence IDs)
+            Default is True.
+
+    Returns:
+
+        list: A list of Cluster objects, one per cluster.
+    '''
+    ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
+        threshold=threshold, make_db=make_db)
+    return parse_clusters(cfile, seq_db)
+
 
 def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
-    '''
-    Perform CD-HIT clustering on a set of sequences.
+    # '''
+    # Perform CD-HIT clustering on a set of sequences.
 
-    Inputs are an iterable of sequences, which can be in any format that abtools.sequence.Sequence
-    can handle.
+    # Inputs are an iterable of sequences, which can be in any format that abtools.sequence.Sequence
+    # can handle.
 
-    Returns the centroid file name and cluster file name (from CD-HIT).
-    If ::make_db:: is True (default), a SQLite3 connection and database path are also returned.
-    '''
+    # Returns the centroid file name and cluster file name (from CD-HIT).
+    # If ::make_db:: is True (default), a SQLite3 connection and database path are also returned.
+    # '''
     logger = log.get_logger('cluster')
     start_time = time.time()
     seqs = [Sequence(s) for s in seqs]
     logger.info('CD-HIT: clustering {} seqeunces'.format(len(seqs)))
-    if not out_file:
+    if out_file is None:
         out_file = tempfile.NamedTemporaryFile(dir=temp_dir, delete=False)
         ofile = out_file.name
     else:
@@ -176,14 +218,14 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
 
 
 def parse_clusters(clust_file, seq_db):
-    '''
-    Parses clustered sequences.
+    # '''
+    # Parses clustered sequences.
 
-    Inputs are a CD-HIT cluster file (ends with '.clstr') and a connection to a
-    SQLite3 database of sequence IDs and sequences.
+    # Inputs are a CD-HIT cluster file (ends with '.clstr') and a connection to a
+    # SQLite3 database of sequence IDs and sequences.
 
-    Returns a list of Cluster objects (one per cluster).
-    '''
+    # Returns a list of Cluster objects (one per cluster).
+    # '''
     raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
     return [Cluster(rc, seq_db) for rc in raw_clusters]
 
@@ -197,14 +239,14 @@ def _make_cdhit_input(seqs, temp_dir):
 
 
 def _build_seq_db(seqs, direc=None):
-    '''
-    Builds a SQLite3 database of sequences.
+    # '''
+    # Builds a SQLite3 database of sequences.
 
-    Inputs are a list of Sequence objects and an optional directory to store the database.
-    If ::direc:: is not provided, '/tmp' will be used.
+    # Inputs are a list of Sequence objects and an optional directory to store the database.
+    # If ::direc:: is not provided, '/tmp' will be used.
 
-    Returns a SQLite3 connection object and the database path.
-    '''
+    # Returns a SQLite3 connection object and the database path.
+    # '''
     direc = direc if direc else '/tmp'
     db_path = os.path.join(direc, 'seq_db')
     conn = sqlite3.connect(db_path)

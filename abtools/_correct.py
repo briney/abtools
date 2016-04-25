@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import Counter
+import json
 import math
 import multiprocessing as mp
 import os
@@ -41,7 +42,7 @@ from Bio.Align import AlignInfo
 
 from abtools import log, mongodb
 from abtools.alignment import muscle
-from abtools.pipeline import make_dir
+from abtools.pipeline import make_dir, list_files
 
 
 def parse_args():
@@ -50,11 +51,13 @@ def parse_args():
                                       antibody identifiers (UAIDs). \
                                       Calculates either the centroid or consensus sequence for each \
                                       identity/UAID cluster passing a cluster size threshold.")
-    parser.add_argument('-d', '--database', dest='db', required=True,
+    parser.add_argument('-d', '--database', dest='db', default=None,
                         help="Name of the MongoDB database to query. Required")
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
+    parser.add_argument('-j', '--json', dest='json', default=None,
+                        help="Input JSON file or directory of JSON files.")
     parser.add_argument('-o', '--output', dest='output', required=True,
                         help="Output directory for the FASTA files. Required")
     parser.add_argument('-l', '--log', dest='log',
@@ -115,7 +118,7 @@ def parse_args():
 
 class Args(object):
     """docstring for Args"""
-    def __init__(self, db=None, collection=None,
+    def __init__(self, db=None, collection=None, json=None,
                  output=None, log=None, temp=None,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975,
@@ -129,6 +132,7 @@ class Args(object):
             sys.exit(1)
         self.db = db
         self.collection = collection
+        self.json = json
         self.output = output
         self.log = log
         self.temp_dir = temp
@@ -159,15 +163,6 @@ class Args(object):
 
 
 
-# def get_collections(args):
-#     if args.collection:
-#         return [args.collection, ]
-#     conn = MongoClient(args.ip, 27017)
-#     db = conn[args.db]
-#     collections = db.collection_names(include_system_collections=False)
-#     return sorted(collections)
-
-
 def get_seqs(db, collection, args, make_seq_db=True):
     seqs = query(db, collection, args)
     if not make_seq_db:
@@ -176,17 +171,48 @@ def get_seqs(db, collection, args, make_seq_db=True):
 
 
 def query(db, collection, args):
-    logger.info('Getting sequences from MongoDB...')
     seq_field = args.field
-    coll = db[collection]
-    match = {'prod': 'yes'}
-    project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
-    if args.uaid is not None:
-        project['uaid'] = 1
-    # if args.consensus:
-    #     project['v_gene.gene'] = 1
-    results = coll.find(match, project)
-    # results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
+    # parse JSON file...
+    if db is None:
+        loger.info('Reading JSON file...')
+        results = []
+        with open(collection) as f:
+            _results = json.load(f)
+        for r in _results:
+            try:
+                d = {'seq_id': r['seq_id'],
+                     seq_field: r[seq_field],
+                     'raw_query': r['raw_query'],
+                     'v_gene': {'full': f['v_gene']['full']}}
+                if args.uaid is not None:
+                    if 'uaid' in r:
+                        d['uaid'] = r['uaid']
+                    elif args.parse_uaids:
+                        if args.parse_uaids > 0:
+                            d['uaid'] = r['raw_query'][:args.parse_uaids]
+                        else:
+                            d['uaid'] = r['raw_query'][args.parse_uaids:]
+                    else:
+                        err = 'ERROR: UAID field was not found. '
+                        err += 'Ensure that UAIDs were parsed by AbStar, '
+                        err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
+                        err += 'or use the -u option for identity-based clustering.'
+                        raise ValueError(err)
+                results.append(d)
+            except KeyError:
+                continue
+    # ...or get sequences from a MongoDB database
+    else:
+        logger.info('Getting sequences from MongoDB...')
+        coll = db[collection]
+        match = {'prod': 'yes'}
+        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
+        if args.uaid is not None:
+            project['uaid'] = 1
+        # if args.consensus:
+        #     project['v_gene.gene'] = 1
+        results = coll.find(match, project)
+        # results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
     if args.non_redundant:
         return results
     elif args.uaid:
@@ -200,8 +226,8 @@ def query(db, collection, args):
                 else:
                     seqs.append((r['seq_id'], r['raw_query'][args.parse_uaids:], r[seq_field], r['raw_query'], r['v_gene']['full']))
             else:
-                err = 'UAID field was not found. '
-                err += 'Ensure that UAIDs are being parsed by AbStar, '
+                err = 'ERROR: UAID field was not found. '
+                err += 'Ensure that UAIDs were parsed by AbStar, '
                 err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
                 err += 'or use the -u option for identity-based clustering.'
                 raise ValueError(err)
@@ -672,7 +698,10 @@ def write_output(collection, fastas, sizes, collection_start_time, args):
 
 def write_nr_output(collection, unique_file, collection_start_time, args):
     logger.info('Writing non-redundant sequences to output file...')
-    outfile = os.path.join(args.output, '{}_nr.fasta'.format(collection))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_nr.fasta'.format(oname))
     open(outfile, 'w').write('')
     ohandle = open(outfile, 'a')
     count = 0
@@ -691,7 +720,10 @@ def write_nr_output(collection, unique_file, collection_start_time, args):
 
 def write_fasta_output(collection, fastas, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
-    outfile = os.path.join(args.output, '{}_{}.fasta'.format(collection, seq_type))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
     out_handle.write('\n'.join(fastas))
     out_handle.close()
@@ -704,7 +736,10 @@ def write_stats_output(collection, sizes, args):
     binned_data = zip(bins, bin_counts)
     bin_string = 'Cluster Size\tCount\n'
     bin_string += '\n'.join(['{}\t{}'.format(b[0], b[1]) for b in binned_data])
-    outfile = os.path.join(args.output, '{}_cluster_sizes.txt'.format(collection))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_cluster_sizes.txt'.format(oname))
     out_handle = open(outfile, 'w')
     out_handle.write(bin_string)
     out_handle.close()
@@ -749,7 +784,7 @@ def run(**kwargs):
     Corrects antibody reads using UAIDs (molecular barcodes) or
     identity-based clustering.
 
-    A MongoDB database (::db::)    is required, as are output and temp
+    A MongoDB database (::db::) is required, as are output and temp
     directories (::output:: and ::temp::, respectively). If ::collection::
     is not provided, all collections in ::db:: will be iteratively
     processed.
@@ -811,8 +846,13 @@ def main(args):
         germs = parse_germs(args.germs)
     else:
         germs = args.germs
-    db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
-    for collection in mongodb.get_collections(db, args.collection):
+    if args.jsons is not None and all([args.db is None, args.collections is None]):
+        collections = list_files(args.jsons, extension='json')
+        db = None
+    else:
+        db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
+        collections = mongodb.get_collections(db, collection=args.collection)
+    for collection in collections:
         collection_start = time.time()
         print_collection_info(collection)
         if args.non_redundant:

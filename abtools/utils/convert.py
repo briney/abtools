@@ -36,13 +36,12 @@ def abi_to_fasta(input, output):
     '''
     Converts ABI or AB1 files to FASTA format.
 
-    INPUTS
-    ------
+    Args:
 
-    input: a file or directory containing abi/ab1 files or
-        zip archives of abi/ab1 files
+         input (str): Path to a file or directory containing abi/ab1 files or
+            zip archives of abi/ab1 files
 
-    output: a directory for the output FASTA files
+        output (str): Path to a directory for the output FASTA files
     '''
     direcs = [input, ]
     # unzip any zip archives

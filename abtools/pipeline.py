@@ -26,14 +26,36 @@
 import glob
 import os
 
-from abtools import log
+from . import log
 
 
 def initialize(log_file, project_dir=None, debug=False):
+    '''
+    Initializes an AbTools pipeline.
+
+    Initialization includes printing the AbTools splash, setting up logging,
+    creating the project directory, and logging both the project directory
+    and the log location.
+
+    Args:
+
+        log_file (str): Path to the log file. Required.
+
+        project_dir (str): Path to the project directory. If not provided,
+            the project directory won't be created and the location won't be logged.
+
+        debug (bool): If ``True``, the logging level will be set to ``logging.DEBUG``.
+            Default is ``FALSE``, which logs at ``logging.INFO``.
+
+    Returns:
+
+        logger
+    '''
     _print_splash()
     log.setup_logging(log_file, print_log_location=False, debug=debug)
     logger = log.get_logger('pipeline')
     if project_dir is not None:
+        make_dir(os.path.normpath(project_dir))
         logger.info('PROJECT DIRECTORY: {}'.format(project_dir))
         logger.info('')
     logger.info('LOG LOCATION: {}'.format(log_file))
@@ -42,11 +64,33 @@ def initialize(log_file, project_dir=None, debug=False):
 
 
 def make_dir(d):
+    '''
+    Makes a directory, if it doesn't already exist.
+
+    Args:
+
+        d (str): Path to a directory.
+    '''
     if not os.path.exists(d):
         os.makedirs(d)
 
 
 def list_files(d, extension=None):
+    '''
+    Lists files in a given directory.
+
+    Args:
+
+        d (str): Path to a directory.
+
+        extension (str): If supplied, only files that contain the
+            specificied extension will be returned. Default is ``False``,
+            which returns all files in ``d``.
+
+    Returns:
+
+        list: A sorted list of file paths.
+    '''
     if os.path.isdir(d):
         expanded_dir = os.path.expanduser(d)
         files = sorted(glob.glob(expanded_dir + '/*'))
@@ -62,12 +106,13 @@ def list_files(d, extension=None):
 
 
 def _print_splash():
-    splash = '''     _    _   _____           _       ____  _            _ _            
+    splash = '''
+     _    _   _____           _       ____  _            _ _            
     / \  | |_|_   _|__   ___ | |___  |  _ \(_)_ __   ___| (_)_ __   ___ 
    / _ \ | '_ \| |/ _ \ / _ \| / __| | |_) | | '_ \ / _ \ | | '_ \ / _ \\
   / ___ \| |_) | | (_) | (_) | \__ \ |  __/| | |_) |  __/ | | | | |  __/
  /_/   \_\_.__/|_|\___/ \___/|_|___/ |_|   |_| .__/ \___|_|_|_| |_|\___|
                                              |_|                        '''
-    print('')
+    # print('')
     print(splash)
     print('')
