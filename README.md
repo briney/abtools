@@ -6,6 +6,10 @@ AbTools is a package of several tools for performing common antibody repertoire 
 `AbPhylogeny` generates publication-quality phylogenetic trees from antibody sequences  
 `AbCompare` provides methods for repertoire-level comparison of antibody sequence data  
   
+  - Source code: [github.com/briney/abtools](https://github.com/briney/abtools)  
+  - Documentation: [abtools.readthedocs.org](http://abtools.readthedocs.org)  
+  - Download: [pypi.python.org/pypi/abtools](https://pypi.python.org/pypi/abtools)  
+  
 ### install  
 `pip install abtools`  
   
