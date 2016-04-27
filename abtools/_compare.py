@@ -100,7 +100,7 @@ def parse_args():
                         Default is 'heavy'.")
     parser.add_argument('--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
@@ -826,7 +826,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args()
     logfile = args.log if args.log else os.path.join(args.output, 'abcompare.log')
     log.setup_logging(logfile)
     logger = log.get_logger('abcompare')

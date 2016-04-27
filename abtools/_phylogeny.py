@@ -101,7 +101,7 @@ def parse_args():
                         help="Tree orientation. If 0, tree will be drawn from left to right. \
                         if 1, tree will be drawn from right to left. \
                         Default is 0.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
@@ -323,5 +323,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args
     main(args)

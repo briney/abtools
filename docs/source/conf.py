@@ -19,14 +19,15 @@ import sphinx_rtd_theme
 from mock import MagicMock
 
 
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#             return Mock()
+if os.environ.get('READTHEDOCS', None):
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+                return Mock()
 
-# MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
-#                 'biopython', 'celery', 'pymongo', 'scikit-bio', 'ete2', 'matplotlib', 'seaborn',
-#                 'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
+    MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
+                    'biopython', 'celery', 'pymongo', 'scikit-bio', 'ete2', 'matplotlib', 'seaborn',
+                    'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
@@ -45,7 +46,8 @@ from mock import MagicMock
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinxcontrib.autoprogram'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

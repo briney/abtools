@@ -20,20 +20,27 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
-   overview
    installation
 
 
-Usage
------
+Commandline Use
+---------------
 
 .. toctree::
    :maxdepth: 1
 
+   abcompare
    abcorrect
    abfinder
    abphylogeny
-   abcompare
+
+
+API
+---
+
+.. toctree::
+   :maxdepth: 1
+
    api_examples
    api
    

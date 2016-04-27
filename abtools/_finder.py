@@ -120,7 +120,7 @@ def parse_args():
     parser.add_argument('-D', '--debug', dest="debug", action='store_true', default=False,
                         help="If set, will write all failed/exception sequences to file \
                         and should give more informative errors.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
@@ -641,7 +641,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args()
     logfile = args.log if args.log else os.path.join(args.output_dir, 'abfinder.log')
     log.setup_logging(logfile)
     logger = log.get_logger('abfinder')

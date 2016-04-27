@@ -76,12 +76,12 @@ def parse_args():
     parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
                         help="Minimum number of sequences for finding centroids from a UAID group. \
                         Defaults to 1.")
-    parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
+    parser.add_argument('-U', '--no-uaid', dest='uaid', action='store_false', default=True,
                         help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
-    parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
+    parser.add_argument('-P', '--parse-uaids', dest='parse_uaids', type=int, default=0,
                         help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
-                        If the '--no_uaid' flag is also used, this option will be ignored. \
-                        For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
+                        If the '--no-uaid' flag is also used, this option will be ignored. \
+                        For a UAID of length 20, option should be passed as '--parse-uaids 20'. \
                         Default is to not parse UAIDs.")
     parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
@@ -113,7 +113,7 @@ def parse_args():
                         help="If set, will run in debug mode.")
     parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
                         help="Delay, in minutes, until the script starts executing. Default is 0.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
@@ -936,7 +936,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args()
     logfile = args.log if args.log else os.path.join(args.output, 'abcorrect.log')
     log.setup_logging(logfile)
     logger = log.get_logger('abcorrect')

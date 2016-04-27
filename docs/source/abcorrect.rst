@@ -3,7 +3,7 @@ AbCorrect
 
 
 Overview
----------------------------------------
+--------
 
 AbCorrect is a full-featured utility for performing error-correction
 on antibody repertoire sequencing data. Error correction can be performed
@@ -111,8 +111,11 @@ Finally, to make non-redundant set of sequences, AbCorrect provides the ``--nr``
 
     $ abcorrect -d MyDatabase -t /path/to/temp/ -o /path/to/output/ --nr
 
- This uses ``sort | uniq``, which is much faster than clustering at 100% identity with CD-HIT. It is 
- important to note that using ``nr`` may produce a different result compared to clustering at
- 100% identity. Two sequences that are different lengths but are otherwise identical will be collapsed
- when clustering with CD-HIT but will not when using ``sort | uniq``.
+This uses ``sort | uniq``, which is much faster than clustering at 100% identity with CD-HIT. 
+
+.. warning::
+ 
+    Using ``--nr`` is is not the same as clustering at 100% identity. Two sequences that are 
+    different lengths but are otherwise identical will be collapsed when clustering with CD-HIT 
+    but will not be collapsed when using ``sort | uniq``.
 
