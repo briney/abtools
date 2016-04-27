@@ -105,7 +105,6 @@ def parse_args():
 
 
 class Args(object):
-    """docstring for Args"""
     def __init__(self, input=None, output=None,
                  root=None, mabs=None,
                  alignment=None, newick=None,
@@ -234,6 +233,76 @@ def make_tree(alignment, timepoints, args):
 
 
 def run(**kwargs):
+    '''
+    Builds a phylogenetic representation of antibody sequences.
+
+    ``output`` is required, as well as one of ``input``, ``alignment`` or ``newick``.
+
+    Args:
+
+        input (str): Can be one of three things:
+
+            1. Path to a FASTA-formatted file containing input sequences.
+            2. A list of AbTools ``Sequence`` objects.
+            3. A list of dictionaries, containing at minimum ``name_key`` and ``seq_key``.
+
+        output (str): Path to the output directory, into which tree images and
+            all intermediate files will be deposited.
+
+        root (str): Path to a FASTA-formatted file containing a single sequence
+            which will be used to root the tree. If not provided, tree will be unrooted.
+
+        mabs (str): Path to a FASTA-formatted file containing mAb sequences. If supplying
+            both mAb sequences and NGS sequences, passing the mAb sequences separately
+            allows you to modify their representation separately (for example, show sequence
+            IDs for just the mAb sequences).
+
+        alignment (str): Path to a multiple sequence alignment, in FASTA format. If sequences
+            are already aligned, this will save some computational time since the alignment
+            will not be redone.
+
+        newick (str): Path to a tree file, in Newick format. As with ``alignment``, this is
+            primarily to save computational time if the tree file has already been generated.
+
+        name_key (str): If ``input`` is a list of Sequence objects or dicts, this key will be
+            used to find the sequence ID. Default is ``seq_id``.
+
+        sequence_key (str): If ``input`` is a list of Sequence objects or dicts, this key will be
+            used to find the sequence. Default is ``vdj_nt``.
+
+        timepoints (str): Path to a Tab-delimited file, of the following format (one per line)::
+
+                TimepointName    TimepointOrder    TimepointColor
+
+            ``TimepointName`` should prepended to the sequences in the input file (separated by ``delimiter``).
+
+            ``TimepointOrder`` is an integer that indicates the order in which the timepoints should be sorted.
+
+            ``TimepointColor`` is a hex value that will be used to color the phylogenetic tree.
+            If mAb sequences are provided, the 'mab' ``TimepointName`` will be used to sort/color the mAb sequences.
+            If not provided, colors will be automatically selected and timepoints will be determined by a simple
+            sort of the raw timepoint values parsed from the input file.
+
+        is_aa (bool): If ``True``, input sequences will be assumed to be amino acid sequences.
+            Default is ``False``, which assumes nucleotide sequences.
+
+        delimiter (str): The delimiter used in sequence IDs to separate the timepoint from
+            the sequence name. Default is ``_``.
+
+        scale (int): Horizontal scale of the phylogeny. Default is ``None``, which uses the
+            default ``ete2`` value.
+
+        branch_vertical_margin (float): Vertical scale of the phylogeny. Default is ``None``,
+            which uses the default ``ete2`` value.
+
+        label_nodes (str): Type of nodes to be labeled. Options are: ``all``, ``none``,
+            ``no-root``, ``mab``, ``input``, and ``root``.
+
+        label_fontsize (float): Font size for the node labels.
+
+        tree_orientation (int): If ``0``, tree is drawn from left to right. If ``1``, tree
+            will be drawn from right to left (mirror). Default is ``0``.
+    '''
     args = Args(**kwargs)
     main(args)
 

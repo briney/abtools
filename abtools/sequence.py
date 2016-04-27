@@ -34,12 +34,17 @@ class Sequence(object):
     Container for biological (RNA and DNA) sequences.
 
     ``seq`` can be one of several things:
+
         1) a raw sequence, as a string
+
         2) an iterable, formatted as ``[seq_id, sequence]``
+
         3) a dict, containing at least the ID (default key = 'seq_id') and a
-            sequence (default key = 'vdj_nt'). Alternate ``id_key`` and ``seq_key``
-            can be provided at instantiation.
+           sequence (default key = 'vdj_nt'). Alternate ``id_key`` and ``seq_key``
+           can be provided at instantiation.
+
         4) a Biopython ``SeqRecord`` object
+
         5) an AbTools ``Sequence`` object
 
     If ``seq`` is provided as a string, the sequence ID can optionally be

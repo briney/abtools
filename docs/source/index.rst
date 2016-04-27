@@ -1,11 +1,16 @@
 
-AbStar: Genetic analysis of antibody repertoires
+AbTools: Utilities for antibody sequence analysis
 ===================================================================
 
 
-AbStar is a core component of the Ab[x] Toolkit for antibody sequence analysis. 
-AbStar performs V(D)J germline gene assignment and primary sequence annotation and can readily scale
-from a single sequence to billions of sequences.
+AbTools provides core data structures and methods for analysis of 
+antibody repertoire data. Tools for manipulating sequences, pairwise
+and multiple sequence alignment and sequence clustering are included.
+
+Additionally, AbTools provides utilities for secondary analysis of 
+antibody sequence data. Error correction, mining NGS datasets for sequences 
+with similarity to known antibody sequences, generating lineage phylogenies, 
+and making repertoire-level comparisons are all covered.
 
 
 
@@ -25,7 +30,10 @@ Usage
 .. toctree::
    :maxdepth: 1
 
-   cli
+   abcorrect
+   abfinder
+   abphylogeny
+   abcompare
    api_examples
    api
    
@@ -46,7 +54,7 @@ Related Projects
 .. toctree::
    :maxdepth: 1
 
-   AbTools <https://github.com/briney/abtools>
+   AbStar <https://github.com/briney/abstar>
    AbCloud <https://github.com/briney/abcloud>
    Clonify <https://github.com/briney/clonify-python>
 

@@ -64,9 +64,12 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
         sequences (list): Sequences to be aligned. ``sequences`` can be one of four things:
 
             1. a FASTA-formatted string
+
             2. a list of BioPython ``SeqRecord`` objects
+
             3. a list of AbTools ``Sequence`` objects
-            4 a list of lists/tuples, of the format ``[sequence_id, sequence]``
+
+            4. a list of lists/tuples, of the format ``[sequence_id, sequence]``
 
         alignment_file (str): Path for the output alignment file. If not supplied,
             a name will be generated using ``tempfile.NamedTemporaryFile()``.
@@ -132,9 +135,12 @@ def muscle(sequences=None, alignment_file=None, fasta=None,
         sequences (list): Sequences to be aligned. ``sequences`` can be one of four things:
 
             1. a FASTA-formatted string
+
             2. a list of BioPython ``SeqRecord`` objects
+
             3. a list of AbTools ``Sequence`` objects
-            4 a list of lists/tuples, of the format ``[sequence_id, sequence]``
+
+            4. a list of lists/tuples, of the format ``[sequence_id, sequence]``
 
         alignment_file (str): Path for the output alignment file. If not supplied,
             a name will be generated using ``tempfile.NamedTemporaryFile()``.
@@ -240,8 +246,11 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
         query: Query sequence. ``query`` can be one of four things:
 
             1. a nucleotide or amino acid sequence, as a string
+
             2. a Biopython ``SeqRecord`` object
+
             3. an AbTools ``Sequence`` object
+
             4. a list/tuple of the format ``[seq_id, sequence]``
 
         target: A single target sequence. ``target`` can be anything that
@@ -264,14 +273,12 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
         matrix (str, dict): Alignment scoring matrix. Two options for passing the
             alignment matrix:
 
-                1. The name of a built-in matrix. Current options are ``blosum62``
-                    and ``pam250``.
+            - The name of a built-in matrix. Current options are ``blosum62`` and ``pam250``.
 
-                2. A nested dictionary, giving an alignment score for each residue
-                    pair. Should be formatted such that retrieving the alignment
-                    score for A and G is accomplished by::
+            - A nested dictionary, giving an alignment score for each residue pair. Should be formatted
+              such that retrieving the alignment score for A and G is accomplished by::
 
-                        matrix['A']['G']
+                matrix['A']['G']
 
         aa (bool): Must be set to ``True`` if aligning amino acid sequences. Default
             is ``False``.
@@ -382,8 +389,11 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
         query: Query sequence. ``query`` can be one of four things:
 
             1. a nucleotide or amino acid sequence, as a string
+
             2. a Biopython ``SeqRecord`` object
+
             3. an AbTools ``Sequence`` object
+
             4. a list/tuple of the format ``[seq_id, sequence]``
 
         target: A single target sequence. ``target`` can be anything that
@@ -416,17 +426,14 @@ def global_alignment(query, target=None, targets=None, match=3, mismatch=-2, gap
         score_gap_extend (int): Gap extend penalty for scoring the alignment. Should be a negative
             integer. Default is to use ``gap_extend``.
 
-        matrix (str, dict): Alignment scoring matrix. Two options for passing the
-            alignment matrix:
+        matrix (str, dict): Alignment scoring matrix. Two options for passing the alignment matrix:
 
-                1. The name of a built-in matrix. Current options are ``blosum62``
-                    and ``pam250``.
+            - The name of a built-in matrix. Current options are ``blosum62`` and ``pam250``.
 
-                2. A nested dictionary, giving an alignment score for each residue
-                    pair. Should be formatted such that retrieving the alignment
-                    score for A and G is accomplished by::
+            - A nested dictionary, giving an alignment score for each residue pair. Should be
+              formatted such that retrieving the alignment score for A and G is accomplished by::
 
-                        matrix['A']['G']
+                matrix['A']['G']
 
         aa (bool): Must be set to ``True`` if aligning amino acid sequences. Default
             is ``False``.
@@ -627,13 +634,12 @@ class SSWAlignment(BaseAlignment):
 
         aligned_target (str): The aligned target sequence (including gaps).
 
-        alignment_midline (str): Midline for the aligned query/target
-            sequences, with ``|`` indicating matches and a gap indicating
-            mismatches::
+        alignment_midline (str): Midline for the aligned sequences, with ``|`` indicating
+          matches and a gap indicating mismatches::
 
-            print('\n'.join([aln.aligned_query,
-                             aln.alignment_midline,
-                             aln.aligned_target]))
+            print(aln.aligned_query)
+            print(aln.alignment_midline)
+            print(aln.aligned_target)
 
             # ATGC
             # || |
@@ -740,13 +746,12 @@ class NWAlignment(BaseAlignment):
 
         aligned_target (str): The aligned target sequence (including gaps).
 
-        alignment_midline (str): Midline for the aligned query/target
-            sequences, with ``|`` indicating matches and a gap indicating
-            mismatches::
+        alignment_midline (str): Midline for the aligned sequences, with
+          ``|`` indicating matches and a gap indicating mismatches::
 
-            print('\n'.join([aln.aligned_query,
-                             aln.alignment_midline,
-                             aln.aligned_target]))
+            print(aln.aligned_query)
+            print(aln.alignment_midline)
+            print(aln.aligned_target)
 
             # ATGC
             # || |

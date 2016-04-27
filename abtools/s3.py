@@ -37,11 +37,11 @@ def compress_and_upload(data, compressed_file, s3_path,
 
     S3 upload uses ``s3cmd``, so you must either:
 
-        1. Manually configure ``s3cmd`` prior to use (typically using
-            ``s3cmd --configure``)
-        2. Configure ``s3cmd`` using ``s3.configure()``
-        3. Pass your access key and secret key to ``compress_and_upload``, which
-            will automatically configure s3cmd.
+        1) Manually configure ``s3cmd`` prior to use (typically using ``s3cmd --configure``).
+
+        2) Configure ``s3cmd`` using ``s3.configure()``.
+
+        3) Pass your access key and secret key to ``compress_and_upload``, which will automatically configure s3cmd.
 
     .. note:
 
@@ -53,22 +53,25 @@ def compress_and_upload(data, compressed_file, s3_path,
 
         data: Can be one of three things:
 
-            1. Path to a single file
-            2. Path to a directory
-            3. A list of one or more paths to files or directories
+            1) Path to a single file
+
+            2) Path to a directory
+
+            3) A list of one or more paths to files or directories
 
         compressed_file (str): Path to the compressed file. Required.
 
         s3_path (str): The S3 path, with the filename omitted. The S3 filename
-            will be the basename of the ``compressed_file``. For example::
+          will be the basename of the ``compressed_file``. For example::
 
-                compress_and_upload(data='/path/to/data',
-                                    compressed_file='/path/to/compressed.tar.gz',
-                                    s3_path='s3://my_bucket/path/to/')
+            compress_and_upload(data='/path/to/data',
+                                compressed_file='/path/to/compressed.tar.gz',
+                                s3_path='s3://my_bucket/path/to/')
 
-            will result in an uploaded S3 path of ``s3://my_bucket/path/to/compressed.tar.gz``
+          will result in an uploaded S3 path of ``s3://my_bucket/path/to/compressed.tar.gz``
 
-        method (str): Compression method. Options are ``gz`` or ``bz2``. Default is ``bz``.
+        method (str): Compression method. Options are ``'gz'`` (gzip) or ``'bz2'`` (bzip2).
+            Default is ``'gz'``.
 
         delete (bool): If ``True``, the ``compressed_file`` will be deleted after upload
             to S3. Default is ``False``.
@@ -134,14 +137,17 @@ def compress(d, output, compress='gz', logger=None):
     Args:
 
         d: Can be one of three things:
+
             1. the path to a single file, as a string
+
             2. the path to a single directory, as a string
+
             3. an iterable of file or directory paths
 
         output (str): Output file path.
 
-        compress: Compression method. Options are ``gz``, ``bz2`` and ``none``.
-            Default is ``gz``.
+        compress: Compression method. Options are ``'gz'`` (gzip),
+            ``'bz2'`` (bzip2) and ``'none'`` (uncompressed). Default is ``'gz'``.
     '''
     if not logger:
         logger = log.get_logger('s3')
@@ -196,6 +202,7 @@ def configure(access_key=None, secret_key=None, logger=None):
     Args:
 
         access_key (str): AWS access key
+
         secret_key (str): AWS secret key
     '''
     if not logger:

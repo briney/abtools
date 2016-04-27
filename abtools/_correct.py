@@ -83,7 +83,7 @@ def parse_args():
                         If the '--no_uaid' flag is also used, this option will be ignored. \
                         For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
                         Default is to not parse UAIDs.")
-    parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
+    parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
                         Default is to identify cluster centroids.")
     parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
@@ -117,13 +117,12 @@ def parse_args():
 
 
 class Args(object):
-    """docstring for Args"""
     def __init__(self, db=None, collection=None, json=None,
                  output=None, log=None, temp=None,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975,
                  uaid=True, parse_uaids=0, non_redundant=False,
-                 consensus=False, only_largest_cluster=False, germs=None,
+                 consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, field='vdj_nt', debug=False, sleep=0):
         super(Args, self).__init__()
         if not all([db, output, temp]):
@@ -281,7 +280,7 @@ def parse_germs(germ_file):
 
 # =========================================
 #
-#           CD-HIT CLUSTERING
+#             NON-REDUNDANT
 #
 # =========================================
 
@@ -501,15 +500,15 @@ def get_uaid_centroids(uaid_clusters, args):
 
 
 def do_usearch_centroid(uaid_group_seqs, args):
-    '''
-    Clusters sequences at 90% identity using USEARCH.
+    # '''
+    # Clusters sequences at 90% identity using USEARCH.
 
-    Inputs
-    uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
+    # Inputs
+    # uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
 
-    Outputs
-    A list of fasta strings, containing centroid sequences for each cluster.
-    '''
+    # Outputs
+    # A list of fasta strings, containing centroid sequences for each cluster.
+    # '''
     fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
     results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
     centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
@@ -781,46 +780,91 @@ def countdown(args):
 
 def run(**kwargs):
     '''
-    Corrects antibody reads using UAIDs (molecular barcodes) or
-    identity-based clustering.
+    Corrects antibody reads using UAIDs (molecular barcodes) or identity-based clustering.
 
-    A MongoDB database (::db::) is required, as are output and temp
-    directories (::output:: and ::temp::, respectively). If ::collection::
-    is not provided, all collections in ::db:: will be iteratively
-    processed.
+    Either ``json`` or ``db`` is required.
 
-    By default, the output is centroid sequences. To calculate consensus
-    sequences instead, set ::consensus:: to True.
 
-    To correct using UAIDs (default), just set the minimum number
-    of reads required in each UAID cluster (::min_seqs:: -- default=1).
+    Args:
 
-    To use identity-based clustering, set ::uaid:: to False.
-    If UAIDs weren't parsed by AbStar (the MongoDB doesn't have a 'uaid'
-    field), UAIDs can be parsed by setting ::parse_uaids:: to the length
-    of the UAID. The default clustering threshold of 0.975 can be
-    adjusted with ::identity_threshold::. As with UAID-based clustering,
-    the minimum number of reads can be adjusted with ::min_seqs::
+        db (str): Name of a MongoDB database to query.
 
-    Defaults:
-    db=None
-    collection=None
-    output=None
-    log=None
-    temp=None
-    ip='localhost'
-    port=27017
-    user=None
-    password=None
-    min_seqs=1
-    identity_threshold=0.975
-    uaid=True
-    parse_uaids=0
-    consensus=False
-    only_largest_cluster=False
-    germs=None
-    sleep=0
-    debug=False
+        collection (str): Name of a MongoDB collection. If not provided, all
+            collections in ``db`` will be iteratively processed.
+
+        json: Can be one of two things:
+
+            1. Path to a JSON file, containing sequence data annotated by AbStar.
+
+            2. Path to a directory, containing one or more JSON files of
+                AbStar-annotated data.
+
+        output (str): Path to the output directory, into which corrected FASTA
+            files will be deposited. If it does not exist, it will be created.
+
+        log (str): Path to the log file. If the parent directory doesn't exist,
+            it will be created.
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        password (str): Password with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        min_seqs (int): Minimum number of sequences for a centroid/consensus sequence to be
+            calculated. After clustering (either by identity or using UAIDs), clusters with
+            at least ``min_seqs`` sequences will be retained for consensus/centroid calculation.
+            Default is ``1``.
+
+        uaid (bool): If ``True``, use Unique Antibody IDs (UAIDs) for error correction.
+            Sequences will be binned by UAID and the sequences in each bin will be used to
+            compute a centroid or consensus sequence. If ``False``, sequences will be clustered
+            by identity and each cluster will be used for consensus/centroid determination.
+
+        parse_uaids (int): If UAIDs haven't been pre-parsed by AbStar, indicate the length of the
+            UAID sequence (in nucleotides) and the UAIDs will be parsed during correction. If
+            ``parse_uaids`` is negative, the UAID will be parsed from the end of the sequence.
+            Default is ``0``, which does not parse a UAID sequence.
+
+        consensus (bool): If ``True``, consensus sequences are calculated. If ``False``, centroid
+            sequences are calculated. Default is ``True``.
+
+        identity_threshold (float): Identity threshold, if clustering by identity (not UAIDs).
+            Must be a float between 0 and 1. Default is 0.975.
+
+        only_largest_cluster (bool): When clustering using UAIDs, there is a some probability that
+            different sequences get labeled with the same UAID. To limit incorrect consensus/centroid
+            calculation, sequences in each UAID bin are clustered using ``identity_threshold`` before
+            calculating consens/centroid sequences. By default, all UAID clusters that meet the
+            ``min_seqs`` size threshold are used to generate consensus/centroid sequences. If that
+            behavior is not desired, setting ``only_largest_cluster`` to ``True`` results in only
+            the largest UAID cluster being used to generate centroid/consensus sequences.
+
+        nr (bool): If ``True``, a non-redundant sequence dataset will be generated using ``sort | uniq``.
+            This is much faster than normal sequence clustering with CD-HIT, but can only be performed at an
+            identity threshold of 100%.
+
+            .. note:
+
+                Using ``nr`` may produce different results than clustering sequences with ``identity_threshold``
+                set to ``1.0``. This is because sequences of different lengths that are otherwise identical
+                will not be collapsed when using ``nr`` but will be collapsed using normal clustering.
+
+        germs (str): Path to a file containing germline V-gene sequences. When clustering with ``min_seqs``
+            equal to 2, the appropriate germline sequence will be added to the alignment to serve as a
+            consensus tiebreaker.
+
+        aa (bool): If ``True``, perform sequence clustering (either using ``identity_threshold`` or ``nr``)
+            using amino acid sequences. Default is ``False``, which performs clustering using nucleotide
+            sequences.
+
+        debug (bool): If ``True``, logging is more verbose.
     '''
     args = Args(**kwargs)
     global logger
@@ -846,9 +890,14 @@ def main(args):
         germs = parse_germs(args.germs)
     else:
         germs = args.germs
+    # check whether JSON files have been passed
     if args.jsons is not None and all([args.db is None, args.collections is None]):
-        collections = list_files(args.jsons, extension='json')
+    	if os.path.isfile(args.jsons) and args.jsons.endswith('.json'):
+    		collections = [args.jsons, ]
+    	else:
+        	collections = list_files(args.jsons, extension='json')
         db = None
+    # otherwise, get sequences from MongoDB
     else:
         db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
         collections = mongodb.get_collections(db, collection=args.collection)

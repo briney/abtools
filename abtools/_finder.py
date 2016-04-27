@@ -124,7 +124,6 @@ def parse_args():
 
 
 class Args(object):
-    """docstring for Args"""
     def __init__(self, db=None, collection=None,
                  output=None, temp=None, log=None, cluster=False,
                  ip='localhost', port=27017, user=None, password=None, update=True,
@@ -534,6 +533,70 @@ def update_progress(finished, jobs):
 
 
 def run(**kwargs):
+    '''
+    Mines NGS datasets for identity to known antibody sequences.
+
+    All of ``db``, ``output``, ``temp`` and ``standard`` are required.
+
+
+    Args:
+
+        db (str): Name of a MongoDB database to query.
+
+        collection (str): Name of a MongoDB collection. If not provided, all collections
+            in ``db`` will be processed iteratively.
+
+        output_dir (str): Path to the output directory, into which identity/divergence
+            figures will be deposited.
+
+        temp_dir (str): Path to a temporary directory.
+
+        log (str): Path to a log file. If not provided, log information will not be retained.
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (str): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        password (str): Password with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        standard (path): Path to a FASTA-formatted file containing one or more 'standard'
+            sequences, against which the NGS sequences will be compared.
+
+        chain (str): Antibody chain. Choices are 'heavy', 'kappa', 'lambda', and 'light'.
+            Default is 'heavy'. Only NGS sequences matching ``chain`` (with 'light' covering
+            both 'kappa' and 'lambda') will be compared to the ``standard`` sequences.
+
+        update (bool): If ``True``, the MongoDB record for each NGS sequence will be updated
+            with identity information for each standard. If ``False``, the updated is skipped.
+            Default is ``True``.
+
+        is_aa (bool): If ``True``, the ``standard`` sequences are amino acid sequences. If
+            ``False``, they are nucleotide seqeunces. Default is ``False``.
+
+        x_min (int): Minimum x-axis value on identity/divergence plots.
+
+        x_max (int): Maximum x-axis value on identity/divergence plots.
+
+        y_min (int): Minimum y-axis value on identity/divergence plots.
+
+        y_max (int): Maximum y-axis value on identity/divergence plots.
+
+        gridsize (int): Relative size of hexbin grids.
+
+        mincount (int): Minimum number of sequences in a hexbin for the bin to be colored.
+            Default is 3.
+
+        colormap (str, colormap): Colormap to be used for identity/divergence plots.
+            Default is ``Blues``.
+
+        debug (bool): If ``True``, more verbose logging.
+   '''
     args = Args(**kwargs)
     global logger
     logger = log.get_logger('abfinder')
