@@ -25,17 +25,11 @@ if os.environ.get('READTHEDOCS', None) == 'True':
         def __getattr__(cls, name):
                 return Mock()
 
-<<<<<<< HEAD
     MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
                     'biopython', 'celery', 'pymongo', 'skbio', 'skbio.alignment', 'ete2', 'matplotlib', 'seaborn',
                     'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
-=======
-MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
-                'biopython', 'celery', 'pymongo', 'skbio', 'skbio.alignment', 'ete2', 'matplotlib', 'seaborn',
-                'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
->>>>>>> master
 
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
