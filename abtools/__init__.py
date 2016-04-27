@@ -1,3 +1,5 @@
+import os
+
 if not os.environ.get('READTHEDOCS', None):
 
     from _compare import run as compare
