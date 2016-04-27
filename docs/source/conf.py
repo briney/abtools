@@ -19,7 +19,7 @@ import sphinx_rtd_theme
 from mock import MagicMock
 
 
-if os.environ.get('READTHEDOCS', None):
+if os.environ.get('READTHEDOCS', None) == 'True':
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
