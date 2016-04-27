@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import Counter
+import json
 import math
 import multiprocessing as mp
 import os
@@ -41,7 +42,7 @@ from Bio.Align import AlignInfo
 
 from abtools import log, mongodb
 from abtools.alignment import muscle
-from abtools.pipeline import make_dir
+from abtools.pipeline import make_dir, list_files
 
 
 def parse_args():
@@ -50,11 +51,13 @@ def parse_args():
                                       antibody identifiers (UAIDs). \
                                       Calculates either the centroid or consensus sequence for each \
                                       identity/UAID cluster passing a cluster size threshold.")
-    parser.add_argument('-d', '--database', dest='db', required=True,
+    parser.add_argument('-d', '--database', dest='db', default=None,
                         help="Name of the MongoDB database to query. Required")
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
+    parser.add_argument('-j', '--json', dest='json', default=None,
+                        help="Input JSON file or directory of JSON files.")
     parser.add_argument('-o', '--output', dest='output', required=True,
                         help="Output directory for the FASTA files. Required")
     parser.add_argument('-l', '--log', dest='log',
@@ -73,14 +76,14 @@ def parse_args():
     parser.add_argument('-m', '--min', dest='min_seqs', default=1, type=int,
                         help="Minimum number of sequences for finding centroids from a UAID group. \
                         Defaults to 1.")
-    parser.add_argument('-U', '--no_uaid', dest='uaid', action='store_false', default=True,
+    parser.add_argument('-U', '--no-uaid', dest='uaid', action='store_false', default=True,
                         help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
-    parser.add_argument('-P', '--parse_uaids', dest='parse_uaids', type=int, default=0,
+    parser.add_argument('-P', '--parse-uaids', dest='parse_uaids', type=int, default=0,
                         help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
-                        If the '--no_uaid' flag is also used, this option will be ignored. \
-                        For a UAID of length 20, option should be passed as '--parse_uaids 20'. \
+                        If the '--no-uaid' flag is also used, this option will be ignored. \
+                        For a UAID of length 20, option should be passed as '--parse-uaids 20'. \
                         Default is to not parse UAIDs.")
-    parser.add_argument('-C', '--consensus', dest='consensus', action='store_true', default=False,
+    parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
                         Default is to identify cluster centroids.")
     parser.add_argument('-I', '--identity', dest='identity_threshold', default=0.975, type=float,
@@ -110,17 +113,16 @@ def parse_args():
                         help="If set, will run in debug mode.")
     parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
                         help="Delay, in minutes, until the script starts executing. Default is 0.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
-    """docstring for Args"""
-    def __init__(self, db=None, collection=None,
+    def __init__(self, db=None, collection=None, json=None,
                  output=None, log=None, temp=None,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975,
                  uaid=True, parse_uaids=0, non_redundant=False,
-                 consensus=False, only_largest_cluster=False, germs=None,
+                 consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, field='vdj_nt', debug=False, sleep=0):
         super(Args, self).__init__()
         if not all([db, output, temp]):
@@ -129,6 +131,7 @@ class Args(object):
             sys.exit(1)
         self.db = db
         self.collection = collection
+        self.json = json
         self.output = output
         self.log = log
         self.temp_dir = temp
@@ -159,15 +162,6 @@ class Args(object):
 
 
 
-# def get_collections(args):
-#     if args.collection:
-#         return [args.collection, ]
-#     conn = MongoClient(args.ip, 27017)
-#     db = conn[args.db]
-#     collections = db.collection_names(include_system_collections=False)
-#     return sorted(collections)
-
-
 def get_seqs(db, collection, args, make_seq_db=True):
     seqs = query(db, collection, args)
     if not make_seq_db:
@@ -176,17 +170,48 @@ def get_seqs(db, collection, args, make_seq_db=True):
 
 
 def query(db, collection, args):
-    logger.info('Getting sequences from MongoDB...')
     seq_field = args.field
-    coll = db[collection]
-    match = {'prod': 'yes'}
-    project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
-    if args.uaid is not None:
-        project['uaid'] = 1
-    # if args.consensus:
-    #     project['v_gene.gene'] = 1
-    results = coll.find(match, project)
-    # results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
+    # parse JSON file...
+    if db is None:
+        loger.info('Reading JSON file...')
+        results = []
+        with open(collection) as f:
+            _results = json.load(f)
+        for r in _results:
+            try:
+                d = {'seq_id': r['seq_id'],
+                     seq_field: r[seq_field],
+                     'raw_query': r['raw_query'],
+                     'v_gene': {'full': f['v_gene']['full']}}
+                if args.uaid is not None:
+                    if 'uaid' in r:
+                        d['uaid'] = r['uaid']
+                    elif args.parse_uaids:
+                        if args.parse_uaids > 0:
+                            d['uaid'] = r['raw_query'][:args.parse_uaids]
+                        else:
+                            d['uaid'] = r['raw_query'][args.parse_uaids:]
+                    else:
+                        err = 'ERROR: UAID field was not found. '
+                        err += 'Ensure that UAIDs were parsed by AbStar, '
+                        err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
+                        err += 'or use the -u option for identity-based clustering.'
+                        raise ValueError(err)
+                results.append(d)
+            except KeyError:
+                continue
+    # ...or get sequences from a MongoDB database
+    else:
+        logger.info('Getting sequences from MongoDB...')
+        coll = db[collection]
+        match = {'prod': 'yes'}
+        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
+        if args.uaid is not None:
+            project['uaid'] = 1
+        # if args.consensus:
+        #     project['v_gene.gene'] = 1
+        results = coll.find(match, project)
+        # results = coll.find({'prod': 'yes'}, {'_id': 0, 'v_gene.full': 1, 'seq_id': 1, 'uaid': 1, seq_field: 1, 'raw_query': 1})
     if args.non_redundant:
         return results
     elif args.uaid:
@@ -200,8 +225,8 @@ def query(db, collection, args):
                 else:
                     seqs.append((r['seq_id'], r['raw_query'][args.parse_uaids:], r[seq_field], r['raw_query'], r['v_gene']['full']))
             else:
-                err = 'UAID field was not found. '
-                err += 'Ensure that UAIDs are being parsed by AbStar, '
+                err = 'ERROR: UAID field was not found. '
+                err += 'Ensure that UAIDs were parsed by AbStar, '
                 err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
                 err += 'or use the -u option for identity-based clustering.'
                 raise ValueError(err)
@@ -255,7 +280,7 @@ def parse_germs(germ_file):
 
 # =========================================
 #
-#           CD-HIT CLUSTERING
+#             NON-REDUNDANT
 #
 # =========================================
 
@@ -475,15 +500,15 @@ def get_uaid_centroids(uaid_clusters, args):
 
 
 def do_usearch_centroid(uaid_group_seqs, args):
-    '''
-    Clusters sequences at 90% identity using USEARCH.
+    # '''
+    # Clusters sequences at 90% identity using USEARCH.
 
-    Inputs
-    uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
+    # Inputs
+    # uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
 
-    Outputs
-    A list of fasta strings, containing centroid sequences for each cluster.
-    '''
+    # Outputs
+    # A list of fasta strings, containing centroid sequences for each cluster.
+    # '''
     fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
     results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
     centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
@@ -672,7 +697,10 @@ def write_output(collection, fastas, sizes, collection_start_time, args):
 
 def write_nr_output(collection, unique_file, collection_start_time, args):
     logger.info('Writing non-redundant sequences to output file...')
-    outfile = os.path.join(args.output, '{}_nr.fasta'.format(collection))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_nr.fasta'.format(oname))
     open(outfile, 'w').write('')
     ohandle = open(outfile, 'a')
     count = 0
@@ -691,7 +719,10 @@ def write_nr_output(collection, unique_file, collection_start_time, args):
 
 def write_fasta_output(collection, fastas, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
-    outfile = os.path.join(args.output, '{}_{}.fasta'.format(collection, seq_type))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
     out_handle.write('\n'.join(fastas))
     out_handle.close()
@@ -704,7 +735,10 @@ def write_stats_output(collection, sizes, args):
     binned_data = zip(bins, bin_counts)
     bin_string = 'Cluster Size\tCount\n'
     bin_string += '\n'.join(['{}\t{}'.format(b[0], b[1]) for b in binned_data])
-    outfile = os.path.join(args.output, '{}_cluster_sizes.txt'.format(collection))
+    oname = collection
+    if os.path.isfile(collection):
+        oname = os.path.basename(collection).rstrip('.json')
+    outfile = os.path.join(args.output, '{}_cluster_sizes.txt'.format(oname))
     out_handle = open(outfile, 'w')
     out_handle.write(bin_string)
     out_handle.close()
@@ -746,46 +780,91 @@ def countdown(args):
 
 def run(**kwargs):
     '''
-    Corrects antibody reads using UAIDs (molecular barcodes) or
-    identity-based clustering.
+    Corrects antibody reads using UAIDs (molecular barcodes) or identity-based clustering.
 
-    A MongoDB database (::db::)    is required, as are output and temp
-    directories (::output:: and ::temp::, respectively). If ::collection::
-    is not provided, all collections in ::db:: will be iteratively
-    processed.
+    Either ``json`` or ``db`` is required.
 
-    By default, the output is centroid sequences. To calculate consensus
-    sequences instead, set ::consensus:: to True.
 
-    To correct using UAIDs (default), just set the minimum number
-    of reads required in each UAID cluster (::min_seqs:: -- default=1).
+    Args:
 
-    To use identity-based clustering, set ::uaid:: to False.
-    If UAIDs weren't parsed by AbStar (the MongoDB doesn't have a 'uaid'
-    field), UAIDs can be parsed by setting ::parse_uaids:: to the length
-    of the UAID. The default clustering threshold of 0.975 can be
-    adjusted with ::identity_threshold::. As with UAID-based clustering,
-    the minimum number of reads can be adjusted with ::min_seqs::
+        db (str): Name of a MongoDB database to query.
 
-    Defaults:
-    db=None
-    collection=None
-    output=None
-    log=None
-    temp=None
-    ip='localhost'
-    port=27017
-    user=None
-    password=None
-    min_seqs=1
-    identity_threshold=0.975
-    uaid=True
-    parse_uaids=0
-    consensus=False
-    only_largest_cluster=False
-    germs=None
-    sleep=0
-    debug=False
+        collection (str): Name of a MongoDB collection. If not provided, all
+            collections in ``db`` will be iteratively processed.
+
+        json: Can be one of two things:
+
+            1. Path to a JSON file, containing sequence data annotated by AbStar.
+
+            2. Path to a directory, containing one or more JSON files of
+                AbStar-annotated data.
+
+        output (str): Path to the output directory, into which corrected FASTA
+            files will be deposited. If it does not exist, it will be created.
+
+        log (str): Path to the log file. If the parent directory doesn't exist,
+            it will be created.
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        password (str): Password with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        min_seqs (int): Minimum number of sequences for a centroid/consensus sequence to be
+            calculated. After clustering (either by identity or using UAIDs), clusters with
+            at least ``min_seqs`` sequences will be retained for consensus/centroid calculation.
+            Default is ``1``.
+
+        uaid (bool): If ``True``, use Unique Antibody IDs (UAIDs) for error correction.
+            Sequences will be binned by UAID and the sequences in each bin will be used to
+            compute a centroid or consensus sequence. If ``False``, sequences will be clustered
+            by identity and each cluster will be used for consensus/centroid determination.
+
+        parse_uaids (int): If UAIDs haven't been pre-parsed by AbStar, indicate the length of the
+            UAID sequence (in nucleotides) and the UAIDs will be parsed during correction. If
+            ``parse_uaids`` is negative, the UAID will be parsed from the end of the sequence.
+            Default is ``0``, which does not parse a UAID sequence.
+
+        consensus (bool): If ``True``, consensus sequences are calculated. If ``False``, centroid
+            sequences are calculated. Default is ``True``.
+
+        identity_threshold (float): Identity threshold, if clustering by identity (not UAIDs).
+            Must be a float between 0 and 1. Default is 0.975.
+
+        only_largest_cluster (bool): When clustering using UAIDs, there is a some probability that
+            different sequences get labeled with the same UAID. To limit incorrect consensus/centroid
+            calculation, sequences in each UAID bin are clustered using ``identity_threshold`` before
+            calculating consens/centroid sequences. By default, all UAID clusters that meet the
+            ``min_seqs`` size threshold are used to generate consensus/centroid sequences. If that
+            behavior is not desired, setting ``only_largest_cluster`` to ``True`` results in only
+            the largest UAID cluster being used to generate centroid/consensus sequences.
+
+        nr (bool): If ``True``, a non-redundant sequence dataset will be generated using ``sort | uniq``.
+            This is much faster than normal sequence clustering with CD-HIT, but can only be performed at an
+            identity threshold of 100%.
+
+            .. note:
+
+                Using ``nr`` may produce different results than clustering sequences with ``identity_threshold``
+                set to ``1.0``. This is because sequences of different lengths that are otherwise identical
+                will not be collapsed when using ``nr`` but will be collapsed using normal clustering.
+
+        germs (str): Path to a file containing germline V-gene sequences. When clustering with ``min_seqs``
+            equal to 2, the appropriate germline sequence will be added to the alignment to serve as a
+            consensus tiebreaker.
+
+        aa (bool): If ``True``, perform sequence clustering (either using ``identity_threshold`` or ``nr``)
+            using amino acid sequences. Default is ``False``, which performs clustering using nucleotide
+            sequences.
+
+        debug (bool): If ``True``, logging is more verbose.
     '''
     args = Args(**kwargs)
     global logger
@@ -811,8 +890,18 @@ def main(args):
         germs = parse_germs(args.germs)
     else:
         germs = args.germs
-    db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
-    for collection in mongodb.get_collections(db, args.collection):
+    # check whether JSON files have been passed
+    if args.jsons is not None and all([args.db is None, args.collections is None]):
+    	if os.path.isfile(args.jsons) and args.jsons.endswith('.json'):
+    		collections = [args.jsons, ]
+    	else:
+        	collections = list_files(args.jsons, extension='json')
+        db = None
+    # otherwise, get sequences from MongoDB
+    else:
+        db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
+        collections = mongodb.get_collections(db, collection=args.collection)
+    for collection in collections:
         collection_start = time.time()
         print_collection_info(collection)
         if args.non_redundant:
@@ -847,7 +936,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args()
     logfile = args.log if args.log else os.path.join(args.output, 'abcorrect.log')
     log.setup_logging(logfile)
     logger = log.get_logger('abcorrect')

@@ -37,6 +37,28 @@ cmaps = {'heatmap': sns.diverging_palette(240, 10, as_cmap=True)}
 
 
 def cmap_from_color(color, dark=False):
+    '''
+    Generates a matplotlib colormap from a single color.
+
+    Colormap will be built, by default, from white to ``color``.
+
+    Args:
+
+        color: Can be one of several things:
+
+            1. Hex code
+            2. HTML color name
+            3. RGB tuple
+
+        dark (bool): If ``True``, colormap will be built from ``color`` to
+            black. Default is ``False``, which builds a colormap from
+            white to ``color``.
+
+    Returns:
+
+        colormap: A matplotlib colormap
+
+    '''
     if dark:
         return sns.dark_palette(color, as_cmap=True)
     else:
@@ -53,12 +75,25 @@ def husl(n_colors, hue=0.01, saturation=0.9, lightness=0.65):
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=256):
     """
-    Truncates the provided colormap, such that the new colormap consists of
-    cmap[minval:maxval].
+    Truncates a colormap, such that the new colormap consists of
+    ``cmap[minval:maxval]``.
 
-    minval and maxval should be floats 0..1
+    If maxval is larger than minval, the truncated colormap will be reversed.
 
-    if maxval is larger than minval, the subset will be reversed.
+    Args:
+
+    	cmap (colormap): Colormap to be truncated
+
+    	minval (float): Lower bound. Should be a float betwee 0 and 1.
+
+    	maxval (float): Upper bound. Should be a float between 0 and 1
+
+    	n (int): Number of colormap steps. Default is ``256``.
+
+    Returns:
+
+    	colormap
+
 
     http://stackoverflow.com/questions/18926031/how-to-extract-a-subset-of-a-colormap-as-a-new-colormap-in-matplotlib
     """
@@ -68,41 +103,47 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=256):
         name, cmap(np.linspace(minval, maxval, n)))
 
 
-def stack_colormap(A, B, n=256):
+def stack_colormap(lower, upper, n=256):
     """
-    Stacks two colormaps (A, B) such that
-    low half -> A colors, high half -> B colors
+    Stacks two colormaps (``lower`` and ``upper``) such that
+    low half -> ``lower`` colors, high half -> ``upper`` colors
 
-    Optionally, provide the number of steps (n, default is 256)
+    Args:
+
+    	lower (colormap): colormap for the lower half of the stacked colormap.
+
+    	upper (colormap): colormap for the upper half of the stacked colormap.
+
+    	n (int): Number of colormap steps. Default is ``256``.
     """
-    A = get_cmap(A)
-    B = get_cmap(B)
+    A = get_cmap(lower)
+    B = get_cmap(upper)
     name = "%s-%s" % (A.name, B.name)
     lin = np.linspace(0, 1, n)
     return array_cmap(np.vstack((A(lin), B(lin))), name, n=n)
 
 
 def get_cmap(cmap=None, name=None, from_color=None, dark=False, n=256):
-    """
-    Generates a matplotlib colormap.
+    # """
+    # Generates a matplotlib colormap.
 
-    cmap can be one of several things:
-        - a name ('Blues', 'BuGn_r') of a built-in colormap
-        - a cmap
-        - a filename, np.loadtxt() n x 3 or 4  ints 0..255 or floats 0..1
-        - a numpy array
-    See http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps or in IPython, plt.cm.<tab>
+    # cmap can be one of several things:
+    #     - a name ('Blues', 'BuGn_r') of a built-in colormap
+    #     - a cmap
+    #     - a filename, np.loadtxt() n x 3 or 4  ints 0..255 or floats 0..1
+    #     - a numpy array
+    # See http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps or in IPython, plt.cm.<tab>
 
-    An optional name for the colormap can be provided (name), as well as the number
-    of cmap steps (n).
+    # An optional name for the colormap can be provided (name), as well as the number
+    # of cmap steps (n).
 
-    Alternatively, to make a colormap using a single color, provide the color
-    via from_color. By default, the supplied color will be the dark end of
-    the cmap, with white as the lightest color. To reverse (use the input
-    color as the lighest value and black as the darkest), set dark=True.
+    # Alternatively, to make a colormap using a single color, provide the color
+    # via from_color. By default, the supplied color will be the dark end of
+    # the cmap, with white as the lightest color. To reverse (use the input
+    # color as the lighest value and black as the darkest), set dark=True.
 
-    Returns a matplotlib colormap object.
-    """
+    # Returns a matplotlib colormap object.
+    # """
     if from_color is not None:
         return cmap_from_color(from_color, dark)
     elif cmap is None:

@@ -33,29 +33,52 @@ from abtools import log
 def compress_and_upload(data, compressed_file, s3_path,
     method='gz', delete=False, access_key=None, secret_key=None):
     '''
-    Tars and compresses ::data:: and uploads to ::s3_path:: on S3.
-    The S3 upload uses s3cmd, so it must be either manually configured prior to use with
-    `s3cmd --configure`, programatically configured prior to s3.compress_and_upload()
-    with s3.configure(), or ::access_key:: and ::secret_key:: must be provided and
-    s3.compress_and_upload() will configure s3cmd.
+    Compresses data and uploads to S3.
 
-    ::data:: can be:
-        -- a file
-        -- a folder
-        -- a list of files or folders.
+    S3 upload uses ``s3cmd``, so you must either:
 
-    ::compressed_file:: is the name of the compressed file.  If ::delete:: is True,
-    the compressed file will be removed after upload to S3.
+        1) Manually configure ``s3cmd`` prior to use (typically using ``s3cmd --configure``).
 
-    ::s3_path:: should be the S3 path, with the filename omitted. The S3 filename will
-    be the basename of the ::compressed_file:: -- if the compressed file is
-    /path/to/compressed_file.tar.gz and ::s3_path:: is s3://path/to/s3/, then the
-    uploaded file will be s3://path/to/s3/compressed_file.tar.gz
+        2) Configure ``s3cmd`` using ``s3.configure()``.
 
-    ::method:: can be 'gz' (default) or 'bz2'.
+        3) Pass your access key and secret key to ``compress_and_upload``, which will automatically configure s3cmd.
 
-    ::temp_dir:: can be provided if the compressed data will be very large
-    and will not fit in the default temp directory ('/tmp').
+    .. note:
+
+        ``s3cmd`` configuration only needs to be done once per computer,
+        which means that relaunching a cloud instance or Docker image will
+        require re-configuration of ``s3cmd``.
+
+    Args:
+
+        data: Can be one of three things:
+
+            1) Path to a single file
+
+            2) Path to a directory
+
+            3) A list of one or more paths to files or directories
+
+        compressed_file (str): Path to the compressed file. Required.
+
+        s3_path (str): The S3 path, with the filename omitted. The S3 filename
+          will be the basename of the ``compressed_file``. For example::
+
+            compress_and_upload(data='/path/to/data',
+                                compressed_file='/path/to/compressed.tar.gz',
+                                s3_path='s3://my_bucket/path/to/')
+
+          will result in an uploaded S3 path of ``s3://my_bucket/path/to/compressed.tar.gz``
+
+        method (str): Compression method. Options are ``'gz'`` (gzip) or ``'bz2'`` (bzip2).
+            Default is ``'gz'``.
+
+        delete (bool): If ``True``, the ``compressed_file`` will be deleted after upload
+            to S3. Default is ``False``.
+
+        access_key (str): AWS access key.
+
+        secret_key (str): AWS secret key.
     '''
     logger = log.get_logger('s3')
     if all([access_key, secret_key]):
@@ -68,10 +91,18 @@ def compress_and_upload(data, compressed_file, s3_path,
 
 def put(f, s3_path, logger=None):
     '''
-    Uploads a file to S3, using s3cmd.
+    Uploads a single file to S3, using s3cmd.
 
-    Inputs: path to a single file, and the s3 path into which the file
-    should be uploaded. The s3 path should not already include file name.
+    Args:
+
+        f (str): Path to a single file.
+
+        s3_path (str): The S3 path, with the filename omitted. The S3 filename
+            will be the basename of the ``f``. For example::
+
+                put(f='/path/to/myfile.tar.gz', s3_path='s3://my_bucket/path/to/')
+
+            will result in an uploaded S3 path of ``s3://my_bucket/path/to/myfile.tar.gz``
     '''
     if not logger:
         logger = log.get_logger('s3')
@@ -101,18 +132,22 @@ def print_put_info(fname, target, logger):
 
 def compress(d, output, compress='gz', logger=None):
     '''
-    Creates a compressed tar file.
+    Creates a compressed/uncompressed tar file.
 
-    ::d:: can be one of four things:
-        1) the path to a single file, as a string
-        2) the path to a single directory, as a string
-        3) an iterable of files
-        4) an iterable of directories
+    Args:
 
-    ::compress:: can be one of three things:
-        1) 'gz' for gzip compression (default)
-        2) 'bz2' for bzip2 compression
-        3) 'none' for no compression
+        d: Can be one of three things:
+
+            1. the path to a single file, as a string
+
+            2. the path to a single directory, as a string
+
+            3. an iterable of file or directory paths
+
+        output (str): Output file path.
+
+        compress: Compression method. Options are ``'gz'`` (gzip),
+            ``'bz2'`` (bzip2) and ``'none'`` (uncompressed). Default is ``'gz'``.
     '''
     if not logger:
         logger = log.get_logger('s3')
@@ -161,15 +196,14 @@ def configure(access_key=None, secret_key=None, logger=None):
     '''
     Configures s3cmd prior to first use.
 
-    Optional inputs:
-        ::access_key:: -- AWS access key
-        ::secred_key:: -- AWS secret key
+    If no arguments are provided, you will be prompted to enter
+    the access key and secret key interactively.
 
-    If ::access_key:: and ::secret_key:: are not provided via arguments,
-    they must be provided by user input at runtime. If providing AWS creds
-    at runtime, it's recommended to run s3.configure() at the start of your
-    script, since the script will pause at the configure() step until user
-    input is provided.
+    Args:
+
+        access_key (str): AWS access key
+
+        secret_key (str): AWS secret key
     '''
     if not logger:
         logger = log.get_logger('s3')

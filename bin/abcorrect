@@ -32,5 +32,6 @@ from abtools import _correct as correct
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    args = correct.parse_args()
+    parser = correct.parse_args()
+    args = parser.parse_args()
     correct.run_standalone(args)

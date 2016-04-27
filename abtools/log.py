@@ -26,9 +26,31 @@
 from __future__ import print_function
 
 import logging
+import os
 
 
-def setup_logging(logfile, print_log_location=True, debug=False, print_debug=False):
+def setup_logging(logfile, print_log_location=True, debug=False):
+    '''
+    Set up logging using the built-in ``logging`` package.
+
+    A stream handler is added to all logs, so that logs at or above
+    ``logging.INFO`` level are printed to screen as well as written
+    to the log file.
+
+    Arguments:
+
+        logfile (str): Path to the log file. If the parent directory
+            does not exist, it will be created. Required.
+
+        print_log_location (bool): If ``True``, the log path will be
+            written to the log upon initialization. Default is ``True``.
+
+        debug (bool): If true, the log level will be set to ``logging.DEBUG``.
+            If ``False``, the log level will be set to ``logging.INFO``.
+            Default is ``False``.
+    '''
+    log_dir = os.path.dirname(logfile)
+    make_dir(log_dir)
     fmt = '[%(levelname)s] %(name)s %(asctime)s %(message)s'
     if debug:
         logging.basicConfig(filename=logfile,
@@ -47,6 +69,16 @@ def setup_logging(logfile, print_log_location=True, debug=False, print_debug=Fal
 
 
 def get_logger(name=None):
+    '''
+    Get a logging handle.
+
+    As with ``setup_logging``, a stream handler is added to the
+    log handle.
+
+    Arguments:
+
+        name (str): Name of the log handle. Default is ``None``.
+    '''
     logger = logging.getLogger(name)
     if len(logger.handlers) == 0:
         logger = add_stream_handler(logger)
@@ -60,3 +92,8 @@ def add_stream_handler(logger):
     ch.setLevel(logging.INFO)
     logger.addHandler(ch)
     return logger
+
+
+def make_dir(d):
+    if not os.path.exists(d):
+        os.makedirs(d)

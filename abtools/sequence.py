@@ -33,52 +33,67 @@ class Sequence(object):
     """
     Container for biological (RNA and DNA) sequences.
 
-    <seq> can be one of several things:
+    ``seq`` can be one of several things:
+
         1) a raw sequence, as a string
-        2) an iterable, formatted as (seq_id, sequence)
+
+        2) an iterable, formatted as ``[seq_id, sequence]``
+
         3) a dict, containing at least the ID (default key = 'seq_id') and a
-            sequence (default key = 'vdj_nt'). Alternate <id_key> and <seq_key>
-            can be provided.
-        4) a Biopython SeqRecord object
-        5) an AbTools Sequence object
+           sequence (default key = 'vdj_nt'). Alternate ``id_key`` and ``seq_key``
+           can be provided at instantiation.
 
-    If <seq> is provided as a string, the sequence ID can optionally be
-    provided via <id>.  If <seq> is a string and <id> is not provided,
-    a random sequence ID will be generated with uuid.uuid4().
+        4) a Biopython ``SeqRecord`` object
 
-    Quality scores can be supplied with <qual> or as part of a SeqRecord object.
-    If providing a SeqRecord object with quality scores and quality scores via <qual>,
-    the <qual> scores will override the SeqRecord quality scores.
+        5) an AbTools ``Sequence`` object
 
-    If <seq> is a dictionary, typically the result of a MongoDB query, the dictionary
-    can be accessed directly from the Sequence instance. To retrive the value
-    for 'junc_aa' in the instantiating dictionary, you would simply:
+    If ``seq`` is provided as a string, the sequence ID can optionally be
+    provided via ``id``.  If ``seq`` is a string and ``id`` is not provided,
+    a random sequence ID will be generated with ``uuid.uuid4()``.
+
+    Quality scores can be supplied with ``qual`` or as part of a ``SeqRecord`` object.
+    If providing both a SeqRecord object with quality scores and quality scores
+    via ``qual``, the ``qual`` scores will override the SeqRecord quality scores.
+
+    If ``seq`` is a dictionary, typically the result of a MongoDB query, the dictionary
+    can be accessed directly from the ``Sequence`` instance. To retrive the value
+    for ``'junc_aa'`` in the instantiating dictionary, you would simply::
 
         s = Sequence(dict)
         junc = s['junc_aa']
 
-    If <seq> is a dictionary, an optional <id_key> and <seq_key> can be provided,
-    which tells the Sequence object which field to use to populate Sequence.id and
-    Sequence.sequence. Defaults are id_key='seq_id' and seq_key='vdj_nt'.
+    If ``seq`` is a dictionary, an optional ``id_key`` and ``seq_key`` can be provided,
+    which tells the ``Sequence`` object which field to use to populate ``Sequence.id`` and
+    ``Sequence.sequence``. Defaults are ``id_key='seq_id'`` and ``seq_key='vdj_nt'``.
 
-    If the Sequence is instantiated with a dictionary, calls to __contains__() will
-    return True if the supplied item is a key in the dictionary. In non-dict instantiations,
-    __contains__() will look in the Sequence.sequence field directly (essentially a
-    motif search). For example:
+    Alternately, the ``__getitem__()`` interface can be used to obtain a slice from the
+    ``sequence`` attribute. An example of the distinction::
+
+        d = {'name': 'MySequence', 'sequence': 'ATGC'}
+        seq = Sequence(d, id_key='name', seq_key='sequence')
+
+        seq['name']  # 'MySequence'
+        seq[:2]  # 'AT'
+
+    If the ``Sequence`` is instantiated with a dictionary, calls to ``__contains__()`` will
+    return ``True`` if the supplied item is a key in the dictionary. In non-dict instantiations,
+    ``__contains__()`` will look in the ``Sequence.sequence`` field directly (essentially a
+    motif search). For example::
 
         dict_seq = Sequence({'seq_id': 'seq1', 'vdj_nt': 'ACGT'})
-        'seq_id' in dict_seq --> TRUE
-        'ACG' in dict_seq --> FALSE
+        'seq_id' in dict_seq  # TRUE
+        'ACG' in dict_seq     # FALSE
 
         str_seq = Sequence('ACGT', id='seq1')
-        'ACG' in str_seq --> TRUE
-        'seq_id' in str_seq --> FALSE
+        'seq_id' in str_seq  # FALSE
+        'ACG' in str_seq     # TRUE
 
-    A note on comparing Sequence objects:
-    Sequence objects are equal only if their sequences and IDs are identical.
-    This means that two Sequence objects with identical sequences but without
-    user-supplied IDs won't be equal, because their IDs will have been randomly
-    generated.
+    .. note::
+
+        When comparing ``Sequence`` objects, they are comsidered equal only if their
+        sequences and IDs are identical. This means that two ``Sequence`` objects
+        with identical sequences but without user-supplied IDs won't be equal,
+        because their IDs will have been randomly generated.
     """
     def __init__(self, seq, id=None, qual=None, id_key='seq_id', seq_key='vdj_nt'):
         super(Sequence, self).__init__()
@@ -100,39 +115,72 @@ class Sequence(object):
 
 
     def __len__(self):
+        '''
+        int: Returns the length of the ``sequence`` attribute
+        '''
         return len(self.sequence)
 
     def __iter__(self):
+        '''
+        iter: Returns an iterator over the ``sequence`` attribute
+        '''
         return iter(self.sequence)
 
     def __reversed__(self):
+        '''
+        str: Returns the reverse of the ``sequence`` attribute
+        '''
         return ''.join(reversed(self.sequence))
 
     def __contains__(self, item):
-        if self._mongo is not None:
-            return item in self._mongo.keys()
+        '''
+        bool: If the instance was initialzed with a dictonary (which means
+            the ``mongo`` attribute is not empty), ``__contains__(key)``
+            will return ``True`` if ``key`` is in ``mongo.keys()``. If ``mongo``
+            is an empty dict, indicating instantiation without a dictionary,
+            ``__contains__(motif)`` will return True if ``motif`` is in the
+            ``sequence attribute.
+
+        '''
+        if self.mongo:
+            return item in self.mongo.keys()
         return item in self.sequence
 
     def __getitem__(self, key):
-        return self.mongo.get(key, None)
+        if key in self.mongo.keys():
+            return self.mongo.get(key, None)
+        elif type(key) in [int, slice]:
+            return self.sequence[key]
+        return None
 
     def __setitem__(self, key, val):
         self.mongo[key] = val
 
     def __eq__(self, other):
-        if hasattr(other, 'sequence'):
+        if all([hasattr(other, 'sequence'), hasattr(other, 'id')]):
             return all([self.sequence == other.sequence, self.id == other.id])
         return False
 
 
     @property
     def fasta(self):
+        '''
+        str: Returns the sequence, as a FASTA-formatted string
+
+        Note: The FASTA string is built using ``Sequence.id`` and ``Sequence.sequence``.
+        '''
         if not self._fasta:
             self._fasta = '>{}\n{}'.format(self.id, self.sequence)
         return self._fasta
 
     @property
     def fastq(self):
+        '''
+        str: Returns the sequence, as a FASTQ-formatted string
+
+        If ``Sequence.qual`` is ``None``, then ``None`` will be returned instead of a
+        FASTQ string
+        '''
         if self.qual is None:
             self._fastq = None
         else:
@@ -142,6 +190,9 @@ class Sequence(object):
 
     @property
     def reverse_complement(self):
+        '''
+        str: Returns the reverse complement of ``Sequence.sequence``.
+        '''
         if self._reverse_complement is None:
             self._reverse_complement = self._get_reverse_complement()
         return self._reverse_complement
@@ -167,7 +218,37 @@ class Sequence(object):
         self._strand = strand
 
 
+    # def as_fasta(self, name_field=None, seq_field=None):
+    #     name = None
+    #     sequence = None
+    #     if name_field is not None:
+    #         name = self.mongo[name_field]
+    #     if name_field is not None:
+    #         sequence = self.monO[seq_field]
+    #     if name is None:
+    #         name = self.id
+    #     if sequence is None:
+    #         sequence = self.sequence
+    #     return '>{}\n{}'.format(name, sequence)
+
     def region(self, start=0, end=None):
+        '''
+        Returns a region of ``Sequence.sequence``, in FASTA format.
+
+        If called without kwargs, the entire sequence will be returned.
+
+        Args:
+
+            start (int): Start position of the region to be returned. Default
+                is 0.
+
+            end (int): End position of the region to be returned. Negative values
+                will function as they do when slicing strings.
+
+        Returns:
+
+            str: A region of ``Sequence.sequence``, in FASTA format
+        '''
         if end is None:
             end = len(self.sequence)
         return '>{}\n{}'.format(self.id, self.sequence[start:end])

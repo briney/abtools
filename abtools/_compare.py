@@ -100,11 +100,10 @@ def parse_args():
                         Default is 'heavy'.")
     parser.add_argument('--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
-    return parser.parse_args()
+    return parser
 
 
 class Args(object):
-    """docstring for Args"""
     def __init__(self, output=None, log=None, db=None,
                  collection1=None, collection2=None, collection_prefix=None,
                  ip='localhost', port=27017, user=None, password=None,
@@ -253,34 +252,34 @@ def normalize(s1, s2):
 
 
 def simdif_method(sample1, sample2, args):
-    '''
-    Determines the appropriate similarity/divergence method to use
-    based on user options.
+    # '''
+    # Determines the appropriate similarity/divergence method to use
+    # based on user options.
 
-    Inputs
-    sample1: list of properties (i.e. Var genes) for sample 1
-    sample2: list of properties (i.e. Var genes) for sample 2
+    # Inputs
+    # sample1: list of properties (i.e. Var genes) for sample 1
+    # sample2: list of properties (i.e. Var genes) for sample 2
 
-    Outputs (from appropriate method function)
-    median: median of similarity/divergence score distribution
-    counts: from binned scores, counts for each bin
-    bins: from binned scores, left-most boundary of each bin
-    similarities: raw similarity scores.
-    '''
+    # Outputs (from appropriate method function)
+    # median: median of similarity/divergence score distribution
+    # counts: from binned scores, counts for each bin
+    # bins: from binned scores, left-most boundary of each bin
+    # similarities: raw similarity scores.
+    # '''
     methods = {'marisita-horn': (mh_similarity, False, False),
-                'kullback-leibler': (kl_divergence, True, True),
-                'jensen-shannon': (js_similarity, False, True),
-                'jaccard': (jaccard_similarity, False, False),
-                'bray-curtis': (bc_similarity, False, True),
-                'renkonen': (renkonen_similarity, False, True),
-                'cosine': (cosine_similarity, False, False)}
-     method, continuous, normalize = methods[args.method]
-     s1, s2 = random_sample_no_replacement(sample1,
-                                           sample2,
-                                           continuous,
-                                           normalize,
-                                           args)
-     return method(s1, s2)
+               'kullback-leibler': (kl_divergence, True, True),
+               'jensen-shannon': (js_similarity, False, True),
+               'jaccard': (jaccard_similarity, False, False),
+               'bray-curtis': (bc_similarity, False, True),
+               'renkonen': (renkonen_similarity, False, True),
+               'cosine': (cosine_similarity, False, False)}
+    method, continuous, normalize = methods[args.method]
+    s1, s2 = random_sample_no_replacement(sample1,
+                                          sample2,
+                                          continuous,
+                                          normalize,
+                                          args)
+    return method(s1, s2)
 
 
 def calculate_similarities(s1, s2, args):
@@ -310,15 +309,19 @@ def mh_similarity(sample1, sample2):
     '''
     Calculates the Marista-Horn similarity for two samples.
 
-    NOTE: sample1 and sample2 should be the same length, and
-    the sum of each sample should be greater than 0.
+    .. note:
 
-    Inputs
-    sample1: list of frequencies
-    sample2: list of frequencies
+        sample1 and sample2 should be the same length, and
+        the sum of each sample should be greater than 0.
 
-    Output
-    Marista-Horn similarity (float, between 0 and 1)
+    Args:
+
+        sample1: list of frequencies for sample 1
+        sample2: list of frequencies for sample 2
+
+    Returns:
+
+        float: Marista-Horn similarity (between 0 and 1)
     '''
     X = sum(sample1)
     Y = sum(sample2)
@@ -339,16 +342,20 @@ def kl_divergence(s1, s2):
     '''
     Calculates the Kullback-Leibler divergence for two samples.
 
-    NOTE: s1 and s2 should be the same length, and the sum of
-    each should equal 1. Probabilities should be continuous for
-    both s1 and s2.
+    .. note:
 
-    Inputs
-    sample1: probability distribution
-    sample2: probability distribution
+        s1 and s2 should be the same length, and the sum of
+        each should equal 1. Probabilities should be continuous for
+        both s1 and s2.
 
-    Output
-    Kullbeck-Leibler similarity (float)
+    Args:
+
+        sample1: probability distribution for sample 1
+        sample2: probability distribution for sample 2
+
+    Returns:
+
+        float: Kullbeck-Leibler similarity
     '''
     n1, n2 = normalize(s1, s2)
     kl = 0
@@ -361,15 +368,19 @@ def js_similarity(s1, s2):
     '''
     Calculates the Jensen-Shannon similarity for two samples.
 
-    NOTE: s1 and s2 should be the same length, and the sum of
-    each should equal 1.
+    .. note:
 
-    Inputs
-    sample1: probability distribution
-    sample2: probability distribution
+        s1 and s2 should be the same length, and the sum of
+        each should equal 1.
 
-    Output
-    Jensen-Shannon similarity (float, between 0 and 1)
+    Args:
+
+        sample1: probability distribution for sample 1
+        sample2: probability distribution for sample 2
+
+    Returns:
+
+        float: Jensen-Shannon similarity (between 0 and 1)
     '''
     n1, n2 = normalize(s1, s2)
     Hsum = np.zeros(len(n1))
@@ -385,11 +396,13 @@ def shannon_entropy(prob_dist):
     '''
     Calculates the Shannon entropy for a single probability distribution.
 
-    Input
-    prob_dist: probability distribution, must sum to 1
+    Args:
 
-    Output
-    Shannon entropy (float)
+        prob_dist: probability distribution, must sum to 1
+
+    Returns:
+
+        float: Shannon entropy
     '''
     return -sum([p * math.log(p) for p in prob_dist if p != 0])
 
@@ -398,15 +411,19 @@ def jaccard_similarity(s1, s2):
     '''
     Calculates the Jaccard similarity for two samples.
 
-    NOTE: sample1 and sample2 should be the same length, and
-    the sum of each sample should be greater than 0.
+    .. note:
 
-    Inputs
-    sample1: list of frequencies
-    sample2: list of frequencies
+        sample1 and sample2 should be the same length, and
+        the sum of each sample should be greater than 0.
 
-    Output
-    Jaccard similarity (float, between 0 and 1)
+    Args:
+
+        sample1: list of frequencies for sample 1
+        sample2: list of frequencies for sample 2
+
+    Returns:
+
+        float: Jaccard similarity (between 0 and 1)
     '''
     num = 0
     denom = 0
@@ -421,15 +438,19 @@ def renkonen_similarity(s1, s2):
     Calculates the Renkonen similarity (also known as the
     percentage similarity) for two samples.
 
-    NOTE: s1 and s2 should be the same length, and
-    the sum of each sample should equal 1.
+    .. note:
 
-    Inputs
-    s1: probability distribution
-    s2: probability distribution
+        s1 and s2 should be the same length, and
+        the sum of each sample should equal 1.
 
-    Output
-    Renkonen similarity (float, between 0 and 1)
+    Args:
+
+        s1: probability distribution for sample 1
+        s2: probability distribution for sample 2
+
+    Returns:
+
+        float: Renkonen similarity (between 0 and 1)
     '''
     return sum(min(vals) for vals in zip(s1, s2))
 
@@ -438,15 +459,19 @@ def bc_similarity(s1, s2):
     '''
     Calculates the Bray-Curtis similarity for two samples.
 
-    NOTE: s1 and s2 should be the same length, and
-    the sum of each sample should equal 1.
+    .. note:
 
-    Inputs
-    s1: probability distribution
-    s2: probability distribution
+        s1 and s2 should be the same length, and
+        the sum of each sample should equal 1.
 
-    Output
-    Bray-Curtis similarity (float, between 0 and 1)
+    Args:
+
+        s1: probability distribution for sample 1
+        s2: probability distribution for sample 2
+
+    Returns:
+
+        float: Bray-Curtis similarity (between 0 and 1)
     '''
     return 2.0 * sum(min(vals) for vals in zip(s1, s2)) / (sum(s1) + sum(s2))
 
@@ -455,14 +480,18 @@ def cosine_similarity(s1, s2):
     '''
     Calculates the cosine (angular) similarity for two samples.
 
-    NOTE: s1 and s2 should be the same length.
+    .. note:
 
-    Inputs
-    s1: list of frequencies
-    s2: list of frequencies
+        s1 and s2 should be the same length.
 
-    Output
-    Cosine similarity (float, between 0 and 1)
+    Args:
+
+        s1: list of frequencies for sample 1
+        s2: list of frequencies for sample 2
+
+    Returns:
+
+        float: Cosine similarity (between 0 and 1)
     '''
     num = sum([Pi * Qi for Pi, Qi in zip(s1, s2)])
     denomPi = mp.sqrt(sum([Pi * Pi for Pi in s1])) * mp.sqrt(sum([Qi * Qi for Qi in s2]))
@@ -473,15 +502,19 @@ def sd_similarity(s1, s2):
     '''
     Calculates the Brey-Curtis similarity for two samples.
 
-    NOTE: s1 and s2 should be the same length, and
-    the sum of each sample should equal 1..
+    .. note:
 
-    Inputs
-    s1: list of frequencies
-    s2: list of frequencies
+        s1 and s2 should be the same length, and
+        the sum of each sample should equal 1.
 
-    Output
-    Brey-Curtis similarity (float, between 0 and 1)
+    Args:
+
+        s1: list of frequencies for sample 1
+        s2: list of frequencies for sample 2
+
+    Results:
+
+        float: Brey-Curtis similarity (between 0 and 1)
     '''
     num = 0
     denom = 0
@@ -657,12 +690,12 @@ def print_pair_info(s1, s2):
 
 
 def print_final_results(scores, control=False):
-    '''
-    Prints nicely formatted results to sys.stdout.
+    # '''
+    # Prints nicely formatted results to sys.stdout.
 
-    Input
-    2D dict, containing scores for pairs of samples
-    '''
+    # Input
+    # 2D dict, containing scores for pairs of samples
+    # '''
     if not scores:
         return 0
     logger.info('')
@@ -679,6 +712,68 @@ def print_final_results(scores, control=False):
 
 
 def run(**kwargs):
+    '''
+    Performs repertoire-level comparison of antibody sequencing datasets.
+
+    Currently, the only metric for comparison is V-gene usage frequency. Additional measures
+    are in the works (such as comparisons based on clonality).
+
+    Args:
+
+        db (str): MongoDB database name.
+
+        collection1 (str): Name of the first MongoDB collection to query for comparison.
+            If both ``collection1`` and ``collection2`` are provided, ``collection1`` will
+            be compared only to ``collection2``.
+            If neither ``collection1`` nor ``collection2`` are provided, all collections in
+            ``db`` will be processed iteratively (all pairwise comparisons will be made).
+            If ``collection1`` is provided but ``collection2`` is not, ``collection1`` will
+            be iteratively compared to all other collections in ``db``.
+
+        collection2 (str): Name of the second MongoDB collection to query for comparison.
+            If both ``collection1`` and ``collection2`` are provided, ``collection1`` will
+            be compared only to ``collection2``.
+            If neither ``collection1`` nor ``collection2`` are provided, all collections in
+            ``db`` will be processed iteratively (all pairwise comparisons will be made).
+
+        collection_prefix (str): All collections beginning with ``collection_prefix`` will
+            be iteratively compared (all pairwise comparisons will be made).
+
+        ip (str): IP address of the MongoDB server. Default is ``localhost``.
+
+        port (int): Port of the MongoDB server. Default is ``27017``.
+
+        user (str): Username with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        password (str): Password with which to connect to the MongoDB database. If either
+            of ``user`` or ``password`` is not provided, the connection to the MongoDB
+            database will be attempted without authentication.
+
+        chunksize (int): Number of sequences for each iteration. Default is 100,000.
+
+        iterations (int): Number of iterations to perform on each pair of samples.
+            Default is 10,000
+
+        method (str): Similarity/divergence method to used for comparison. Default is
+            ``marisita-horn``. Options are:
+
+            - ``marisita-horn``
+            - ``kullback-leibler``
+            - ``jensen-shannon``
+            - ``jaccard``
+            - ``bray-curtis``
+            - ``renkonen``
+            - ``cosine``
+
+        control_similarity (bool): If ``True``, control similarity/divergence will be
+            calculated, in which each sample is also compared to itself. Default is ``False``.
+
+        chain (str): Antibody chain to be used for comparison. Options are ``heavy``, ``kappa``
+            and ``lambda``. Default is ``heavy``.
+    '''
+
     args = Args(**kwargs)
     global logger
     logger = log.get_logger('abcompare')
@@ -731,7 +826,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_args()
+    args = parser.parse_args()
     logfile = args.log if args.log else os.path.join(args.output, 'abcompare.log')
     log.setup_logging(logfile)
     logger = log.get_logger('abcompare')

@@ -24,6 +24,8 @@
 
 from __future__ import print_function
 
+import time
+
 from abtools.utils import progbar
 
 

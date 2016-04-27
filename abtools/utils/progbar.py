@@ -30,6 +30,34 @@ from datetime import datetime
 
 
 def progress_bar(finished, total, start_time=None):
+    '''
+    Prints an ASCII progress bar.
+
+    Each call to ``progress_bar`` will update the progress bar. An example
+    of tracking the progress of a list of items would look like::
+
+        job_list = [job1, job2, job3, ... jobN]
+        total_jobs = len(job_list)
+
+        #initialize the progress bar
+        progress_bar(0, total_jobs)
+
+        # do the jobs
+        for i, job in enumerate(job_list):
+            do_job(job)
+            progress_bar(i + 1, total_jobs)
+
+    Args:
+
+        finished (int): Number of finished jobs.
+
+        total (int): Total number of jobs.
+
+        start_time (datetime): Start time, as a ``datetime.datetime`` object.
+            Only required if you want to display execution time alongside
+            the progress bar. If not provided, execution time is not shown.
+
+    '''
     pct = int(100. * finished / total)
     ticks = pct / 2
     spaces = 50 - ticks
