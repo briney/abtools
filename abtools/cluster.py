@@ -119,7 +119,7 @@ class Cluster(object):
 
     def _get_sequences(self):
         seqs = []
-        for chunk in self._chunker(self.seq_ids):
+        for chunk in self._chunker(self.ids):
             sql_cmd = '''SELECT seqs.id, seqs.sequence
                          FROM seqs
                          WHERE seqs.id IN ({})'''.format(','.join('?' * len(chunk)))
@@ -149,7 +149,7 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True):
+def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True, quiet=False):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -175,11 +175,11 @@ def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True):
         list: A list of Cluster objects, one per cluster.
     '''
     ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-        threshold=threshold, make_db=make_db)
+        threshold=threshold, make_db=make_db, quiet=quiet)
     return parse_clusters(cfile, seq_db)
 
 
-def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
+def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False):
     # '''
     # Perform CD-HIT clustering on a set of sequences.
 
@@ -192,7 +192,8 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
     logger = log.get_logger('cluster')
     start_time = time.time()
     seqs = [Sequence(s) for s in seqs]
-    logger.info('CD-HIT: clustering {} seqeunces'.format(len(seqs)))
+    if not quiet:
+        logger.info('CD-HIT: clustering {} seqeunces'.format(len(seqs)))
     if out_file is None:
         out_file = tempfile.NamedTemporaryFile(dir=temp_dir, delete=False)
         ofile = out_file.name
@@ -208,10 +209,12 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True):
                        stderr=sp.PIPE)
     stdout, stderr = cluster.communicate()
     os.unlink(ifile)
-    logger.info('CD-HIT: clustering took {:.2f} seconds'.format(time.time() - start_time))
+    if not quiet:
+        logger.info('CD-HIT: clustering took {:.2f} seconds'.format(time.time() - start_time))
     cfile = ofile + '.clstr'
     if make_db:
-        logger.info('CD-HIT: building a SQLite3 database')
+        if not quiet:
+            logger.info('CD-HIT: building a SQLite3 database')
         seq_db, db_path = _build_seq_db(seqs, direc=temp_dir)
         return ofile, cfile, seq_db, db_path
     return ofile, cfile
