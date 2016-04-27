@@ -19,15 +19,15 @@ import sphinx_rtd_theme
 from mock import MagicMock
 
 
-if os.environ.get('READTHEDOCS', None) == 'True':
-    class Mock(MagicMock):
-        @classmethod
-        def __getattr__(cls, name):
-                return Mock()
+# if os.environ.get('READTHEDOCS', None) == 'True':
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
 
-    MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
-                    'biopython', 'celery', 'pymongo', 'scikit-bio', 'ete2', 'matplotlib', 'seaborn',
-                    'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
+MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'nwalign', 'pandas',
+                'biopython', 'celery', 'pymongo', 'scikit-bio', 'scikit-bio.alignment', 'ete2', 'matplotlib', 'seaborn',
+                'Bio', 'Bio.Align', 'Bio.Alphabet', 'Bio.SeqIO', 'Bio.Seq', 'Bio.SeqRecord']
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
