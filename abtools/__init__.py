@@ -2,10 +2,10 @@ import os
 
 if not os.environ.get('READTHEDOCS', None):
 
-    from _compare import run as compare
-    from _correct import run as correct
-    from _finder import run as finder
-    from _phylogeny import run as phylogeny
+    from ._compare import run as compare
+    from ._correct import run as correct
+    from ._finder import run as finder
+    from ._phylogeny import run as phylogeny
     # import _stats as stats
 
     from pkg_resources import get_distribution, DistributionNotFound
