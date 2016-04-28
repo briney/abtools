@@ -45,12 +45,12 @@ SSH_PORT = 22
 DEFAULT_PORT = 27017
 
 
-class ForwardServer (SocketServer.ThreadingTCPServer):
+class ForwardServer(SocketServer.ThreadingTCPServer):
     daemon_threads = True
     allow_reuse_address = True
 
 
-class Handler (SocketServer.BaseRequestHandler):
+class Handler(SocketServer.BaseRequestHandler):
     def handle(self):
         try:
             chan = self.ssh_transport.open_channel(
