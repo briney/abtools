@@ -27,6 +27,9 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
+import matplotlib as mpl
+mpl.use('Agg')
+
 from abtools import _finder as finder
 
 
