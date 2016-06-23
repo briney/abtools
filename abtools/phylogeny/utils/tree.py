@@ -31,7 +31,7 @@ import ete2
 
 
 def make_tree(alignment, timepoints, delimiter, is_aa, scale, branch_vert_margin,
-    	fontsize, show_name, tree_orientation):
+    	fontsize, show_name, tree_orientation, show_scale=False):
     '''
     Builds a tree file (using FastTree) from a sequence alignment in FASTA format
 
@@ -44,22 +44,26 @@ def make_tree(alignment, timepoints, delimiter, is_aa, scale, branch_vert_margin
     tree = alignment.replace('_aligned.aln', '_tree.nw')
     tree = fast_tree(alignment, tree, is_aa)
     make_figure(tree, timepoints, delimiter, scale, branch_vert_margin,
-    	fontsize, show_name, tree_orientation)
+    	fontsize, show_name, tree_orientation, show_scale=show_scale)
 
 
 
-def fast_tree(alignment, tree, is_aa):
+def fast_tree(alignment, tree, is_aa, show_output=False):
     if is_aa:
         ft_cmd = 'fasttree {} > {}'.format(alignment, tree)
     else:
         ft_cmd = 'fasttree -nt {} > {}'.format(alignment, tree)
     ft = sp.Popen(ft_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     stdout, stderr = ft.communicate()
+    if show_output:
+    	print(ft_cmd)
+    	print(stdout)
+    	print(stderr)
     return tree
 
 
 def make_figure(tree, timepoints, delimiter, scale, branch_vert_margin,
-		fontsize, show_name, tree_orientation):
+		fontsize, show_name, tree_orientation, show_scale=False):
     fig = tree.replace('_tree.nw', '_tree.pdf')
     orders = {tp.name: tp.order for tp in timepoints}
     colors = {tp.name: tp.color for tp in timepoints}

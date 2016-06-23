@@ -85,12 +85,12 @@ def lazy_property(func):
         return getattr(self, attr_name)
 
     @_lazy_property.deleter
-    def _lazyprop(self):
+    def _lazy_property(self):
         if hasattr(self, attr_name):
             delattr(self, attr_name)
 
     @_lazy_property.setter
-    def _lazyprop(self, value):
+    def _lazy_property(self, value):
         setattr(self, attr_name, value)
 
     return _lazy_property
