@@ -65,6 +65,16 @@ def cmap_from_color(color, dark=False):
         return sns.light_palette(color, as_cmap=True)
 
 
+def hex_to_rgb(hex_string):
+    rgb = colors.hex2color(hex_string)
+    return tuple([int(255 * x) for x in rgb])
+
+
+def rgb_to_hex(rgb_tuple):
+    div = 1 if all([v <= 1.0 for v in rgb_tuple]) else 255
+    return colors.rgb2hex([1.0 * x / div for x in rgb_tuple])
+
+
 def hls(n_colors, hue=0.01, lightness=0.6, saturation=0.65):
     return sns.hls_palette(n_colors, h=hue, l=lightness, s=saturation)
 
