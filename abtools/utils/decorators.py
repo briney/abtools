@@ -32,7 +32,7 @@ def lazy_property(func):
 
         # OLD:
         class MyClass():
-            def __init__()
+            def __init__():
                 self._compute = None
 
             @property
@@ -52,9 +52,10 @@ def lazy_property(func):
         # NEW:
         class MyClass():
 
-            def __init__()
+            def __init__():
+                pass
 
-            @property
+            @lazy_property
             def compute(self):
                 # computationally intense stuff
                 # ...
@@ -64,8 +65,8 @@ def lazy_property(func):
     .. note:
 
         Properties wrapped with ``lazy_property`` are only evaluated once.
-        If the instance state changes, lazy properties will not be
-        re-evaulated and must be updated manually::
+        If the instance state changes, lazy properties will not be automatically
+        re-evaulated and the update must be explicitly called for::
 
             c = MyClass(data)
             prop = c.lazy_property
@@ -73,8 +74,14 @@ def lazy_property(func):
             # If you update some data that affects c.lazy_property
             c.data = new_data
 
-            # You need to recompute c.lazy_property manually
-            c.lazy_property = new_lazy_property
+            # c.lazy property won't changes
+            prop == c.lazy_property  # TRUE
+
+            # You can delete lazy_property, which will force it
+            # to be recomputed the next time you use it
+            del c.lazy_property
+            new_prop = c.lazy_property
+            new_prop == prop  # FALSE
     '''
     attr_name = '_lazy_' + func.__name__
 

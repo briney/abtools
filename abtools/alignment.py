@@ -53,7 +53,8 @@ from abtools.sequence import Sequence
 
 
 
-def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=-1, as_file=False):
+def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=-1, as_file=False,
+        print_stdout=False, print_stderr=False):
     '''
     Performs multiple sequence alignment with MAFFT.
 
@@ -98,6 +99,7 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
         fasta_file = tempfile.NamedTemporaryFile(delete=False)
         fasta_file.write(fasta_string)
         ffile = fasta_file.name
+        fasta_file.close()
     elif fasta:
         ffile = fasta
     if alignment_file is None:
@@ -112,6 +114,11 @@ def mafft(sequences=None, alignment_file=None, fasta=None, fmt='fasta', threads=
                      universal_newlines=True,
                      shell=True)
     stdout, stderr = mafft.communicate()
+    if print_stdout:
+        print(mafft_cline)
+        print(stdout)
+    if print_stderr:
+        print(stderr)
     os.unlink(ffile)
     if as_file:
         return alignment_file
@@ -237,7 +244,7 @@ def _get_fasta_string(sequences):
 
 
 def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
-        gap_open_penalty=5, gap_extend_penalty=2, matrix=None, aa=False):
+        gap_open=-5, gap_extend=-2, matrix=None, aa=False, gap_open_penalty=None, gap_extend_penalty=None):
     '''
     Striped Smith-Waterman local pairwise alignment.
 
@@ -264,11 +271,11 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
 
         mismatch (int): Mismatch score. Should be a negative integer. Default is -2.
 
-        gap_open_penalty (int): Penalty for opening gaps. Should be a positive integer.
-            Default is 5.
+        gap_open (int): Penalty for opening gaps. Should be a negative integer.
+            Default is -5.
 
-        gap_extend_penalty (int): Penalty for extending gaps. Should be a positive
-            integer. Default is 2.
+        gap_extend (int): Penalty for extending gaps. Should be a negative
+            integer. Default is -2.
 
         matrix (str, dict): Alignment scoring matrix. Two options for passing the
             alignment matrix:
@@ -297,6 +304,11 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
         raise RuntimeError(err)
     if target:
         targets = [target, ]
+    # to maintain backward compatibility with earlier AbTools API
+    if gap_open_penalty is not None:
+        gap_open = -1 * gap_open_penalty
+    if gap_extend_penalty is not None:
+        gap_extend = -1 * gap_extend_penalty
     alignments = []
     for t in targets:
         try:
@@ -305,8 +317,8 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
                                      match=match,
                                      mismatch=mismatch,
                                      matrix=matrix,
-                                     gap_open=gap_open_penalty,
-                                     gap_extend=gap_extend_penalty,
+                                     gap_open=-1 * gap_open,
+                                     gap_extend=-1 * gap_extend,
                                      aa=aa)
             alignments.append(alignment)
         except IndexError:
@@ -317,7 +329,7 @@ def local_alignment(query, target=None, targets=None, match=3, mismatch=-2,
 
 
 def local_alignment_biopython(query, target=None, targets=None, match=3, mismatch=-2, matrix=None,
-        gap_open_penalty=-5, gap_extend_penalty=-2, aa=False):
+        gap_open=-5, gap_extend=-2, aa=False):
     if not target and not targets:
         err = 'ERROR: You must supply a target sequence (or sequences).'
         raise RuntimeError(err)
@@ -331,8 +343,8 @@ def local_alignment_biopython(query, target=None, targets=None, match=3, mismatc
                                                        match=match,
                                                        mismatch=mismatch,
                                                        matrix=matrix,
-                                                       gap_open=gap_open_penalty,
-                                                       gap_extend=gap_extend_penalty,
+                                                       gap_open=gap_open,
+                                                       gap_extend=gap_extend,
                                                        aa=aa)
             alignments.append(alignment)
         except IndexError:
@@ -809,7 +821,8 @@ class NWAlignment(BaseAlignment):
                 err += 'Built-in matrices are: {}'.format(', '.join(builtins))
                 raise RuntimeError(err)
         else:
-            self._build_matrix_from_params(match, mismatch)
+            self._build_matrix_from_params(match, mismatch, os.path.join(matrix_dir, matrix_name))
+            return os.path.join(matrix_dir, matrix_name)
 
     def _align(self):
         matrix = self._get_matrix_file(match=self._match,

@@ -173,17 +173,19 @@ def query(db, collection, args):
     seq_field = args.field
     # parse JSON file...
     if db is None:
-        loger.info('Reading JSON file...')
+        logger.info('Reading JSON file...')
         results = []
+        _results = []
         with open(collection) as f:
-            _results = json.load(f)
+            for line in f:
+                _results.append(json.load(line.strip))
         for r in _results:
             try:
                 d = {'seq_id': r['seq_id'],
                      seq_field: r[seq_field],
                      'raw_query': r['raw_query'],
-                     'v_gene': {'full': f['v_gene']['full']}}
-                if args.uaid is not None:
+                     'v_gene': {'full': r['v_gene']['full']}}
+                if args.uaid and not args.non_redundant:
                     if 'uaid' in r:
                         d['uaid'] = r['uaid']
                     elif args.parse_uaids:
@@ -891,11 +893,11 @@ def main(args):
     else:
         germs = args.germs
     # check whether JSON files have been passed
-    if args.jsons is not None and all([args.db is None, args.collections is None]):
-    	if os.path.isfile(args.jsons) and args.jsons.endswith('.json'):
-    		collections = [args.jsons, ]
+    if args.json is not None and all([args.db is None, args.collection is None]):
+    	if os.path.isfile(args.json) and args.json.endswith('.json'):
+    		collections = [args.json, ]
     	else:
-        	collections = list_files(args.jsons, extension='json')
+        	collections = list_files(args.json, extension='json')
         db = None
     # otherwise, get sequences from MongoDB
     else:

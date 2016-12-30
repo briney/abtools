@@ -27,13 +27,15 @@ from __future__ import print_function
 
 import logging
 import os
+import random
 import sqlite3
+import string
 import subprocess as sp
 import sys
 import tempfile
 import time
 
-from Bio import SeqIO
+from Bio import SeqIO, AlignIO
 from Bio.Align import AlignInfo
 
 from abtools import log
@@ -83,10 +85,13 @@ class Cluster(object):
         centroid (Sequence): Centroid sequence, as calculated by
             CD-HIT.
     """
-    def __init__(self, raw_cluster, seq_db):
+    def __init__(self, raw_cluster,
+            seq_db=None, db_path=None, seq_dict=None):
         super(Cluster, self).__init__()
         self._raw_cluster = raw_cluster
         self._seq_db = seq_db
+        self._seq_db_path = db_path
+        self._seq_dict = seq_dict
 
 
     @lazy_property
@@ -99,15 +104,34 @@ class Cluster(object):
 
     @lazy_property
     def sequences(self):
+        if all([self._seq_db is None, self._seq_dict is None]):
+            err = "ERROR: In order to access a Cluster's sequences, you must provide "
+            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            raise RuntimeError(err)
         return self._get_sequences()
 
     @lazy_property
     def consensus(self):
+        if all([self._seq_db is None, self._seq_dict is None]):
+            err = "ERROR: In order to compute a Cluster's consensus, you must provide "
+            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            raise RuntimeError(err)
         return self._make_consensus()
 
     @lazy_property
     def centroid(self):
+        if all([self._seq_db is None, self._seq_dict is None]):
+            err = "ERROR: In order to retrieve a Cluster's centroid, you must provide "
+            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            raise RuntimeError(err)
         return self._get_centroid()
+
+
+    def terminate_db(self):
+        if self._seq_db is not None:
+            self._seq_db.close()
+        if os.path.isfile(self._seq_db_path):
+            os.unlink(self._seq_db_path)
 
 
     def _get_ids(self):
@@ -118,14 +142,17 @@ class Cluster(object):
         return ids
 
     def _get_sequences(self):
-        seqs = []
-        for chunk in self._chunker(self.ids):
-            sql_cmd = '''SELECT seqs.id, seqs.sequence
-                         FROM seqs
-                         WHERE seqs.id IN ({})'''.format(','.join('?' * len(chunk)))
-            seq_chunk = self._seq_db.execute(sql_cmd, chunk)
-            seqs.extend(seq_chunk)
-        return [Sequence(s) for s in seqs]
+        if self._seq_db is not None:
+            seqs = []
+            for chunk in self._chunker(self.ids):
+                sql_cmd = '''SELECT seqs.id, seqs.sequence
+                             FROM seqs
+                             WHERE seqs.id IN ({})'''.format(','.join('?' * len(chunk)))
+                seq_chunk = self._seq_db.execute(sql_cmd, chunk)
+                seqs.extend(seq_chunk)
+            return [Sequence(s) for s in seqs]
+        else:
+            return [self._seq_dict[s] for s in self.ids]
 
     def _get_centroid(self):
         for line in self._raw_cluster:
@@ -138,7 +165,8 @@ class Cluster(object):
     def _make_consensus(self):
         if len(self.sequences) == 1:
             return self.sequences[0]
-        aln = mafft(self.sequences)
+        _aln = mafft(self.sequences, as_file=True)
+        aln = AlignIO.read(open(_aln, 'r'), 'fasta')
         summary_align = AlignInfo.SummaryInfo(aln)
         consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
         consensus_string = str(consensus).replace('-', '')
@@ -149,7 +177,7 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True, quiet=False):
+def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=None, quiet=False):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -174,9 +202,16 @@ def cluster(seqs, threshold=0.975, out_file=None, temp_dir=None, make_db=True, q
 
         list: A list of Cluster objects, one per cluster.
     '''
-    ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-        threshold=threshold, make_db=make_db, quiet=quiet)
-    return parse_clusters(cfile, seq_db)
+    if any([len(seqs) > 25, force_make_db]):
+        ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
+            threshold=threshold, make_db=True, quiet=quiet)
+        return parse_clusters(cfile, seq_db=seq_db, db_path=db_path)
+    else:
+        seqs = [Sequence(s) for s in seqs]
+        seq_dict = {s.id: s for s in seqs}
+        ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
+            threshold=threshold, make_db=False, quiet=quiet)
+        return parse_clusters(cfile, seq_dict=seq_dict)
 
 
 def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False):
@@ -220,7 +255,7 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     return ofile, cfile
 
 
-def parse_clusters(clust_file, seq_db):
+def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None):
     # '''
     # Parses clustered sequences.
 
@@ -230,7 +265,7 @@ def parse_clusters(clust_file, seq_db):
     # Returns a list of Cluster objects (one per cluster).
     # '''
     raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
-    return [Cluster(rc, seq_db) for rc in raw_clusters]
+    return [Cluster(rc, seq_db, db_path, seq_dict) for rc in raw_clusters]
 
 
 def _make_cdhit_input(seqs, temp_dir):
@@ -250,8 +285,9 @@ def _build_seq_db(seqs, direc=None):
 
     # Returns a SQLite3 connection object and the database path.
     # '''
-    direc = direc if direc else '/tmp'
-    db_path = os.path.join(direc, 'seq_db')
+    direc = direc if direc is not None else '/tmp'
+    db_name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+    db_path = os.path.join(direc, db_name)
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     create_cmd = '''CREATE TABLE seqs (id text, sequence text)'''

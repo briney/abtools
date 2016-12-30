@@ -141,7 +141,7 @@ def get_collections(db, collection=None, prefix=None, suffix=None):
     if prefix is not None:
         collections = [c for c in collections if c.startswith(prefix)]
     if suffix is not None:
-        collections = [c for c in collections if c.endswith(prefix)]
+        collections = [c for c in collections if c.endswith(suffix)]
     return sorted(collections)
 
 

@@ -31,6 +31,7 @@ import os
 import subprocess as sp
 import sys
 import tempfile
+from threading import Thread
 import time
 
 import numpy as np
@@ -57,6 +58,8 @@ def parse_args():
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
+    parser.add_argument('--collection-prefix', dest='collection_prefix', default=None,
+                        help="If supplied, will iteratively process only collections beginning with <collection_prefix>.")
     parser.add_argument('-o', '--output', dest='output_dir', default=None,
                         help="Output directory figure files. If not provided, figures will not be generated. \
                         Directory will be created if it does not already exist.")
@@ -92,8 +95,13 @@ def parse_args():
     parser.add_argument('-n', '--no_update', dest='update', action='store_false', default=True,
                         help="Does not update the MongoDB with AbFinder info. \
                         Can save some time if the identity calculations aren't needed again.")
+    parser.add_argument('--no_figure', dest='make_figure', action='store_false', default=True,
+                        help="Does not make the identity/divergence figure. \
+                        Useful if you don't want the figure, just the identity info written to the database.")
     parser.add_argument('--single-process-update', dest='single_process_update', action='store_true', default=False,
                         help="Perform the MongoDB update using a single process (without multiprocessing).")
+    parser.add_argument('--update-threads', dest='update_threads', type=int, default=25,
+                        help="Number of threads to use when update the MongoDB database. Default is 25.")
     parser.add_argument('-N', '--nucleotide', dest='is_aa', action='store_false', default=True,
                         help="Use nucleotide sequences for alignment. Default is amino acid sequences. \
                         Ensure standard format matches.")
@@ -261,6 +269,8 @@ def chunker(l, n):
 
 def update_db(db, standard, scores, collection, args):
     db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
+    print_index_info()
+    mongodb.index(db, collection, ['seq_id'])
     print_update_info()
     start = time.time()
     conn = mongodb.get_connection(args.ip, args.port,
@@ -269,18 +279,31 @@ def update_db(db, standard, scores, collection, args):
     standard = standard.replace('.', '_')
     g = scores.groupby('identity')
     groups = regroup(g.groups)
-    if platform.system().lower() == 'darwin' or args.debug or args.single_process_update:
-        for i, group in enumerate(groups):
-            update(db, collection, group, standard, mongo_version, args)
-            progbar.progress_bar(i, len(groups))
-    else:
-        p = mp.Pool(processes=25)
-        async_results = []
-        for group in groups:
-            async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
-        monitor_update(async_results)
-        p.close()
-        p.join()
+
+
+    for g in range(0, len(groups), args.update_threads):
+        tlist = []
+        for group in groups[g:g + args.update_threads]:
+            t = Thread(target=update, args=(db, collection, group, standard, mongo_version, args))
+            t.start()
+            tlist.append(t)
+        for t in tlist:
+            t.join()
+        progbar.progress_bar(g + args.update_threads, len(groups))
+
+
+    # if platform.system().lower() == 'darwin' or args.debug or args.single_process_update:
+    #     for i, group in enumerate(groups):
+    #         update(db, collection, group, standard, mongo_version, args)
+    #         progbar.progress_bar(i, len(groups))
+    # else:
+    #     p = mp.Pool(processes=25)
+    #     async_results = []
+    #     for group in groups:
+    #         async_results.append(p.apply_async(update, args=(db, collection, group, standard, mongo_version, args)))
+    #     monitor_update(async_results)
+    #     p.close()
+    #     p.join()
     print('')
     run_time = time.time() - start
     logger.info('Updating took {} seconds. ({} sequences per second)'.format(round(run_time, 2),
@@ -434,6 +457,10 @@ def print_remove_padding():
 
 def print_fig_info():
     logger.info('Making identity/divergence figure...')
+
+
+def print_index_info():
+    logger.info('Indexing the MongoDB collection...')
 
 
 def print_update_info():
@@ -618,7 +645,7 @@ def main(args):
     make_directories(args)
     standards = get_standards(args)
     print_standards_info(standards)
-    collections = mongodb.get_collections(db, args.collection)
+    collections = mongodb.get_collections(db, args.collection, prefix=args.collection_prefix)
     print_collections_info(collections)
     for collection in collections:
         indexed = False
