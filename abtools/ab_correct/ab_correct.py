@@ -48,6 +48,8 @@ def parse_args():
 						help="Name of the MongoDB database to query. Required")
 	parser.add_argument('-c', '--collection', dest='collection', default=None,
 						help="Name of the MongoDB collection to query. If not provided, all collections in the given database will be processed iteratively.")
+	parser.add_argument('-j', '--json', dest='jsons', default=None,
+						help='Input JSON file or directory of JSON files.')
 	parser.add_argument('-o', '--output', dest='output', required=True,
 						help="Output directory for the FASTA files. Required")
 	parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
@@ -85,7 +87,7 @@ def parse_args():
 class Args(object):
 	"""docstring for Args"""
 	def __init__(self, db=None, collection=None,
-				 output=None, temp=None,
+				 output=None, temp=None, jsons=None,
 				 ip='localhost', user=None, password=None,
 				 min_seqs=1, identity_threshold=0.975,
 				 uaid=True, parse_uaids=0,
@@ -100,6 +102,7 @@ class Args(object):
 		self.collection = collection
 		self.output = output
 		self.temp = temp
+		self.jsons = jsons
 		self.ip = ip
 		self.user = user
 		self.password = password
