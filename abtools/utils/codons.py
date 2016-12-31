@@ -24,7 +24,7 @@
 
 
 
-codons = {"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+codon_lookup = {"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
           "TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
           "TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
           "TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
