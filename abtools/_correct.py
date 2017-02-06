@@ -180,19 +180,21 @@ def query(db, collection, args):
             for line in f:
                 _results.append(json.load(line.strip))
         for r in _results:
+            raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             try:
                 d = {'seq_id': r['seq_id'],
                      seq_field: r[seq_field],
-                     'raw_query': r['raw_query'],
+                     'raw_query': r[raw_field],
                      'v_gene': {'full': r['v_gene']['full']}}
                 if args.uaid and not args.non_redundant:
-                    if 'uaid' in r:
-                        d['uaid'] = r['uaid']
+                    uid_field = 'uid' if 'uid' in r else 'uaid'
+                    if uid_field in r:
+                        d['uaid'] = r[uid_field]
                     elif args.parse_uaids:
                         if args.parse_uaids > 0:
-                            d['uaid'] = r['raw_query'][:args.parse_uaids]
+                            d['uaid'] = r[raw_field][:args.parse_uaids]
                         else:
-                            d['uaid'] = r['raw_query'][args.parse_uaids:]
+                            d['uaid'] = r[raw_field][args.parse_uaids:]
                     else:
                         err = 'ERROR: UAID field was not found. '
                         err += 'Ensure that UAIDs were parsed by AbStar, '
