@@ -209,7 +209,7 @@ def query(db, collection, args):
         logger.info('Getting sequences from MongoDB...')
         coll = db[collection]
         match = {'prod': 'yes'}
-        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
+        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'raw_input': 1, 'v_gene.full': 1}
         if args.uaid is not None:
             project['uaid'] = 1
         # if args.consensus:
@@ -221,13 +221,14 @@ def query(db, collection, args):
     elif args.uaid:
         seqs = []
         for r in results:
+            raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             if 'uaid' in r:
-                seqs.append((r['seq_id'], r['uaid'], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                seqs.append((r['seq_id'], r['uaid'], r[seq_field], r[raw_field], r['v_gene']['full']))
             elif args.parse_uaids:
                 if args.parse_uaids > 0:
-                    seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][:args.parse_uaids], r[seq_field], r[raw_field], r['v_gene']['full']))
                 else:
-                    seqs.append((r['seq_id'], r['raw_query'][args.parse_uaids:], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][args.parse_uaids:], r[seq_field], r[raw_field], r['v_gene']['full']))
             else:
                 err = 'ERROR: UAID field was not found. '
                 err += 'Ensure that UAIDs were parsed by AbStar, '
@@ -235,7 +236,7 @@ def query(db, collection, args):
                 err += 'or use the -u option for identity-based clustering.'
                 raise ValueError(err)
     else:
-        seqs = [(r['seq_id'], r[seq_field], r['raw_query'], r['v_gene']['full']) for r in results]
+        seqs = [(r['seq_id'], r[seq_field], r[raw_field], r['v_gene']['full']) for r in results]
     logger.info('Found {} sequences\n'.format(len(seqs)))
     return seqs
 
