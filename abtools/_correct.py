@@ -43,6 +43,7 @@ from Bio.Align import AlignInfo
 from abtools import log, mongodb
 from abtools.alignment import muscle
 from abtools.pipeline import make_dir, list_files
+from abtools.sequence import Sequence
 
 
 def parse_args():
