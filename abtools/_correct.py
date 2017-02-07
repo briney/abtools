@@ -352,7 +352,7 @@ def make_sort_input(seqs, args):
 
 
 def initial_clustering(seq_db, args):
-    logger.info('\n{} clustering with CD-HIT...\n'.format('Initial UAID' if args.uaid else 'Identity-based'))
+    logger.info('\n{} clustering with CD-HIT...'.format('Initial UAID' if args.uaid else 'Identity-based'))
     start = time.time()
     if args.uaid:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
@@ -371,13 +371,17 @@ def initial_clustering(seq_db, args):
 
 def process_initial_clusters(initial_clusters, seq_db, args):
     process_func = process_initial_uaid_cluster if args.uaid else process_initial_identity_cluster
+    logger.info('Calculating {} sequences...'.format('consensus' if args.consensus else 'centroid'))
     consentroids = []
     if args.debug:
-        for initial_cluster in initial_clusters:
+        num_clusters = len(initial_clusters)
+        update_progress(0, num_clusters, sys.stdout)
+        for i, initial_cluster in enumerate(initial_clusters):
             clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
             output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
             _consentroids = process_func(clustering_seqs, output_seqs, args)
             consentroids.extend(_consentroids)
+            update_progress(i + 1, num_clusters, sys.stdout)
     else:
         async_results = []
         p = mp.Pool(maxtasksperchild=100)
