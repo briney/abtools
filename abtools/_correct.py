@@ -179,7 +179,7 @@ def query(db, collection, args):
         _results = []
         with open(collection) as f:
             for line in f:
-                _results.append(json.load(line.strip))
+                _results.append(json.loads(line.strip))
         for r in _results:
             raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             try:
