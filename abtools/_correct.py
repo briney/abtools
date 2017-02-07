@@ -107,11 +107,14 @@ def parse_args():
                         Required if building consensus sequences, not required for centroids.")
     parser.add_argument('--aa', dest='aa', action='store_true', default=False,
                         help="If set, use amino acid sequences for identity-based clustering.")
-    parser.add_argument('--field', dest='field', default='vdj_nt',
+    parser.add_argument('--clustering_field', dest='clustering_field', default='vdj_nt',
                         help="The MongoDB field to be used for clustering. \
                         If using UAIDs, this is the field that will be used to calculate \
                         consensus/centroid sequences. \
                         Default is 'vdj_nt'.")
+    parser.add_argument('--output_field', dest='output_field', default='oriented_input',
+                        help="The MongoDB field to be used for creating consensus/centroid sequences. \
+                        Default is 'oriented_input'.")
     parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
     parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
