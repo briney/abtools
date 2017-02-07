@@ -622,7 +622,7 @@ def get_consensus(clusters, germs, args):
 
 def calculate_consensus(cluster, germs, args):
     if len(cluster) == 1:
-        return cluster.sequence.upper()
+        return [(cluster[0].sequence.upper(), 1)]
     if args.uaid:
         from .cluster import cluster as _cdhit
         consensus_seqs = []
