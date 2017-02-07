@@ -587,6 +587,7 @@ def get_consensus(clusters, germs, args):
     if args.debug:
         # consensus_seqs = [calculate_consensus(cluster, germs, args) for cluster in clusters]
         if args.uaid:
+            from .cluster import cluster as _cdhit
             consensus_seqs = []
             for cluster in clusters:
                 bin_clusters = _cdhit(cluster, threshold=args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
@@ -623,6 +624,7 @@ def calculate_consensus(cluster, germs, args):
     if len(cluster) == 1:
         return cluster.sequence.upper()
     if args.uaid:
+        from .cluster import cluster as _cdhit
         consensus_seqs = []
         bin_clusters = _cdhit(cluster, threshold=args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
         if args.only_largest_cluster:
