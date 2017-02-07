@@ -419,6 +419,7 @@ def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
         reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         consentroid = recluster.consensus if args.consensus else recluster.centroid
+        consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
         consentroids.append((consentroid, recluster.size))
         for rc in reclusters:
             rc.cleanup()
@@ -432,6 +433,7 @@ def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
         reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         consentroid = recluster.consensus if args.consensus else recluster.centroid
+        consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
         consentroids.append((consentroid, recluster.size))
         for rc in reclusters:
             rc.cleanup()
@@ -870,10 +872,10 @@ def update_progress(finished, jobs, log, failed=None):
     sys.stdout.write(prog_bar)
 
 
-def write_output(collection, fastas, sizes, collection_start_time, args):
+def write_output(collection, sequences, sizes, collection_start_time, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
     logger.info('Writing {} sequences to output file...'.format(seq_type))
-    write_fasta_output(collection, fastas, args)
+    write_fasta_output(collection, sequences, args)
     if sizes is not None:
         write_stats_output(collection, sizes, args)
     logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
@@ -904,14 +906,14 @@ def write_nr_output(collection, unique_file, collection_start_time, args):
     logger.info('')
 
 
-def write_fasta_output(collection, fastas, args):
+def write_fasta_output(collection, sequences, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
     oname = collection
     if os.path.isfile(collection):
         oname = os.path.basename(collection).rstrip('.json')
     outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
-    out_handle.write('\n'.join(fastas))
+    out_handle.write('\n'.join([s.fasta for s in sequences]))
     out_handle.close()
 
 
