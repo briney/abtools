@@ -437,7 +437,7 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
         subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
     for subcluster in subclusters:
         sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
-        consentroids.append(consentroid_func(sc_seqs))
+        consentroids.append(consentroid_func(sc_seqs, args))
         # reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         # consentroid = recluster.consensus if args.consensus else recluster.centroid
@@ -452,7 +452,7 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
 # def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
 def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
-    consentroid = consentroid_func(output_seqs)
+    consentroid = consentroid_func(output_seqs, args)
     return consentroid
     # reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
     # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
@@ -464,7 +464,7 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     # return consentroids
 
 
-def calculate_consensus(seqs):
+def calculate_consensus(seqs, args):
     fasta_string = '\n'.join([s.fasta for s in seqs])
     if len(seqs) < 100:
         alignment = muscle(fasta_string)
@@ -479,7 +479,7 @@ def calculate_consensus(seqs):
     return [(Sequence(raw_consensus, id=consensus_id), len(seqs))]
 
 
-def calculate_centroid(seqs):
+def calculate_centroid(seqs, args):
     reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
     recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
     centroid = recluster.centroid
