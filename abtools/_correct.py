@@ -189,7 +189,7 @@ def query(db, collection, args):
             raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             try:
                 d = {'seq_id': r['seq_id'],
-                     args.cluster_field: r[args.cluster_field],
+                     args.clustering_field: r[args.clustering_field],
                      args.output_field: r[args.output_field],
                      'raw_query': r[raw_field],
                      'v_gene': {'full': r['v_gene']['full']}}
@@ -216,7 +216,7 @@ def query(db, collection, args):
         logger.info('Getting sequences from MongoDB...')
         coll = db[collection]
         match = {'prod': 'yes'}
-        project = {'_id': 0, 'seq_id': 1, args.cluster_field: 1, args.output_field: 1, 'raw_query': 1, 'raw_input': 1, 'v_gene.full': 1}
+        project = {'_id': 0, 'seq_id': 1, args.clustering_field: 1, args.output_field: 1, 'raw_query': 1, 'raw_input': 1, 'v_gene.full': 1}
         if args.uaid is not None:
             project['uaid'] = 1
             project['uid'] = 1
@@ -230,12 +230,12 @@ def query(db, collection, args):
             raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             uid_field = 'uid' if 'uid' in r else 'uaid'
             if 'uaid' in r:
-                seqs.append((r['seq_id'], r[uid_field], r[args.cluster_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
+                seqs.append((r['seq_id'], r[uid_field], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
             elif args.parse_uaids:
                 if args.parse_uaids > 0:
-                    seqs.append((r['seq_id'], r[raw_field][:args.parse_uaids], r[args.cluster_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][:args.parse_uaids], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
                 else:
-                    seqs.append((r['seq_id'], r[raw_field][args.parse_uaids:], r[args.cluster_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][args.parse_uaids:], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
             else:
                 err = 'ERROR: UAID field was not found. '
                 err += 'Ensure that UAIDs were parsed by AbStar, '
@@ -243,7 +243,7 @@ def query(db, collection, args):
                 err += 'or use the -u option for identity-based clustering.'
                 raise ValueError(err)
     else:
-        seqs = [(r['seq_id'], r[seq_field], r[args.cluster_field], r[args.output_field], r[raw_field], r['v_gene']['full']) for r in results]
+        seqs = [(r['seq_id'], r[seq_field], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']) for r in results]
     logger.info('Found {} sequences\n'.format(len(seqs)))
     return seqs
 
