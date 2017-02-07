@@ -43,6 +43,7 @@ from Bio.Align import AlignInfo
 from abtools import log, mongodb
 from abtools.alignment import muscle
 from abtools.pipeline import make_dir, list_files
+from abtools.sequence import Sequence
 
 
 def parse_args():
@@ -178,21 +179,24 @@ def query(db, collection, args):
         _results = []
         with open(collection) as f:
             for line in f:
-                _results.append(json.load(line.strip))
+                if line.strip():
+                    _results.append(json.loads(line.strip()))
         for r in _results:
+            raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             try:
                 d = {'seq_id': r['seq_id'],
                      seq_field: r[seq_field],
-                     'raw_query': r['raw_query'],
+                     'raw_query': r[raw_field],
                      'v_gene': {'full': r['v_gene']['full']}}
                 if args.uaid and not args.non_redundant:
-                    if 'uaid' in r:
-                        d['uaid'] = r['uaid']
+                    uid_field = 'uid' if 'uid' in r else 'uaid'
+                    if uid_field in r:
+                        d['uaid'] = r[uid_field]
                     elif args.parse_uaids:
                         if args.parse_uaids > 0:
-                            d['uaid'] = r['raw_query'][:args.parse_uaids]
+                            d['uaid'] = r[raw_field][:args.parse_uaids]
                         else:
-                            d['uaid'] = r['raw_query'][args.parse_uaids:]
+                            d['uaid'] = r[raw_field][args.parse_uaids:]
                     else:
                         err = 'ERROR: UAID field was not found. '
                         err += 'Ensure that UAIDs were parsed by AbStar, '
@@ -207,7 +211,7 @@ def query(db, collection, args):
         logger.info('Getting sequences from MongoDB...')
         coll = db[collection]
         match = {'prod': 'yes'}
-        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'v_gene.full': 1}
+        project = {'_id': 0, 'seq_id': 1, seq_field: 1, 'raw_query': 1, 'raw_input': 1, 'v_gene.full': 1}
         if args.uaid is not None:
             project['uaid'] = 1
         # if args.consensus:
@@ -219,13 +223,16 @@ def query(db, collection, args):
     elif args.uaid:
         seqs = []
         for r in results:
+            # raw_field and uid_field are necessary to maintain compatibility with legacy AbStar versions
+            raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
+            uid_field = 'uid' if 'uid' in r else 'uaid'
             if 'uaid' in r:
-                seqs.append((r['seq_id'], r['uaid'], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                seqs.append((r['seq_id'], r[uid_field], r[seq_field], r[raw_field], r['v_gene']['full']))
             elif args.parse_uaids:
                 if args.parse_uaids > 0:
-                    seqs.append((r['seq_id'], r['raw_query'][:args.parse_uaids], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][:args.parse_uaids], r[seq_field], r[raw_field], r['v_gene']['full']))
                 else:
-                    seqs.append((r['seq_id'], r['raw_query'][args.parse_uaids:], r[seq_field], r['raw_query'], r['v_gene']['full']))
+                    seqs.append((r['seq_id'], r[raw_field][args.parse_uaids:], r[seq_field], r[raw_field], r['v_gene']['full']))
             else:
                 err = 'ERROR: UAID field was not found. '
                 err += 'Ensure that UAIDs were parsed by AbStar, '
@@ -233,7 +240,7 @@ def query(db, collection, args):
                 err += 'or use the -u option for identity-based clustering.'
                 raise ValueError(err)
     else:
-        seqs = [(r['seq_id'], r[seq_field], r['raw_query'], r['v_gene']['full']) for r in results]
+        seqs = [(r['seq_id'], r[seq_field], r[raw_field], r['v_gene']['full']) for r in results]
     logger.info('Found {} sequences\n'.format(len(seqs)))
     return seqs
 
@@ -455,7 +462,8 @@ def get_cluster_seqs(seq_ids, seq_db):
                                    FROM seqs
                                    WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
         seqs.extend(seq_chunk)
-    return ['>{}\n{}'.format(s[0], s[1]) for s in seqs]
+    # return ['>{}\n{}'.format(s[0], s[1]) for s in seqs]
+    return [Sequence(s[1], id=s[0]) for s in seqs]
 
 
 
@@ -470,31 +478,51 @@ def get_cluster_seqs(seq_ids, seq_db):
 
 
 def get_uaid_centroids(uaid_clusters, args):
+    from .cluster import cluster as _cdhit
     logger.info('Calculating centroid sequences with USEARCH:')
     start_time = time.time()
     centroids = []
     singletons = [c[0] for c in uaid_clusters if len(c) == 1]
     for s in singletons:
-        seq_id = s.split('\n')[0].replace('>', '')
-        seq = s.split('\n')[1]
-        centroids.append('>{}\n{}'.format(seq_id, seq))
+        # seq_id = s.split('\n')[0].replace('>', '')
+        # seq = s.split('\n')[1]
+        # centroids.append('>{}\n{}'.format(seq_id, seq))
+        centroids.append(s.fasta)
     sizes = [1] * len(centroids)
     clusters = [c for c in uaid_clusters if len(c) > 1]
     if args.debug:
         for cluster in clusters:
-            centroid, size = do_usearch_centroid(cluster, args)
-            centroids.extend(centroid)
-            sizes.extend(size)
+            bin_clusters = _cdhit(cluster, threshold=args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
+            if args.only_largest_cluster:
+                bin_clusters = sorted(bin_clusters, key=lambda x: x.size)
+                centroids.append(bin_clusters[0].centroid)
+                sizes.append(bin_clusters[0].size)
+            else:
+                centroids.extend([bc.centroid for bc in bin_clusters])
+                sizes.extend([bc.size for bc in bin_clusters])
+            # centroid, size = do_usearch_centroid(cluster, args)
+            # centroids.extend(centroid)
+            # sizes.extend(size)
     else:
         p = mp.Pool(maxtasksperchild=100)
         async_results = []
         for c in clusters:
-            async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
+            kwargs = {'threshold': args.identity_threshold, 'temp_dir': args.temp_dir, 'quiet': True}
+            async_results.append(p.apply_async(_cdhit, args=(cluster, ), kws=kwargs))
+            # async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
         monitor_mp_jobs(async_results)
         for a in async_results:
-            centroid, size = a.get()
-            centroids.extend(centroid)
-            sizes.extend(size)
+            bin_clusters = a.get()
+            if args.only_largest_cluster:
+                bin_clusters = sorted(bin_clusters, key=lambda x: x.size)
+                centroids.append(bin_clusters[0].centroid)
+                sizes.append(bin_clusters[0].size)
+            else:
+                centroids.extend([bc.centroid for bc in bin_clusters])
+                sizes.extend([bc.size for bc in bin_clusters])
+            # centroid, size = a.get()
+            # centroids.extend(centroid)
+            # sizes.extend(size)
         p.close()
         p.join()
         logger.info('Centroids were calculated in {} seconds.'.format(round(time.time() - start_time), 2))
@@ -521,7 +549,7 @@ def do_usearch_centroid(uaid_group_seqs, args):
                fasta.name,
                '-maxaccepts', '0',
                '-maxrejects', '0',
-               '-id', '0.9',
+               '-id', '0.9 ',
                '-sizeout',
                '-uc', results.name,
                '-centroids', centroids.name]
@@ -558,38 +586,82 @@ def do_usearch_centroid(uaid_group_seqs, args):
 def get_consensus(clusters, germs, args):
     logger.info('Building consensus sequences...')
     if args.debug:
-        consensus_seqs = [calculate_consensus(cluster, germs, args) for cluster in clusters]
+        # consensus_seqs = [calculate_consensus(cluster, germs, args) for cluster in clusters]
+        if args.uaid:
+            from .cluster import cluster as _cdhit
+            consensus_seqs = []
+            for cluster in clusters:
+                bin_clusters = _cdhit(cluster, threshold=args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
+                if args.only_largest_cluster:
+                    bin_clusters = sorted(bin_clusters, key=lambda x: x.size)
+                    consensus_seqs.append([bin_clusters[0].consensus, bin_clusters[0].size])
+                else:
+                    consensus_seqs.extend([[bc.consensus, bc.size] for bc in bin_clusters])
+        else:
+            consensus_seqs = [calculate_consensus(cluster, germs, args) for cluster in clusters]
     else:
-        p = mp.Pool()
+        p = mp.Pool(maxtasksperchild=100)
         async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
         monitor_mp_jobs(async_results)
-        results = [a.get() for a in async_results]
+        # consensus_seqs = [a.get() for a in async_results]
+        consensus_seqs = []
+        for ar in async_results:
+            consensus_seqs.extend(ar.get())
         p.close()
         p.join()
     fastas = []
-    for r in results:
-        seq = r[0]
-        size = r[1]
-        fastas.append('>{}\n{}'.format(uuid.uuid4(), seq))
-    return fastas, [r[1] for r in results]
+    seqs = [r[0] for r in consensus_seqs]
+    sizes = [r[1] for r in consensus_seqs]
+    fastas = ['>{}\n{}'.format(uuid.uuid4(), seq.sequence) for seq in seqs]
+    return fastas, sizes
+    # for r in results:
+    #     seq = r[0]
+    #     size = r[1]
+    #     fastas.append('>{}\n{}'.format(uuid.uuid4(), seq))
+    # return fastas, [r[1] for r in results]
 
 
 def calculate_consensus(cluster, germs, args):
     if len(cluster) == 1:
-        return (cluster[0].split('\n')[1].upper(), 1)
-    fasta_string = consensus_alignment_input(cluster, germs, args)
-
-    if len(cluster) < 100:
-        alignment = muscle(fasta_string)
-    elif len(cluster) < 1000:
-        alignment = muscle(fasta_string, maxiters=2)
+        return [(cluster[0], 1)]
+    if args.uaid:
+        from .cluster import cluster as _cdhit
+        consensus_seqs = []
+        bin_clusters = _cdhit(cluster, threshold=args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
+        if args.only_largest_cluster:
+            bin_clusters = sorted(bin_clusters, key=lambda x: x.size)
+            consensus_seqs.append([bin_clusters[0].consensus, bin_clusters[0].size])
+        else:
+            consensus_seqs.extend([[bc.consensus, bc.size] for bc in bin_clusters])
+        return consensus_seqs
     else:
-        alignment = muscle(fasta_string, maxiters=1, diags=True)
-    ambig = 'N' if 'nt' in args.field else 'X'
-    summary_align = AlignInfo.SummaryInfo(alignment)
-    consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
-    consensus = str(consensus).replace('-', '')
-    return (consensus.upper(), len(cluster))
+        fasta_string = '\n'.join([c.fasta for c in cluster])
+        if len(cluster) < 100:
+            alignment = muscle(fasta_string)
+        elif len(cluster) < 1000:
+            alignment = muscle(fasta_string, maxiters=2)
+        else:
+            alignment = muscle(fasta_string, maxiters=1, diags=True)
+        ambig = 'N' if 'nt' in args.field else 'X'
+        summary_align = AlignInfo.SummaryInfo(alignment)
+        consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
+        consensus = str(consensus).replace('-', '')
+        return [(Sequence(consensus.upper()), len(cluster))]
+
+    # if len(cluster) == 1:
+    #     return (cluster[0].split('\n')[1].upper(), 1)
+    # fasta_string = consensus_alignment_input(cluster, germs, args)
+    # if len(cluster) < 100:
+    #     alignment = muscle(fasta_string)
+    # elif len(cluster) < 1000:
+    #     alignment = muscle(fasta_string, maxiters=2)
+    # else:
+    #     alignment = muscle(fasta_string, maxiters=1, diags=True)
+    # ambig = 'N' if 'nt' in args.field else 'X'
+    # summary_align = AlignInfo.SummaryInfo(alignment)
+    # consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
+    # consensus = str(consensus).replace('-', '')
+    # return (consensus.upper(), len(cluster))
 
 
 def consensus_alignment_input(cluster, germs, args):
@@ -648,18 +720,24 @@ def _log_params(args):
     logger.info('OUTPUT DIR: {}'.format(args.output))
     logger.info('TEMP DIR: {}'.format(args.temp_dir))
     logger.info('UAIDs: {}'.format(args.uaid))
+    logger.info('OUTPUT TYPE: {}'.format('Consensus' if args.consensus else 'Centroid'))
     logger.info('CLUSTERING TYPE: {}'.format('sort/uniq' if args.non_redundant else 'CD-HIT'))
     if args.non_redundant:
+        logger.info('NON-REDUNDANT CLUSTERING FIELD: {}'.format(args.field))
         logger.info('IDENTITY THRESHOLD: 1.0')
         logger.info('MIN SEQS: 1')
         return
-    elif args.uaid == 0:
+    elif not args.uaid:
+        logger.info('CLUSTERING FIELD: {}'.format(args.field))
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
         logger.info('GERMLINES: {}'.format(args.germs))
     else:
-        logger.info('PARSE UAIDS: {}'.format(args.parse_uaids))
+        logger.info('PARSE UAIDS: {}'.format('False' if args.parse_uaids == 0 else args.parse_uaids))
     logger.info('MIN SEQS: {}'.format(args.min_seqs))
     logger.info('LARGEST CLUSTER ONLY: {}'.format(args.only_largest_cluster))
+    if args.uaid:
+        logger.info('INTRA-BIN CLUSTERING THRESHOLD: {}'.format(args.identity_threshold))
+        logger.info('{} FIELD: {}'.format('CONSENSUS' if args.consensus else 'CENTROID', args.field))
 
 
 

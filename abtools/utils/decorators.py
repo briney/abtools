@@ -74,11 +74,11 @@ def lazy_property(func):
             # If you update some data that affects c.lazy_property
             c.data = new_data
 
-            # c.lazy property won't changes
+            # c.lazy_property won't change
             prop == c.lazy_property  # TRUE
 
-            # You can delete lazy_property, which will force it
-            # to be recomputed the next time you use it
+            # If you want to update c.lazy_property, you can delete it, which will
+            # force it to be recomputed (with the new data) the next time you use it
             del c.lazy_property
             new_prop = c.lazy_property
             new_prop == prop  # FALSE
