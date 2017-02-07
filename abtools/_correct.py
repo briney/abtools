@@ -818,12 +818,12 @@ def _log_params(args):
     logger.info('OUTPUT TYPE: {}'.format('Consensus' if args.consensus else 'Centroid'))
     logger.info('CLUSTERING TYPE: {}'.format('sort/uniq' if args.non_redundant else 'CD-HIT'))
     if args.non_redundant:
-        logger.info('NON-REDUNDANT CLUSTERING FIELD: {}'.format(args.field))
+        logger.info('NON-REDUNDANT CLUSTERING FIELD: {}'.format(args.clustering_field))
         logger.info('IDENTITY THRESHOLD: 1.0')
         logger.info('MIN SEQS: 1')
         return
     elif not args.uaid:
-        logger.info('CLUSTERING FIELD: {}'.format(args.field))
+        logger.info('CLUSTERING FIELD: {}'.format(args.clustering_field))
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
         logger.info('GERMLINES: {}'.format(args.germs))
     else:
@@ -832,7 +832,8 @@ def _log_params(args):
     logger.info('LARGEST CLUSTER ONLY: {}'.format(args.only_largest_cluster))
     if args.uaid:
         logger.info('INTRA-BIN CLUSTERING THRESHOLD: {}'.format(args.identity_threshold))
-        logger.info('{} FIELD: {}'.format('CONSENSUS' if args.consensus else 'CENTROID', args.field))
+        logger.info('INTRA-BIN CLUSTERING FIELD: {}'.format(args.clustering_field))
+        logger.info('{} FIELD: {}'.format('CONSENSUS' if args.consensus else 'CENTROID', args.output_field))
 
 
 
