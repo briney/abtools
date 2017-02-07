@@ -878,7 +878,7 @@ def write_output(collection, sequences, sizes, collection_start_time, args):
     write_fasta_output(collection, sequences, args)
     if sizes is not None:
         write_stats_output(collection, sizes, args)
-    logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
+    logger.info('{} {} sequences were identified.'.format(len(sequences), seq_type))
     logger.info('{} was processed in {} seconds.'.format(collection,
         round(time.time() - collection_start_time, 2)))
     logger.info('')
