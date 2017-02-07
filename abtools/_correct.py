@@ -430,35 +430,64 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
 # def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
 def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     consentroids = []
+    consentroid_func = calculate_consensus if args.consensus else calculate_centroid
     clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
     subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
     if args.only_largest_cluster:
         subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
     for subcluster in subclusters:
         sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
-        reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
-        recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
-        consentroid = recluster.consensus if args.consensus else recluster.centroid
-        consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
-        consentroids.append((consentroid, recluster.size))
-        for rc in reclusters:
-            rc.cleanup()
+        consentroids.append(consentroid_func(sc_seqs))
+        # reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
+        # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
+        # consentroid = recluster.consensus if args.consensus else recluster.centroid
+        # consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
+        # consentroids.append((consentroid, recluster.size))
+        # for rc in reclusters:
+        #     rc.cleanup()
         subcluster.cleanup()
     return consentroids
 
 
 # def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
 def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
-    consentroids = []
     output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
-    reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
+    consentroid = consentroid_func(output_seqs)
+    return consentroid
+    # reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
+    # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
+    # consentroid = recluster.consensus if args.consensus else recluster.centroid
+    # consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
+    # consentroids.append((consentroid, recluster.size))
+    # for rc in reclusters:
+    #     rc.cleanup()
+    # return consentroids
+
+
+def calculate_consensus(seqs):
+    fasta_string = '\n'.join([s.fasta for s in seqs])
+    if len(seqs) < 100:
+        alignment = muscle(fasta_string)
+    elif len(seqs) < 1000:
+        alignment = muscle(fasta_string, maxiters=2)
+    else:
+        alignment = muscle(fasta_string, maxiters=1, diags=True)
+    ambig = 'N' if 'nt' in args.output_field else 'X'
+    summary_align = AlignInfo.SummaryInfo(alignment)
+    raw_consensus = str(summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)).replace('-', '').upper()
+    consensus_id = '{}_{}'.format(uuid.uuid4(), len(seqs))
+    return [(Sequence(raw_consensus, id=consensus_id), len(seqs))]
+
+
+def calculate_centroid(seqs):
+    reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
     recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
-    consentroid = recluster.consensus if args.consensus else recluster.centroid
-    consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
-    consentroids.append((consentroid, recluster.size))
+    centroid = recluster.centroid
+    centroid.id = '{}_{}'.format(consentroid.id, recluster.size)
     for rc in reclusters:
         rc.cleanup()
-    return consentroids
+    return [(centroid, recluster.size)]
+
 
 
 # def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
