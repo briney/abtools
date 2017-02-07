@@ -259,7 +259,9 @@ def build_seq_db(seqs, args):
     c.execute(create_cmd)
     c.executemany(insert_cmd, seqs)
     c.execute('CREATE INDEX seq_index ON seqs (seq_id)')
-    return c
+    conn.commit()
+    conn.close()
+    return db_path
 
 
 def get_seq_db_creation_cmd(args):
@@ -291,23 +293,31 @@ def chunker(l, size=900):
     return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def retrieve_clustering_seqs(seq_ids, seq_db):
+def retrieve_clustering_seqs(seq_ids, seq_db_path):
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
     seqs = []
     for chunk in chunker(seq_ids):
         seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.clustering_seq
                                    FROM seqs
                                    WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
         seqs.extend(seq_chunk)
+    conn.commit()
+    conn.close()
     return [Sequence(s[1], id=s[0]) for s in seqs]
 
 
-def retrieve_output_seqs(seq_ids, seq_db):
+def retrieve_output_seqs(seq_ids, seq_db_path):
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
     seqs = []
     for chunk in chunker(seq_ids):
         seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.output_seq
                                    FROM seqs
                                    WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
         seqs.extend(seq_chunk)
+    conn.commit()
+    conn.close()
     return [Sequence(s[1], id=s[0]) for s in seqs]
 
 
@@ -369,7 +379,7 @@ def initial_clustering(seq_db, args):
     return passed_clusters
 
 
-def process_initial_clusters(initial_clusters, seq_db, args):
+def process_initial_clusters(initial_clusters, seq_db_path, args):
     process_func = process_initial_uaid_cluster if args.uaid else process_initial_identity_cluster
     logger.info('Calculating {} sequences...'.format('consensus' if args.consensus else 'centroid'))
     consentroids = []
@@ -377,18 +387,20 @@ def process_initial_clusters(initial_clusters, seq_db, args):
         num_clusters = len(initial_clusters)
         update_progress(0, num_clusters, sys.stdout)
         for i, initial_cluster in enumerate(initial_clusters):
-            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
-            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
-            _consentroids = process_func(clustering_seqs, output_seqs, args)
+            # clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            # output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            # _consentroids = process_func(clustering_seqs, output_seqs, args)
+            _consentroids = process_func(initial_cluster.ids, seq_db_path, args)
             consentroids.extend(_consentroids)
             update_progress(i + 1, num_clusters, sys.stdout)
     else:
         async_results = []
         p = mp.Pool(maxtasksperchild=10)
         for initial_cluster in initial_clusters:
-            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
-            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
-            async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
+            # clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            # output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            # async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
+            async_results.append(p.apply_async(process_func, (initial_cluster.ids, seq_db_path, args)))
         monitor_mp_jobs(async_results)
         for ar in async_results:
             consentroids.extend(ar.get())
@@ -411,13 +423,15 @@ def process_initial_clusters(initial_clusters, seq_db, args):
     # return consentroids
 
 
-def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
+# def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
+def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     consentroids = []
+    clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
     subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
     if args.only_largest_cluster:
         subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
     for subcluster in subclusters:
-        sc_seqs = [o for o in output_seqs if o.id in subcluster.ids]
+        sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
         reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         consentroid = recluster.consensus if args.consensus else recluster.centroid
@@ -429,16 +443,17 @@ def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
     return consentroids
 
 
-def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
+# def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
+def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     consentroids = []
-    for initial_cluster in initial_clusters:
-        reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
-        recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
-        consentroid = recluster.consensus if args.consensus else recluster.centroid
-        consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
-        consentroids.append((consentroid, recluster.size))
-        for rc in reclusters:
-            rc.cleanup()
+    output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
+    reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
+    recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
+    consentroid = recluster.consensus if args.consensus else recluster.centroid
+    consentroid.id = '{}_{}'.format(consentroid.id, recluster.size)
+    consentroids.append((consentroid, recluster.size))
+    for rc in reclusters:
+        rc.cleanup()
     return consentroids
 
 
@@ -1100,9 +1115,9 @@ def main(args):
             unique_file = unix_sort_unique(seqs, args)
             write_nr_output(collection, unique_file, collection_start, args)
         else:
-            seq_db = get_seqs(db, collection, args)
-            initial_clusters = initial_clustering(seq_db, args)
-            consentroids = process_initial_clusters(initial_clusters, seq_db, args)
+            seq_db_path = get_seqs(db, collection, args)
+            initial_clusters = initial_clustering(seq_db_path, args)
+            consentroids = process_initial_clusters(initial_clusters, seq_db_path, args)
             sequences, sizes = zip(*consentroids)
             write_output(collection, sequences, sizes, collection_start, args)
             for ic in initial_clusters:
