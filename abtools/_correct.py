@@ -361,9 +361,11 @@ def make_sort_input(seqs, args):
 # =================================
 
 
-def initial_clustering(seq_db, args):
+def initial_clustering(seq_db_path, args):
     logger.info('\n{} clustering with CD-HIT...'.format('Initial UAID' if args.uaid else 'Identity-based'))
     start = time.time()
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
     if args.uaid:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
     else:
@@ -376,6 +378,8 @@ def initial_clustering(seq_db, args):
     logger.info('{} clusters meet the minimum size cutoff ({} sequence{})'.format(len(passed_clusters), args.min_seqs, 's' if args.min_seqs > 1 else ''))
     logger.info('The average cluster contains {} sequences; the largest contains {} sequences'.format(round(1. * sum(sizes) / len(sizes), 2), max(sizes)))
     logger.info('Initial clustering took {} seconds\n'.format(round(time.time() - start, 2)))
+    conn.commit()
+    conn.close()
     return passed_clusters
 
 
