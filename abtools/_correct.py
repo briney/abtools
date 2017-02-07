@@ -372,15 +372,22 @@ def initial_clustering(seq_db, args):
 def process_initial_clusters(initial_clusters, seq_db, args):
     process_func = process_initial_uaid_cluster if args.uaid else process_initial_identity_cluster
     consentroids = []
-    async_results = []
-    p = mp.Pool(maxtasksperchild=100)
-    for initial_cluster in initial_clusters:
-        clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
-        output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
-        async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
-    monitor_mp_jobs(async_results)
-    for ar in async_results:
-        consentroids.extend(ar.get())
+    if args.debug:
+        for initial_cluster in initial_clusters:
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
+            _consentroids = process_func(clustering_seqs, output_seqs, args)
+            consentroids.extend(_consentroids)
+    else:
+        async_results = []
+        p = mp.Pool(maxtasksperchild=100)
+        for initial_cluster in initial_clusters:
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
+            async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
+        monitor_mp_jobs(async_results)
+        for ar in async_results:
+            consentroids.extend(ar.get())
     return consentroids
 
     #     subclusters = cluster(ic_seqs, args.uaid_clustering_threshold, temp_dir=args.temp_dir, quiet=True)
