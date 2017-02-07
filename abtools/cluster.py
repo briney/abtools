@@ -138,8 +138,9 @@ class Cluster(object):
     def terminate_db(self):
         if self._seq_db is not None:
             self._seq_db.close()
-        if os.path.isfile(self._seq_db_path):
-            os.unlink(self._seq_db_path)
+        if self._seq_db_path is not None:
+            if os.path.isfile(self._seq_db_path):
+                os.unlink(self._seq_db_path)
 
 
     def _get_ids(self):
