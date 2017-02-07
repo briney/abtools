@@ -612,7 +612,7 @@ def get_consensus(clusters, germs, args):
     fastas = []
     seqs = [r[0] for r in consensus_seqs]
     sizes = [r[1] for r in consensus_seqs]
-    fastas = ['>{}\n{}'.format(uuid.uuid4(), seq) for seq in seqs]
+    fastas = ['>{}\n{}'.format(uuid.uuid4(), seq.sequence) for seq in seqs]
     return fastas, sizes
     # for r in results:
     #     seq = r[0]
