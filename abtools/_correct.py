@@ -384,7 +384,7 @@ def process_initial_clusters(initial_clusters, seq_db, args):
             update_progress(i + 1, num_clusters, sys.stdout)
     else:
         async_results = []
-        p = mp.Pool(maxtasksperchild=100)
+        p = mp.Pool(maxtasksperchild=10)
         for initial_cluster in initial_clusters:
             clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db)
             output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db)
@@ -392,6 +392,8 @@ def process_initial_clusters(initial_clusters, seq_db, args):
         monitor_mp_jobs(async_results)
         for ar in async_results:
             consentroids.extend(ar.get())
+        p.close()
+        p.join()
     return consentroids
 
     #     subclusters = cluster(ic_seqs, args.uaid_clustering_threshold, temp_dir=args.temp_dir, quiet=True)
