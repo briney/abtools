@@ -646,7 +646,7 @@ def calculate_consensus(cluster, germs, args):
         summary_align = AlignInfo.SummaryInfo(alignment)
         consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
         consensus = str(consensus).replace('-', '')
-        return [(consensus.upper(), len(cluster))]
+        return [(Sequence(consensus.upper()), len(cluster))]
 
     # if len(cluster) == 1:
     #     return (cluster[0].split('\n')[1].upper(), 1)
