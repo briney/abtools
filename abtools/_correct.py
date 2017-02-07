@@ -437,7 +437,7 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
         subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
     for subcluster in subclusters:
         sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
-        consentroids.append(consentroid_func(sc_seqs, args))
+        consentroids.extend(consentroid_func(sc_seqs, args))
         # reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         # consentroid = recluster.consensus if args.consensus else recluster.centroid
