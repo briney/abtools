@@ -1170,7 +1170,7 @@ def main(args):
         else:
             seq_db_path = get_seqs(db, collection, args)
             initial_clusters = initial_clustering(seq_db_path, args)
-            if args.min == 1:
+            if args.min_seqs == 1:
                 singletons = [ic for ic in initial_clusters if ic.size == 1]
                 initial_clusters = [ic for ic in initial_clusters if ic.size > 1]
                 logger.info('{} clusters contained only a single sequence. Processing singletons...'.format(len(singletons)))
