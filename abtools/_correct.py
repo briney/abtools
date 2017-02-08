@@ -1174,7 +1174,7 @@ def main(args):
                 singletons = [ic for ic in initial_clusters if ic.size == 1]
                 initial_clusters = [ic for ic in initial_clusters if ic.size > 1]
                 logger.info('{} clusters contained only a single sequence. Processing singletons...'.format(len(singletons)))
-                singleton_consentroids = process_singleton_clusters(singletons)
+                singleton_consentroids = process_singleton_clusters(singletons, seq_db_path, args)
                 logger.info('')
             else:
                 singleton_consentroids = []
