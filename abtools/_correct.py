@@ -477,7 +477,7 @@ def process_singleton_clusters(singletons, seq_db_path, args):
     num_singletons = len(singletons)
     update_progress(0, num_singletons, sys.stdout)
     for i, singleton in enumerate(singletons):
-        seq = retrieve_output_seqs(singleton.ids, seq_db_path)
+        seq = retrieve_output_seqs(singleton.ids, seq_db_path)[0]
         seq.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(seq.id)
         consentroids.append((seq, 1))
         update_progress(i + 1, num_singletons, sys.stdout)
