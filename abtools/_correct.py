@@ -481,8 +481,8 @@ def process_singleton_clusters(singletons, seq_db_path, args):
         seq.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(seq.id)
         consentroids.append((seq, 1))
         update_progress(i + 1, num_singletons, sys.stdout)
-    logger.info('')
     sys.stdout.flush()
+    logger.info('')
     return consentroids
 
 
