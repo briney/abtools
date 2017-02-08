@@ -474,10 +474,13 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
 
 def process_singleton_clusters(singletons, seq_db_path, args):
     consentroids = []
-    for singleton in singletons:
+    num_singletons = len(singletons)
+    update_progress(0, num_singletons, sys.stdout)
+    for i, singleton in enumerate(singletons):
         seq = retrieve_output_seqs(singleton.ids, seq_db_path)
         seq.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(seq.id)
         consentroids.append((seq, 1))
+        update_progress(i + 1, num_singletons, sys.stdout)
     return consentroids
 
 
@@ -1170,8 +1173,9 @@ def main(args):
             if args.min == 1:
                 singletons = [ic for ic in initial_clusters if ic.size == 1]
                 initial_clusters = [ic for ic in initial_clusters if ic.size > 1]
-                logger.info('{} clusters contained only a single sequence'.format(len(singletons)))
+                logger.info('{} clusters contained only a single sequence. Processing singletons...'.format(len(singletons)))
                 singleton_consentroids = process_singleton_clusters(singletons)
+                logger.info('')
             else:
                 singleton_consentroids = []
             consentroids = process_initial_clusters(initial_clusters, seq_db_path, args)
