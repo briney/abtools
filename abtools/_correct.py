@@ -429,6 +429,10 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
 
 # def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
 def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
+    if len(cluster_ids) == 1:
+        consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
+        consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
+        return [(consentroid, 1)]
     consentroids = []
     consentroid_func = calculate_consensus if args.consensus else calculate_centroid
     clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
@@ -451,6 +455,10 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
 
 # def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
 def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
+    if len(cluster_ids) == 1:
+        consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
+        consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
+        return [(consentroid, 1)]
     output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
     consentroid = consentroid_func(output_seqs, args)
     return consentroid
