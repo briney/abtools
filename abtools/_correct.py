@@ -429,10 +429,10 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
 
 # def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
 def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
-    if len(cluster_ids) == 1:
-        consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
-        consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
-        return [(consentroid, 1)]
+    # if len(cluster_ids) == 1:
+    #     consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
+    #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
+    #     return [(consentroid, 1)]
     consentroids = []
     consentroid_func = calculate_consensus if args.consensus else calculate_centroid
     clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
@@ -455,10 +455,10 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
 
 # def process_initial_identity_cluster(clustering_seqs, output_seqs, args):
 def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
-    if len(cluster_ids) == 1:
-        consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
-        consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
-        return [(consentroid, 1)]
+    # if len(cluster_ids) == 1:
+    #     consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
+    #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
+    #     return [(consentroid, 1)]
     output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
     consentroid = consentroid_func(output_seqs, args)
     return consentroid
@@ -470,6 +470,15 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     # for rc in reclusters:
     #     rc.cleanup()
     # return consentroids
+
+
+def process_singleton_clusters(singletons, seq_db_path, args):
+    consentroids = []
+    for singleton in singletons:
+        seq = retrieve_output_seqs(singleton.ids, seq_db_path)
+        seq.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(seq.id)
+        consentroids.append((seq, 1))
+    return consentroids
 
 
 def calculate_consensus(seqs, args):
@@ -1158,7 +1167,15 @@ def main(args):
         else:
             seq_db_path = get_seqs(db, collection, args)
             initial_clusters = initial_clustering(seq_db_path, args)
+            if args.min == 1:
+                singletons = [ic for ic in initial_clusters if ic.size == 1]
+                initial_clusters = [ic for ic in initial_clusters if ic.size > 1]
+                logger.info('{} clusters contained only a single sequence'.format(len(singletons)))
+                singleton_consentroids = process_singleton_clusters(singletons)
+            else:
+                singleton_consentroids = []
             consentroids = process_initial_clusters(initial_clusters, seq_db_path, args)
+            consentroids += singleton_consentroids
             sequences, sizes = zip(*consentroids)
             write_output(collection, sequences, sizes, collection_start, args)
             for ic in initial_clusters:
