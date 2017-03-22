@@ -33,13 +33,16 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-mpl.use('Agg', warn=False)
+# mpl.use('Agg', warn=False)
+mpl.use('cairo', warn=False)
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from pymongo import MongoClient
 
-from abtools import mongodb
+from abtools import log, mongodb
+
+from abstar.core.germline import get_germlines
 
 
 
@@ -49,6 +52,9 @@ def parse_args():
                         help="Output directory for figure and data files. Required.")
     parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
                         help="Directory for temporary files. Required.")
+    parser.add_argument('-l', '--log', dest='log',
+                        help="Location for the AbStats log file. \
+                        If not provided, will be written to <output>/abstats.log.")
     parser.add_argument('-d', '--database', dest='db', required=True,
                         help="Name of the MongoDB database to query. Required.")
     parser.add_argument('-c', '--collection', dest='collection', default=None,
@@ -89,15 +95,18 @@ def parse_args():
                         help="Select the antibody chain to analyze. \
                         Options are 'heavy', 'kappa', and 'lambda'. \
                         Default is 'heavy'.")
+    parser.add_argument('-s', '--species', dest='species', default='human', choices=['human', 'mouse', 'macaque'],
+                        help="Species of the sequence data. Choices are 'human', 'mouse', and 'macaque'. \
+                        Default is 'human'.")
     parser.add_argument('--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
-    return parser.parse_args()
+    return parser
 
 
 
 class Args(object):
     """docstring for Args"""
-    def __init__(self, output=None, temp=None,
+    def __init__(self, output=None, temp=None, log=None,
         db=None, collection=None, ip='localhost', port=27017,
         user=None, password=None,
         var_plot=None, div_plot=None, join_plot=None,
@@ -111,6 +120,7 @@ class Args(object):
 
         self.output = output
         self.temp = temp
+        self.log = log
         self.db = db
         self.collection = collection
         self.ip = ip
@@ -129,7 +139,7 @@ class Args(object):
 
 
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
-    if user and password:
+    if all([user is not None, password is not None]):
         pwd = urllib.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
         conn = MongoClient(uri)
@@ -146,11 +156,11 @@ def get_collections(db):
 
 
 
-def query(db, collection):
+def query(db, collection, chain):
     print('Getting sequences from MongoDB...', end='')
     sys.stdout.flush()
     c = db[collection]
-    results = c.find({'chain': args.chain, 'prod': 'yes'},
+    results = c.find({'chain': chain, 'prod': 'yes'},
                      {'_id': 0,
                       'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.gene': 1,
                       'v_gene.fam': 1, 'd_gene.fam': 1, 'j_gene.fam': 1,
@@ -198,17 +208,17 @@ def aggregate(data, norm=True, sort_by='value', keys=None):
 
 
 
-def cdr3_plot(seqs, collection, make_plot):
+def cdr3_plot(seqs, collection, make_plot, chain, output_dir):
     if not make_plot:
         return None
-    max_len = 40 if args.chain == 'heavy' else 20
+    max_len = 40 if chain == 'heavy' else 20
     cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0 and s['cdr3_len'] <= max_len]
     x, y = aggregate(cdr3s, keys=range(1, max_len + 1))
     color = sns.hls_palette(7)[4]
-    plot_file = '{}_{}_cdr3_lengths.pdf'.format(collection, args.chain)
+    plot_file = os.path.join(output_dir, '{}_{}_cdr3_lengths.pdf'.format(collection, chain))
     x_title = 'CDR3 Length (AA)'
     y_title = 'Frequency (%)'
-    size = (9, 4) if args.chain == 'heavy' else (6, 4)
+    size = (9, 4) if chain == 'heavy' else (6, 4)
     make_barplot([str(i) for i in x], y,
                  color,
                  plot_file,
@@ -219,18 +229,18 @@ def cdr3_plot(seqs, collection, make_plot):
                  xfontsize=7)
 
 
-def germline_plot(seqs, gene, collection, level):
-    from abtools.utils.germlines import germlines
-    germs = germlines('human', gene, args.chain)
+def germline_plot(seqs, gene, collection, output_dir, level, species, chain):
+    # from abtools.utils.germlines import germlines
+    germs = get_germlines(species, gene, chain=chain)
     if not level:
         return None
     level = ['fam', 'gene'] if level == 'both' else [level, ]
     for l in level:
         if l == 'fam':
-            keys = list(set([g.split('-')[0] for g in germs]))
+            keys = list(set([g.name.split('-')[0] for g in germs]))
             size = (6, 4)
         else:
-            keys = list(set([g.split('*')[0] for g in germs]))
+            keys = list(set([g.name.split('*')[0] for g in germs]))
             if gene == 'J':
                 size = (6, 4)
             elif gene == 'D':
@@ -238,11 +248,11 @@ def germline_plot(seqs, gene, collection, level):
             else:
                 size = (10, 4)
         gtype = '{}_gene'.format(gene.lower())
-        chain = args.chain[0].upper()
+        short_chain = chain[0].upper()
         data = [s[gtype][l].rstrip('D') for s in seqs if gtype in s]
         x, y = aggregate(data, keys=keys)
-        x = [i.replace('IG{}{}'.format(chain, gene), '{}{}'.format(gene, chain)) for i in x]
-        plot_file = '{}_{}{}_{}.pdf'.format(collection, gene, chain, l)
+        x = [i.replace('IG{}{}'.format(short_chain, gene), '{}{}'.format(gene, short_chain)) for i in x]
+        plot_file = os.path.join(output_dir, '{}_{}{}_{}.pdf'.format(collection, gene, chain, l))
         colors = get_germline_plot_colors(x, l)
         make_barplot(x, y,
                      colors,
@@ -266,19 +276,19 @@ def isotypes():
     pass
 
 
-def vj_heatmap(seqs, collection, make_plot):
+def vj_heatmap(seqs, collection, make_plot, species, chain, output_dir):
     if not make_plot:
         return None
-    plot_file = '{}_VJheatmap_{}.pdf'.format(collection, args.chain)
-    vj_data = group_by_vj(seqs)
+    plot_file = os.path.join(output_dir, '{}_VJheatmap_{}.pdf'.format(collection, chain))
+    vj_data = group_by_vj(seqs, species, chain)
     vj_df = pd.DataFrame(vj_data)
     make_heatmap(vj_df.transpose(), plot_file)
 
 
-def group_by_vj(data):
-    from abtools.utils.germlines import germlines
-    vs = list(set([g.split('*')[0] for g in germlines('human', 'V', args.chain)]))
-    js = list(set([g.split('*')[0] for g in germlines('human', 'J', args.chain)]))
+def group_by_vj(data, species, chain):
+    # from abtools.utils.germlines import germlines
+    vs = list(set([g.name.split('*')[0] for g in get_germlines(species, 'V', chain=chain)]))
+    js = list(set([g.name.split('*')[0] for g in get_germlines(species, 'J', chain=chain)]))
     vj = {}
     for v in vs:
         vj[v] = {}
@@ -337,7 +347,7 @@ def make_barplot(x, y, colors, ofile, xlabel=None, ylabel=None, l=None, grid=Fal
     # make the plot
     bar = ax.bar(ind, y, width, color=colors)
     fig.tight_layout()
-    plt.savefig(os.path.join(args.output, ofile))
+    plt.savefig(ofile)
     plt.close()
 
 
@@ -359,7 +369,7 @@ def make_heatmap(df, ofile):
     plt.xticks(rotation=90)
     f.tight_layout()
     # make the plot
-    plt.savefig(os.path.join(args.output, ofile))
+    plt.savefig(ofile)
     plt.close()
 
 
@@ -391,18 +401,18 @@ def run_standalone(args):
 
 
 def main(args):
-    db = mongodb.get_db(args)
+    db = mongodb.get_db(args.db, ip=args.ip, port=args.port, user=args.user, password=args.password)
     for collection in mongodb.get_collections(db):
         print_collection_info(collection)
-        seqs = query(db, collection)
+        seqs = query(db, collection, args.chain)
         if len(seqs) == 0:
             continue
-        germline_plot(seqs, 'V', collection, level=args.var_plot)
+        germline_plot(seqs, 'V', collection, args.output, args.var_plot, args.species, args.chain)
         if args.chain == 'heavy':
-            germline_plot(seqs, 'D', collection, level=args.div_plot)
-        germline_plot(seqs, 'J', collection, level=args.join_plot)
-        cdr3_plot(seqs, collection, args.cdr3_plot)
-        vj_heatmap(seqs, collection, args.heatmap)
+            germline_plot(seqs, 'D', collection, args.output, args.div_plot, args.species, args.chain)
+        germline_plot(seqs, 'J', collection, args.output, args.join_plot, args.species, args.chain)
+        cdr3_plot(seqs, collection, args.cdr3_plot, args.chain, args.output)
+        vj_heatmap(seqs, collection, args.heatmap, args.species, args.chain, args.output)
 
 
 
