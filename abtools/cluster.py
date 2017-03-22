@@ -127,11 +127,20 @@ class Cluster(object):
         return self._get_centroid()
 
 
+    def cleanup(self):
+        try:
+            os.unlink(self._raw_cluster)
+        except:
+            pass
+        self.terminate_db()
+
+
     def terminate_db(self):
         if self._seq_db is not None:
             self._seq_db.close()
-        if os.path.isfile(self._seq_db_path):
-            os.unlink(self._seq_db_path)
+        if self._seq_db_path is not None:
+            if os.path.isfile(self._seq_db_path):
+                os.unlink(self._seq_db_path)
 
 
     def _get_ids(self):
@@ -170,7 +179,9 @@ class Cluster(object):
         summary_align = AlignInfo.SummaryInfo(aln)
         consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
         consensus_string = str(consensus).replace('-', '')
-        return Sequence(consensus_string.upper())
+        consensus_seq = Sequence(consensus_string.upper())
+        os.unlink(_aln)
+        return consensus_seq
 
     @staticmethod
     def _chunker(l, size=900):
