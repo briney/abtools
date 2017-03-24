@@ -188,7 +188,7 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=None, quiet=False):
+def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=None, quiet=False, threads=0):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -215,7 +215,7 @@ def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=
     '''
     if any([len(seqs) > 25, force_make_db]):
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-            threshold=threshold, make_db=True, quiet=quiet)
+            threshold=threshold, make_db=True, quiet=quiet, threads=threads)
         return parse_clusters(cfile, seq_db=seq_db, db_path=db_path)
     else:
         seqs = [Sequence(s) for s in seqs]
@@ -225,7 +225,7 @@ def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=
         return parse_clusters(cfile, seq_dict=seq_dict)
 
 
-def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False):
+def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0):
     # '''
     # Perform CD-HIT clustering on a set of sequences.
 
@@ -246,9 +246,10 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     else:
         ofile = os.path.expanduser(out_file)
     ifile = _make_cdhit_input(seqs, temp_dir)
-    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T 0 -M 35000'.format(ifile,
+    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T {} -M 35000'.format(ifile,
                                                                           ofile,
-                                                                          threshold)
+                                                                          threshold,
+                                                                          threads)
     cluster = sp.Popen(cdhit_cmd,
                        shell=True,
                        stdout=sp.PIPE,
