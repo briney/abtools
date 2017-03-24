@@ -106,7 +106,7 @@ class Cluster(object):
     def sequences(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to access a Cluster's sequences, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._get_sequences()
 
@@ -114,7 +114,7 @@ class Cluster(object):
     def consensus(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to compute a Cluster's consensus, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._make_consensus()
 
@@ -122,7 +122,7 @@ class Cluster(object):
     def centroid(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to retrieve a Cluster's centroid, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._get_centroid()
 
@@ -188,7 +188,7 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=None, quiet=False, threads=0):
+def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, force_no_db=False, temp_dir=None, quiet=False, threads=0):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -213,7 +213,7 @@ def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=
 
         list: A list of Cluster objects, one per cluster.
     '''
-    if any([len(seqs) > 25, force_make_db]):
+    if any([len(seqs) > 25, force_make_db]) and not force_no_db:
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
             threshold=threshold, make_db=True, quiet=quiet, threads=threads)
         return parse_clusters(cfile, seq_db=seq_db, db_path=db_path)
