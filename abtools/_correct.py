@@ -436,7 +436,7 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     consentroids = []
     consentroid_func = calculate_consensus if args.consensus else calculate_centroid
     clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
-    subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, quiet=True, threads=1)
+    subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
     if args.only_largest_cluster:
         subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
     for subcluster in subclusters:
@@ -503,7 +503,7 @@ def calculate_consensus(seqs, args):
 
 
 def calculate_centroid(seqs, args):
-    reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True, threads=1)
+    reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
     recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
     centroid = recluster.centroid
     centroid.id = '{}_{}'.format(consentroid.id, recluster.size)
