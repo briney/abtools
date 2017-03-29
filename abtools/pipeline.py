@@ -51,7 +51,7 @@ def initialize(log_file, project_dir=None, debug=False):
 
         logger
     '''
-    _print_splash()
+    print_splash()
     log.setup_logging(log_file, print_log_location=False, debug=debug)
     logger = log.get_logger('pipeline')
     if project_dir is not None:
@@ -105,7 +105,7 @@ def list_files(d, extension=None):
     return files
 
 
-def _print_splash():
+def print_splash():
     splash = '''
      _    _   _____           _       ____  _            _ _            
     / \  | |_|_   _|__   ___ | |___  |  _ \(_)_ __   ___| (_)_ __   ___ 

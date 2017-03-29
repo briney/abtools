@@ -26,6 +26,7 @@
 from __future__ import print_function
 
 import logging
+import multiprocessing as mp
 import os
 import random
 import sqlite3
@@ -85,8 +86,7 @@ class Cluster(object):
         centroid (Sequence): Centroid sequence, as calculated by
             CD-HIT.
     """
-    def __init__(self, raw_cluster,
-            seq_db=None, db_path=None, seq_dict=None):
+    def __init__(self, raw_cluster, seq_db=None, db_path=None, seq_dict=None):
         super(Cluster, self).__init__()
         self._raw_cluster = raw_cluster
         self._seq_db = seq_db
@@ -286,6 +286,10 @@ def _make_cdhit_input(seqs, temp_dir):
     ifile.write('\n'.join(fastas))
     ifile.close()
     return ifile.name
+
+
+
+
 
 
 def _build_seq_db(seqs, direc=None):

@@ -433,15 +433,22 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     #     consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
     #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
     #     return [(consentroid, 1)]
+
     consentroids = []
-    consentroid_func = calculate_consensus if args.consensus else calculate_centroid
+    consentroid_func = usearch_consensus if args.consensus else usearch_centroid
     clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
-    subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
-    if args.only_largest_cluster:
-        subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
-    for subcluster in subclusters:
-        sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
-        consentroids.extend(consentroid_func(sc_seqs, args))
+
+    # consentroids = []
+    # consentroid_func = calculate_consensus if args.consensus else calculate_centroid
+    # clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
+    # subclusters = cluster(clustering_seqs, args.identity_threshold, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
+    # if args.only_largest_cluster:
+    #     subclusters = sorted(subclusters, key=lambda x: x.size, reverse=True)[:1]
+    # for subcluster in subclusters:
+    #     sc_seqs = retrieve_output_seqs(subcluster.ids, seq_db_path)
+    #     consentroids.extend(consentroid_func(sc_seqs, args))
+
+
         # reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
         # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
         # consentroid = recluster.consensus if args.consensus else recluster.centroid
@@ -510,6 +517,55 @@ def calculate_centroid(seqs, args):
     for rc in reclusters:
         rc.cleanup()
     return [(centroid, recluster.size)]
+
+
+
+# def do_usearch_centroid(uaid_group_seqs, args):
+#     # '''
+#     # Clusters sequences at 90% identity using USEARCH.
+
+#     # Inputs
+#     # uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
+
+#     # Outputs
+#     # A list of fasta strings, containing centroid sequences for each cluster.
+#     # '''
+#     fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
+#     results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
+#     centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
+#     fasta.write('\n'.join(uaid_group_seqs))
+#     fasta.close()
+#     usearch = ['usearch',
+#                '-cluster_fast',
+#                fasta.name,
+#                '-maxaccepts', '0',
+#                '-maxrejects', '0',
+#                '-id', '0.9 ',
+#                '-sizeout',
+#                '-uc', results.name,
+#                '-centroids', centroids.name]
+#     p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
+#     stdout, stderr = p.communicate()
+#     centroid_seqs = []
+#     sizes = []
+#     for cent in SeqIO.parse(open(centroids.name, 'r'), 'fasta'):
+#         seq_id = cent.id.split(';')[0]
+#         size = int(cent.id.split(';')[1].replace('size=', ''))
+#         centroid_seqs.append('>{}\n{}'.format(seq_id, str(cent.seq)))
+#         sizes.append(size)
+#     if args.only_largest_cluster:
+#         cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
+#         centroid_seqs = [cents_plus_sizes[0][0], ]
+#         sizes = [cents_plus_sizes[0][1], ]
+#     os.unlink(fasta.name)
+#     os.unlink(results.name)
+#     os.unlink(centroids.name)
+#     return centroid_seqs, sizes
+
+
+
+
+
 
 
 

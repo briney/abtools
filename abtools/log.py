@@ -28,6 +28,8 @@ from __future__ import print_function
 import logging
 import os
 
+# from .pipeline import make_dir
+
 
 def setup_logging(logfile, print_log_location=True, debug=False):
     '''
