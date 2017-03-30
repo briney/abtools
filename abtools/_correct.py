@@ -370,7 +370,7 @@ def initial_clustering(seq_db_path, args):
     else:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.clustering_seq FROM seqs''')
     seqs = [Sequence(s[1], id=s[0]) for s in seqs]
-    all_clusters = cluster(seqs, args.identity_threshold, temp_dir=args.temp_dir, quiet=True)
+    all_clusters = cluster(seqs, args.identity_threshold, temp_dir=args.temp_dir, quiet=True, max_memory=0)
     passed_clusters = [c for c in all_clusters if c.size >= args.min_seqs]
     sizes = [c.size for c in passed_clusters]
     logger.info('{} total clusters identified'.format(len(all_clusters)))
