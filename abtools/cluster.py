@@ -217,13 +217,13 @@ def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
     if make_db:
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
             threshold=threshold, make_db=True, quiet=quiet, threads=threads, max_memory=max_memory, debug=debug)
-        return parse_clusters(cfile, seq_db=seq_db, db_path=db_path, return_just_seq_ids=return_just_seq_ids)
+        return parse_clusters(ofile, cfile, seq_db=seq_db, db_path=db_path, return_just_seq_ids=return_just_seq_ids)
     else:
         seqs = [Sequence(s) for s in seqs]
         seq_dict = {s.id: s for s in seqs}
         ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir, threads=threads,
             threshold=threshold, make_db=False, quiet=quiet, max_memory=max_memory, debug=debug)
-        return parse_clusters(cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
+        return parse_clusters(ofile, cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
 
 def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0, max_memory=800, debug=False):
@@ -273,7 +273,7 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     return ofile, cfile
 
 
-def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None, return_just_seq_ids=False):
+def parse_clusters(out_file, clust_file, seq_db=None, db_path=None, seq_dict=None, return_just_seq_ids=False):
     # '''
     # Parses clustered sequences.
 
@@ -291,6 +291,8 @@ def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None, return_
                 if c:
                     _ids.append(c.split()[2][1:-3])
             ids.append(_ids)
+        os.unlink(out_file)
+        os.unlink(clust_file)
         return ids
     return [Cluster(rc, seq_db, db_path, seq_dict) for rc in raw_clusters]
 
