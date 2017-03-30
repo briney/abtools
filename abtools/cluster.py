@@ -189,7 +189,7 @@ class Cluster(object):
 
 
 def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
-            quiet=False, threads=0, return_just_seq_ids=False, max_memory=800):
+            quiet=False, threads=0, return_just_seq_ids=False, max_memory=800, debug=False):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -216,17 +216,17 @@ def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
     '''
     if make_db:
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-            threshold=threshold, make_db=True, quiet=quiet, threads=threads, max_memory=max_memory)
+            threshold=threshold, make_db=True, quiet=quiet, threads=threads, max_memory=max_memory, debug=debug)
         return parse_clusters(cfile, seq_db=seq_db, db_path=db_path, return_just_seq_ids=return_just_seq_ids)
     else:
         seqs = [Sequence(s) for s in seqs]
         seq_dict = {s.id: s for s in seqs}
         ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-            threshold=threshold, make_db=False, quiet=quiet, max_memory=max_memory)
+            threshold=threshold, make_db=False, quiet=quiet, max_memory=max_memory, debug=debug)
         return parse_clusters(cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
 
-def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0, max_memory=800):
+def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0, max_memory=800, debug=False):
     # '''
     # Perform CD-HIT clustering on a set of sequences.
 
@@ -257,6 +257,9 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
                        stdout=sp.PIPE,
                        stderr=sp.PIPE)
     stdout, stderr = cluster.communicate()
+    if debug:
+        print(stdout)
+        print(stderr)
     os.unlink(ifile)
     if not quiet:
         logger.info('CD-HIT: clustering took {:.2f} seconds'.format(time.time() - start_time))
