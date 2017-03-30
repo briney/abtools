@@ -390,10 +390,10 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
         num_clusters = len(initial_clusters)
         update_progress(0, num_clusters, sys.stdout)
         for i, initial_cluster in enumerate(initial_clusters):
-            # clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
-            # output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
-            # _consentroids = process_func(clustering_seqs, output_seqs, args)
-            _consentroids = process_func(initial_cluster.ids, seq_db_path, args)
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            _consentroids = process_func(clustering_seqs, output_seqs, args)
+            # _consentroids = process_func(initial_cluster.ids, seq_db_path, args)
             consentroids.extend(_consentroids)
             update_progress(i + 1, num_clusters, sys.stdout)
     else:
