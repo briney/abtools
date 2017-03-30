@@ -221,7 +221,7 @@ def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
     else:
         seqs = [Sequence(s) for s in seqs]
         seq_dict = {s.id: s for s in seqs}
-        ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
+        ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir, threads=threads,
             threshold=threshold, make_db=False, quiet=quiet, max_memory=max_memory, debug=debug)
         return parse_clusters(cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
