@@ -30,7 +30,7 @@ import tarfile
 from abtools import log
 
 
-def compress_and_upload(data, compressed_file, s3_path,
+def compress_and_upload(data, compressed_file, s3_path, multipart_chunk_size_mb=500,
     method='gz', delete=False, access_key=None, secret_key=None):
     '''
     Compresses data and uploads to S3.
@@ -84,12 +84,12 @@ def compress_and_upload(data, compressed_file, s3_path,
     if all([access_key, secret_key]):
         configure(access_key=access_key, secret_key=secret_key, logger=logger)
     compress(data, compressed_file, compress=method, logger=logger)
-    put(compressed_file, s3_path, logger=logger)
+    put(compressed_file, s3_path, multipart_chunk_size_mb=multipart_chunk_size_mb, logger=logger)
     if delete:
         os.unlink(compressed_file)
 
 
-def put(f, s3_path, logger=None):
+def put(f, s3_path, multipart_chunk_size_mb=500, logger=None):
     '''
     Uploads a single file to S3, using s3cmd.
 
@@ -108,7 +108,9 @@ def put(f, s3_path, logger=None):
         logger = log.get_logger('s3')
     fname = os.path.basename(f)
     target = os.path.join(s3_path, fname)
-    s3cmd_cline = 's3cmd put {} {}'.format(f, target)
+    s3cmd_cline = 's3cmd put {} {} --multipart-chunk-size-mb {}'.format(f,
+                                                                        target,
+                                                                        multipart_chunk_size_mb)
     print_put_info(fname, target, logger)
     s3cmd = sp.Popen(s3cmd_cline,
                      stdout=sp.PIPE,
