@@ -226,7 +226,7 @@ def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
         return parse_clusters(cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
 
-def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0):
+def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0, max_memory=800):
     # '''
     # Perform CD-HIT clustering on a set of sequences.
 
@@ -247,10 +247,11 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     else:
         ofile = os.path.expanduser(out_file)
     ifile = _make_cdhit_input(seqs, temp_dir)
-    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T {} -M 35000'.format(ifile,
-                                                                          ofile,
-                                                                          threshold,
-                                                                          threads)
+    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T {} -M {}'.format(ifile,
+                                                                        ofile,
+                                                                        threshold,
+                                                                        threads,
+                                                                        max_memory)
     cluster = sp.Popen(cdhit_cmd,
                        shell=True,
                        stdout=sp.PIPE,
