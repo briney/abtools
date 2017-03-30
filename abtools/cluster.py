@@ -260,7 +260,8 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     if debug:
         print(stdout)
         print(stderr)
-    os.unlink(ifile)
+    else:
+        os.unlink(ifile)
     if not quiet:
         logger.info('CD-HIT: clustering took {:.2f} seconds'.format(time.time() - start_time))
     cfile = ofile + '.clstr'
