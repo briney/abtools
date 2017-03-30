@@ -42,7 +42,7 @@ from Bio.Align import AlignInfo
 
 from abtools import log, mongodb
 from abtools.alignment import mafft, muscle
-from abtools.cluster import cluster
+from abtools.cluster import cdhit, cluster
 from abtools.pipeline import make_dir, list_files
 from abtools.sequence import Sequence
 
@@ -109,8 +109,6 @@ def parse_args():
                         help="If set, use amino acid sequences for identity-based clustering.")
     parser.add_argument('--clustering_field', dest='clustering_field', default='vdj_nt',
                         help="The MongoDB field to be used for clustering. \
-                        If using UAIDs, this is the field that will be used to calculate \
-                        consensus/centroid sequences. \
                         Default is 'vdj_nt'.")
     parser.add_argument('--output_field', dest='output_field', default='oriented_input',
                         help="The MongoDB field to be used for creating consensus/centroid sequences. \
@@ -434,9 +432,9 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
     #     return [(consentroid, 1)]
 
-    consentroids = []
-    consentroid_func = usearch_consensus if args.consensus else usearch_centroid
-    clustering_seqs = retrieve_clustering_seqs(cluster_ids, seq_db_path)
+    consentroid_func = calculate_consensus if args.consensus else calculate_centroid
+    consentroids = consentroid_func(cluster_ids, seq_db_path, args)
+    return consentroids
 
     # consentroids = []
     # consentroid_func = calculate_consensus if args.consensus else calculate_centroid
@@ -456,7 +454,7 @@ def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
         # consentroids.append((consentroid, recluster.size))
         # for rc in reclusters:
         #     rc.cleanup()
-        subcluster.cleanup()
+        # subcluster.cleanup()
     return consentroids
 
 
@@ -467,9 +465,8 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
     #     return [(consentroid, 1)]
     consentroid_func = calculate_consensus if args.consensus else calculate_centroid
-    output_seqs = retrieve_output_seqs(cluster_ids, seq_db_path)
-    consentroid = consentroid_func(output_seqs, args)
-    return consentroid
+    consentroids = consentroid_func(cluster_ids, seq_db_path, args)
+    return consentroids
     # reclusters = cluster(output_seqs, 0.7, temp_dir=args.temp_dir, quiet=True)
     # recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
     # consentroid = recluster.consensus if args.consensus else recluster.centroid
@@ -478,6 +475,71 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     # for rc in reclusters:
     #     rc.cleanup()
     # return consentroids
+
+
+def calculate_consensus(seq_ids, seq_db_path, args):
+    consensus_seqs = []
+    clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
+    clusters = cluster(clustering_seqs,
+                       threshold=args.threshold,
+                       return_just_seq_ids=True,
+                       make_db=False,
+                       threads=1)
+    for clust_ids in clusters:
+        output_seqs = retrieve_output_seqs(clust_ids, seq_db_path)
+        consensus = make_consensus(output_seqs)
+        consensus_seqs.append(consensus)
+    return consensus_seqs
+
+
+def make_consensus(seqs):
+    if len(seqs) == 1:
+        return (Sequence(seqs[0].sequence), 1)
+    _aln = muscle(seqs, as_file=True)
+    aln = AlignIO.read(open(_aln, 'r'), 'fasta')
+    summary_align = AlignInfo.SummaryInfo(aln)
+    consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
+    consensus_string = str(consensus).replace('-', '')
+    consensus_seq = Sequence(consensus_string.upper())
+    os.unlink(_aln)
+    return (consensus_seq, len(seqs))
+
+
+def calculate_centroid(seq_ids, seq_db_path, args):
+    threshold = threshold if args.uaid else 0.9 * args.threshold
+    clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
+    out_file, clust_file = cdhit(clustering_seqs)
+    centroids = parse_centroids(clust_file, seq_db_path)
+    os.unlink(out_file)
+    os.unlink(clust_file)
+    if args.only_largest_cluster:
+        centroids = sorted(centroids, key=lambda x: x[1], reverse=True)[:1]
+    return centroids
+
+
+def parse_centroids(clust_file, seq_db_path):
+    centroid_ids = []
+    sizes = []
+    raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
+    for rc in raw_clusters:
+        size = 0
+        for line in rc:
+            if line.strip():
+                size += 1
+            if '*' in line:
+                centroid_id = line.split()[2][1:-3]
+                centroid_ids.append(centroid_id)
+        sizes.append(size)
+    centroid_seqs = retrieve_output_seqs(centroid_ids, seq_db_path)
+    centroids = []
+    for c, s in zip(centroid_ids, sizes):
+        c_seq = [_c for _c in centroid_seqs if _c.id == c][0]
+        centroids.append((c_seq, size))
+    return centroids
+
+
+
+
 
 
 def process_singleton_clusters(singletons, seq_db_path, args):
@@ -494,29 +556,29 @@ def process_singleton_clusters(singletons, seq_db_path, args):
     return consentroids
 
 
-def calculate_consensus(seqs, args):
-    fasta_string = '\n'.join([s.fasta for s in seqs])
-    if len(seqs) < 100:
-        alignment = muscle(fasta_string)
-    elif len(seqs) < 1000:
-        alignment = muscle(fasta_string, maxiters=2)
-    else:
-        alignment = muscle(fasta_string, maxiters=1, diags=True)
-    ambig = 'N' if 'nt' in args.output_field else 'X'
-    summary_align = AlignInfo.SummaryInfo(alignment)
-    raw_consensus = str(summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)).replace('-', '').upper()
-    consensus_id = '{}_{}'.format(uuid.uuid4(), len(seqs))
-    return [(Sequence(raw_consensus, id=consensus_id), len(seqs))]
+# def calculate_consensus(seqs, args):
+#     fasta_string = '\n'.join([s.fasta for s in seqs])
+#     if len(seqs) < 100:
+#         alignment = muscle(fasta_string)
+#     elif len(seqs) < 1000:
+#         alignment = muscle(fasta_string, maxiters=2)
+#     else:
+#         alignment = muscle(fasta_string, maxiters=1, diags=True)
+#     ambig = 'N' if 'nt' in args.output_field else 'X'
+#     summary_align = AlignInfo.SummaryInfo(alignment)
+#     raw_consensus = str(summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)).replace('-', '').upper()
+#     consensus_id = '{}_{}'.format(uuid.uuid4(), len(seqs))
+#     return [(Sequence(raw_consensus, id=consensus_id), len(seqs))]
 
 
-def calculate_centroid(seqs, args):
-    reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
-    recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
-    centroid = recluster.centroid
-    centroid.id = '{}_{}'.format(consentroid.id, recluster.size)
-    for rc in reclusters:
-        rc.cleanup()
-    return [(centroid, recluster.size)]
+# def calculate_centroid(seqs, args):
+#     reclusters = cluster(sc_seqs, 0.7, temp_dir=args.temp_dir, force_no_db=True, quiet=True, threads=1)
+#     recluster = sorted(reclusters, key=lambda x: x.size, reverse=True)[0]
+#     centroid = recluster.centroid
+#     centroid.id = '{}_{}'.format(consentroid.id, recluster.size)
+#     for rc in reclusters:
+#         rc.cleanup()
+#     return [(centroid, recluster.size)]
 
 
 

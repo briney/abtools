@@ -188,7 +188,8 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, force_no_db=False, temp_dir=None, quiet=False, threads=0):
+def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
+            quiet=False, threads=0, return_just_seq_ids=False):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -213,16 +214,16 @@ def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, force_no_
 
         list: A list of Cluster objects, one per cluster.
     '''
-    if any([len(seqs) > 25, force_make_db]) and not force_no_db:
+    if make_db:
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
             threshold=threshold, make_db=True, quiet=quiet, threads=threads)
-        return parse_clusters(cfile, seq_db=seq_db, db_path=db_path)
+        return parse_clusters(cfile, seq_db=seq_db, db_path=db_path, return_just_seq_ids=return_just_seq_ids)
     else:
         seqs = [Sequence(s) for s in seqs]
         seq_dict = {s.id: s for s in seqs}
         ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
             threshold=threshold, make_db=False, quiet=quiet)
-        return parse_clusters(cfile, seq_dict=seq_dict)
+        return parse_clusters(cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
 
 def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0):
@@ -267,7 +268,7 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     return ofile, cfile
 
 
-def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None):
+def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None, return_just_seq_ids=False):
     # '''
     # Parses clustered sequences.
 
@@ -277,6 +278,15 @@ def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None):
     # Returns a list of Cluster objects (one per cluster).
     # '''
     raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
+    if return_just_seq_ids:
+        ids = []
+        for rc in raw_clusters:
+            _ids = []
+            for c in rc[1:]:
+                if c:
+                    _ids.append(c.split()[2][1:-3])
+            ids.append(_ids)
+        return ids
     return [Cluster(rc, seq_db, db_path, seq_dict) for rc in raw_clusters]
 
 
