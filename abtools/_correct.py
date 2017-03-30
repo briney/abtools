@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import Counter
+import itertools
 import json
 import math
 import multiprocessing as mp
@@ -397,13 +398,16 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
             update_progress(i + 1, num_clusters, sys.stdout)
     else:
         async_results = []
+        job_count = len(initial_clusters)
         p = mp.Pool(maxtasksperchild=10)
-        for initial_cluster in initial_clusters:
-            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
-            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
-            async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
-            # async_results.append(p.apply_async(process_func, (initial_cluster.ids, seq_db_path, args)))
-        monitor_mp_jobs(async_results)
+        iter_size = mp.cpu_count() * 5
+        for cluster_chunk in itertools.islice(initial_clusters, iter_size):
+            for initial_cluster in cluster_chunk:
+                clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+                output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+                async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
+                # async_results.append(p.apply_async(process_func, (initial_cluster.ids, seq_db_path, args)))
+            monitor_mp_jobs(async_results)
         for ar in async_results:
             consentroids.extend(ar.get())
         p.close()
