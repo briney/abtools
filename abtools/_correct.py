@@ -481,7 +481,7 @@ def calculate_consensus(seq_ids, seq_db_path, args):
     consensus_seqs = []
     clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
     clusters = cluster(clustering_seqs,
-                       threshold=args.threshold,
+                       threshold=args.identity_threshold,
                        return_just_seq_ids=True,
                        make_db=False,
                        threads=1)
@@ -506,7 +506,7 @@ def make_consensus(seqs):
 
 
 def calculate_centroid(seq_ids, seq_db_path, args):
-    threshold = threshold if args.uaid else 0.9 * args.threshold
+    threshold = args.identity_threshold if args.uaid else 0.9 * args.identity_threshold
     clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
     out_file, clust_file = cdhit(clustering_seqs)
     centroids = parse_centroids(clust_file, seq_db_path)
