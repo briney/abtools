@@ -399,10 +399,10 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
         async_results = []
         p = mp.Pool(maxtasksperchild=10)
         for initial_cluster in initial_clusters:
-            # clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
-            # output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
-            # async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
-            async_results.append(p.apply_async(process_func, (initial_cluster.ids, seq_db_path, args)))
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            async_results.append(p.apply_async(process_func, (clustering_seqs, output_seqs, args)))
+            # async_results.append(p.apply_async(process_func, (initial_cluster.ids, seq_db_path, args)))
         monitor_mp_jobs(async_results)
         for ar in async_results:
             consentroids.extend(ar.get())
@@ -425,15 +425,16 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
     # return consentroids
 
 
-# def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
-def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
+def process_initial_uaid_cluster(clustering_seqs, output_seqs, args):
+# def process_initial_uaid_cluster(cluster_ids, seq_db_path, args):
     # if len(cluster_ids) == 1:
     #     consentroid = retrieve_output_seqs(cluster_ids, seq_db_path)[0]
     #     consentroid.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(consentroid.id)
     #     return [(consentroid, 1)]
 
     consentroid_func = calculate_consensus if args.consensus else calculate_centroid
-    consentroids = consentroid_func(cluster_ids, seq_db_path, args)
+    # consentroids = consentroid_func(cluster_ids, seq_db_path, args)
+    consentroids = consentroid_func(clustering_seqs, output_seqs, args)
     return consentroids
 
     # consentroids = []
@@ -477,9 +478,10 @@ def process_initial_identity_cluster(cluster_ids, seq_db_path, args):
     # return consentroids
 
 
-def calculate_consensus(seq_ids, seq_db_path, args):
+def calculate_consensus(clustering_seqs, output_seqs, args):
+# def calculate_consensus(seq_ids, seq_db_path, args):
     consensus_seqs = []
-    clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
+    # clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
     clusters = cluster(clustering_seqs,
                        threshold=args.identity_threshold,
                        return_just_seq_ids=True,
@@ -487,8 +489,9 @@ def calculate_consensus(seq_ids, seq_db_path, args):
                        threads=1,
                        quiet=True)
     for clust_ids in clusters:
-        output_seqs = retrieve_output_seqs(clust_ids, seq_db_path)
-        consensus = make_consensus(output_seqs)
+        # output_seqs = retrieve_output_seqs(clust_ids, seq_db_path)
+        _output_seqs = [s for s in output_seqs if s.id in clust_ids]
+        consensus = make_consensus(_output_seqs)
         consensus_seqs.append(consensus)
     return consensus_seqs
 
