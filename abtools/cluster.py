@@ -294,6 +294,8 @@ def parse_clusters(out_file, clust_file, seq_db=None, db_path=None, seq_dict=Non
         os.unlink(out_file)
         os.unlink(clust_file)
         return ids
+    os.unlink(out_file)
+    os.unlink(clust_file)
     return [Cluster(rc, seq_db, db_path, seq_dict) for rc in raw_clusters]
 
 
