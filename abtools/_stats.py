@@ -33,8 +33,6 @@ import numpy as np
 import pandas as pd
 
 import matplotlib as mpl
-# mpl.use('Agg', warn=False)
-mpl.use('cairo', warn=False)
 import matplotlib.pyplot as plt
 import seaborn as sns
 

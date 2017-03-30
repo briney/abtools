@@ -26,6 +26,7 @@
 from __future__ import print_function
 
 import logging
+import multiprocessing as mp
 import os
 import random
 import sqlite3
@@ -85,8 +86,7 @@ class Cluster(object):
         centroid (Sequence): Centroid sequence, as calculated by
             CD-HIT.
     """
-    def __init__(self, raw_cluster,
-            seq_db=None, db_path=None, seq_dict=None):
+    def __init__(self, raw_cluster, seq_db=None, db_path=None, seq_dict=None):
         super(Cluster, self).__init__()
         self._raw_cluster = raw_cluster
         self._seq_db = seq_db
@@ -106,7 +106,7 @@ class Cluster(object):
     def sequences(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to access a Cluster's sequences, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._get_sequences()
 
@@ -114,7 +114,7 @@ class Cluster(object):
     def consensus(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to compute a Cluster's consensus, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._make_consensus()
 
@@ -122,7 +122,7 @@ class Cluster(object):
     def centroid(self):
         if all([self._seq_db is None, self._seq_dict is None]):
             err = "ERROR: In order to retrieve a Cluster's centroid, you must provide "
-            err += 'either a SQLite database connection object or a dictionary of sequencesat instantiation.'
+            err += 'either a SQLite database connection object or a dictionary of sequences at instantiation.'
             raise RuntimeError(err)
         return self._get_centroid()
 
@@ -188,7 +188,8 @@ class Cluster(object):
         return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
 
-def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=None, quiet=False, threads=0):
+def cluster(seqs, threshold=0.975, out_file=None, make_db=True, temp_dir=None,
+            quiet=False, threads=0, return_just_seq_ids=False, max_memory=800, debug=False):
     '''
     Perform sequence clustering with CD-HIT.
 
@@ -213,19 +214,19 @@ def cluster(seqs, threshold=0.975, out_file=None, force_make_db=False, temp_dir=
 
         list: A list of Cluster objects, one per cluster.
     '''
-    if any([len(seqs) > 25, force_make_db]):
+    if make_db:
         ofile, cfile, seq_db, db_path = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-            threshold=threshold, make_db=True, quiet=quiet, threads=threads)
-        return parse_clusters(cfile, seq_db=seq_db, db_path=db_path)
+            threshold=threshold, make_db=True, quiet=quiet, threads=threads, max_memory=max_memory, debug=debug)
+        return parse_clusters(ofile, cfile, seq_db=seq_db, db_path=db_path, return_just_seq_ids=return_just_seq_ids)
     else:
         seqs = [Sequence(s) for s in seqs]
         seq_dict = {s.id: s for s in seqs}
-        ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir,
-            threshold=threshold, make_db=False, quiet=quiet)
-        return parse_clusters(cfile, seq_dict=seq_dict)
+        ofile, cfile, = cdhit(seqs, out_file=out_file, temp_dir=temp_dir, threads=threads,
+            threshold=threshold, make_db=False, quiet=quiet, max_memory=max_memory, debug=debug)
+        return parse_clusters(ofile, cfile, seq_dict=seq_dict, return_just_seq_ids=return_just_seq_ids)
 
 
-def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0):
+def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, quiet=False, threads=0, max_memory=800, debug=False):
     # '''
     # Perform CD-HIT clustering on a set of sequences.
 
@@ -246,16 +247,21 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     else:
         ofile = os.path.expanduser(out_file)
     ifile = _make_cdhit_input(seqs, temp_dir)
-    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T {} -M 35000'.format(ifile,
-                                                                          ofile,
-                                                                          threshold,
-                                                                          threads)
+    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T {} -M {}'.format(ifile,
+                                                                        ofile,
+                                                                        threshold,
+                                                                        threads,
+                                                                        max_memory)
     cluster = sp.Popen(cdhit_cmd,
                        shell=True,
                        stdout=sp.PIPE,
                        stderr=sp.PIPE)
     stdout, stderr = cluster.communicate()
-    os.unlink(ifile)
+    if debug:
+        print(stdout)
+        print(stderr)
+    else:
+        os.unlink(ifile)
     if not quiet:
         logger.info('CD-HIT: clustering took {:.2f} seconds'.format(time.time() - start_time))
     cfile = ofile + '.clstr'
@@ -267,7 +273,7 @@ def cdhit(seqs, out_file=None, temp_dir=None, threshold=0.975, make_db=True, qui
     return ofile, cfile
 
 
-def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None):
+def parse_clusters(out_file, clust_file, seq_db=None, db_path=None, seq_dict=None, return_just_seq_ids=False):
     # '''
     # Parses clustered sequences.
 
@@ -277,6 +283,19 @@ def parse_clusters(clust_file, seq_db=None, db_path=None, seq_dict=None):
     # Returns a list of Cluster objects (one per cluster).
     # '''
     raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
+    if return_just_seq_ids:
+        ids = []
+        for rc in raw_clusters:
+            _ids = []
+            for c in rc[1:]:
+                if c:
+                    _ids.append(c.split()[2][1:-3])
+            ids.append(_ids)
+        os.unlink(out_file)
+        os.unlink(clust_file)
+        return ids
+    os.unlink(out_file)
+    os.unlink(clust_file)
     return [Cluster(rc, seq_db, db_path, seq_dict) for rc in raw_clusters]
 
 
@@ -286,6 +305,10 @@ def _make_cdhit_input(seqs, temp_dir):
     ifile.write('\n'.join(fastas))
     ifile.close()
     return ifile.name
+
+
+
+
 
 
 def _build_seq_db(seqs, direc=None):
