@@ -487,7 +487,7 @@ def calculate_consensus(clustering_seqs, output_seqs, args):
     consensus_seqs = []
     # clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
     clusters = cluster(clustering_seqs,
-                       temp_dir=args.temp
+                       temp_dir=args.temp,
                        threshold=args.identity_threshold,
                        return_just_seq_ids=True,
                        make_db=False,
