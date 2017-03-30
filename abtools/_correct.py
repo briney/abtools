@@ -401,7 +401,7 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
         job_count = len(initial_clusters)
         p = mp.Pool(maxtasksperchild=10)
         iter_size = mp.cpu_count() * 5
-        for cluster_chunk in itertools.islice(initial_clusters, iter_size):
+        for cluster_chunk in chunker(initial_clusters, iter_size):
             for initial_cluster in cluster_chunk:
                 clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
                 output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
