@@ -204,7 +204,7 @@ def _make_barplot(x, y, colors, fig_file=None, xlabel=None, ylabel=None, rotate_
     plt.close()
 
 
-def _make_heatmap(df, fig_file=fig_file):
+def _make_heatmap(df, fig_file=None):
     sns.set()
     # set up plot, determine plot size
     h, w = df.shape
