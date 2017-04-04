@@ -25,30 +25,11 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import uuid
-import time
-import shelve
-import urllib
-import sqlite3
-import tempfile
-import argparse
-import subprocess as sp
-import multiprocessing as mp
-from StringIO import StringIO
-from collections import Counter
-
 import numpy as np
 import pandas as pd
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-from pymongo import MongoClient
-
-from abtools import log, mongodb
 
 from abstar.core.germline import get_germlines
 
@@ -128,7 +109,6 @@ def germline_use_plot(seqs, fig_file=None, level='gene', gene='V', species='huma
     data = [s[gtype][level].rstrip('D') for s in seqs if gtype in s]
     x, y = _aggregate(data, keys=keys)
     x = [i.replace('IG{}{}'.format(short_chain, gene), '{}{}'.format(gene, short_chain)) for i in x]
-    plot_file = os.path.join(output_dir, '{}_{}{}_{}.pdf'.format(collection, gene, chain, l))
     colors = _get_germline_plot_colors(x)
     _make_barplot(x, y,
                  colors,
