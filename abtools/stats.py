@@ -71,8 +71,12 @@ def _aggregate(data, norm=True, sort_by='value', keys=None):
     return xs, ys
 
 
-def cdr3_length_plot(seqs, fig_file=None, max_len=40, color=None):
-    seqs = [s for s in seqs if s['chain'] == chain]
+def cdr3_length_plot(seqs, fig_file=None, max_len=40, chain='heavy', color=None):
+    if chain == 'light':
+        chain = ['kappa', 'lambda']
+    else:
+        chain = [chain, ]
+    seqs = [s for s in seqs if s['chain'] in chain]
     cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0 and s['cdr3_len'] <= max_len]
     x, y = _aggregate(cdr3s, keys=range(1, max_len + 1))
     color = color if color is not None else sns.hls_palette(7)[4]
@@ -178,8 +182,9 @@ def _make_barplot(x, y, colors, fig_file=None, xlabel=None, ylabel=None, rotate_
     ax = fig.add_subplot(111)
     # axis limits and ticks
     ax.set_ylim(0, 1.05 * max(y))
-    ax.set_xlim(-width / 2, len(ind))
-    ax.set_xticks(ind + width / 2)
+    ax.set_xlim(-width, len(ind) - (width / 2))
+    # ax.set_xticks(ind + width / 2)
+    ax.set_xticks(ind)
     xtick_names = ax.set_xticklabels(x)
     if rotate_xtick_labels:
         plt.setp(xtick_names, rotation=90, fontsize=7)
@@ -198,7 +203,7 @@ def _make_barplot(x, y, colors, fig_file=None, xlabel=None, ylabel=None, rotate_
     bar = ax.bar(ind, y, width, color=colors)
     fig.tight_layout()
     if fig_file is not None:
-        plt.savefig(ofile)
+        plt.savefig(fig_file)
     else:
         plt.show()
     plt.close()
