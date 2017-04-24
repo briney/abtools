@@ -194,13 +194,13 @@ def query(db, collection, args):
                      'v_gene': {'full': r['v_gene']['full']}}
                 if args.uaid and not args.non_redundant:
                     uid_field = 'uid' if 'uid' in r else 'uaid'
-                    if uid_field in r:
-                        d['uaid'] = r[uid_field]
-                    elif args.parse_uaids:
+                    if args.parse_uaids:
                         if args.parse_uaids > 0:
                             d['uaid'] = r[raw_field][:args.parse_uaids]
                         else:
                             d['uaid'] = r[raw_field][args.parse_uaids:]
+                    elif uid_field in r:
+                        d['uaid'] = r[uid_field]
                     else:
                         err = 'ERROR: UAID field was not found. '
                         err += 'Ensure that UAIDs were parsed by AbStar, '
