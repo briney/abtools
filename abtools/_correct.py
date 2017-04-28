@@ -189,8 +189,8 @@ def query(db, collection, args):
                     seq_id_index = header.index('seq_id')
                     uid_index = header.index('uid')
                     v_gene_index = header.index('v_gene')
-                    vdj_nt_index = header.index['vdj_nt']
-                    raw_index = header.index['raw_input']
+                    vdj_nt_index = header.index('vdj_nt')
+                    raw_index = header.index('raw_input')
                 # parse sequence data
                 else:
                     try:
