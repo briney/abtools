@@ -433,6 +433,8 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
             output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
             async_results.append(p.apply_async(process_initial_cluster, (clustering_seqs, output_seqs, args)))
             update_progress(i + 1, num_clusters, sys.stdout)
+        sys.stdout.flush()
+        print('')
         # monitor_mp_jobs(async_results)
         for ar in async_results:
             consentroids.extend(ar.get())
