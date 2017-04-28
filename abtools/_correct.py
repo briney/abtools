@@ -61,6 +61,8 @@ def parse_args():
                         If not provided, all collections in the given database will be processed iteratively.")
     parser.add_argument('-j', '--json', dest='json', default=None,
                         help="Input JSON file or directory of JSON files.")
+    parser.add_argument('-M', '--minimal-input', dest='minimal_input', default=None,
+                        help="Input MINIMAL file or directory of MINIMAL files.")
     parser.add_argument('-o', '--output', dest='output', required=True,
                         help="Output directory for the FASTA files. Required")
     parser.add_argument('-l', '--log', dest='log',
@@ -175,6 +177,33 @@ def get_seqs(db, collection, args, make_seq_db=True):
 
 
 def query(db, collection, args):
+    # parse MINIMAL file...
+    if args.minimal_input:
+        logger.info('Reading MINIMAL file...')
+        results = []
+        with open(collection) as f:
+            for i, line in enumerate(f):
+                # parse header file
+                if i == 0:
+                    header = line.strip().split(',')
+                    seq_id_index = header.index('seq_id')
+                    uid_index = header.index('uid')
+                    v_gene_index = header.index('v_gene')
+                    vdj_nt_index = header.index['vdj_nt']
+                    raw_index = header.index['raw_input']
+                # parse sequence data
+                else:
+                    try:
+                        l = line.strip().split(',')
+                        d = {'seq_id': l[seq_id_index],
+                             'uaid': l[uid_index],
+                             args.clustering_field: l[vdj_nt_index],
+                             args.output_field: l[raw_index],
+                             'v_gene': {'full': l[v_gene_index]},
+                             'raw_query': l[raw_index]}
+                        results.append(d)
+                    except IndexError:
+                        continue
     # parse JSON file...
     if db is None:
         logger.info('Reading JSON file...')
@@ -777,6 +806,14 @@ def main(args):
         	collections = list_files(args.json, extension='json')
         db = None
         sample_names = [os.path.basename(c).replace('.json', '') for c in collections]
+    # check whether MINIMAL files have been passed:
+    if args.minimal_input is not None and all([args.db is None, args.collection is None]):
+        if os.path.isfile(args.minimal_input) and args.minimal_input.endswith('.txt'):
+            collections = [args.minimal_input, ]
+        else:
+            collections = list_files(args.minimal_input, extension='txt')
+        db = None
+        sample_names = [os.path.basename(c).replace('.txt', '') for c in collections]
     # otherwise, get sequences from MongoDB
     else:
         db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
