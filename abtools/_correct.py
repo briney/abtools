@@ -205,7 +205,7 @@ def query(db, collection, args):
                     except IndexError:
                         continue
     # parse JSON file...
-    if db is None:
+    elif db is None:
         logger.info('Reading JSON file...')
         results = []
         _results = []
