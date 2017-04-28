@@ -426,6 +426,7 @@ def process_initial_clusters(initial_clusters, seq_db_path, args):
             update_progress(i + 1, num_clusters, sys.stdout)
     else:
         async_results = []
+        num_clusters = len(initial_clusters)
         p = mp.Pool(maxtasksperchild=10)
         for i, initial_cluster in enumerate(initial_clusters):
             clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
