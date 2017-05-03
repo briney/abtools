@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import Counter
+import itertools
 import json
 import math
 import multiprocessing as mp
@@ -41,9 +42,10 @@ from Bio import AlignIO
 from Bio.Align import AlignInfo
 
 from abtools import log, mongodb
-from abtools.alignment import muscle
+from abtools.alignment import mafft, muscle
+from abtools.cluster import cdhit, cluster
 from abtools.pipeline import make_dir, list_files
-from abtools.utils.progbar import progress_bar
+from abtools.sequence import Sequence
 
 
 def parse_args():
@@ -114,9 +116,6 @@ def parse_args():
     parser.add_argument('--output_field', dest='output_field', default='oriented_input',
                         help="The MongoDB field to be used for creating consensus/centroid sequences. \
                         Default is 'oriented_input'.")
-    parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
-                        help="If set, the sequence name of the consensus/centroid will not include the cluster size. \
-                        Default is to include the cluster size in the consensus/centroid name.")
     parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
     parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
@@ -289,7 +288,9 @@ def build_seq_db(seqs, args):
     c.execute(create_cmd)
     c.executemany(insert_cmd, seqs)
     c.execute('CREATE INDEX seq_index ON seqs (seq_id)')
-    return c
+    conn.commit()
+    conn.close()
+    return db_path
 
 
 def get_seq_db_creation_cmd(args):
@@ -317,7 +318,36 @@ def parse_germs(germ_file):
     return germs
 
 
+def chunker(l, size=900):
+    return (l[pos:pos + size] for pos in xrange(0, len(l), size))
 
+
+def retrieve_clustering_seqs(seq_ids, seq_db_path):
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
+    seqs = []
+    for chunk in chunker(seq_ids):
+        seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.clustering_seq
+                                   FROM seqs
+                                   WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
+        seqs.extend(seq_chunk)
+    conn.commit()
+    conn.close()
+    return [Sequence(s[1], id=s[0]) for s in seqs]
+
+
+def retrieve_output_seqs(seq_ids, seq_db_path):
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
+    seqs = []
+    for chunk in chunker(seq_ids):
+        seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.output_seq
+                                   FROM seqs
+                                   WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
+        seqs.extend(seq_chunk)
+    conn.commit()
+    conn.close()
+    return [Sequence(s[1], id=s[0]) for s in seqs]
 
 
 # =========================================
@@ -335,10 +365,7 @@ def unix_sort_unique(seqs, args):
     logger.info('Running sort/uniq...')
     p = sp.Popen(sort_unique_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     p.communicate()
-    # fastas = parse_unique_file(unique_file.name)
     os.unlink(sort_file)
-    # os.unlink(unique_file.name)
-    # return fastas
     return unique_file.name
 
 
@@ -347,403 +374,156 @@ def make_sort_input(seqs, args):
     raw_field = 'raw_query' if 'raw_query' in seqs[0] else 'raw_input'
     seq_field = args.clustering_field
     sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    sort_handle = open(sort_file.name, 'a')
     count = 0
-    with open(sort_file, 'a') as sort_handle:
-        for s in seqs:
-            sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[seq_field], s[raw_field]))
-            count += 1
-    # seq_strings = [' '.join(s) for s in seqs]
-    # sort_file.write('\n'.join(seq_strings))
-    # sort_handle.close()
+    for s in seqs:
+        sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[seq_field], s[raw_field]))
+        count += 1
+    sort_handle.close()
     return sort_file.name, count
 
 
-# def parse_unique_file(unique_file):
-#     with open(unique_file) as f:
-#         for line in f:
-#             if len(line.strip().split()) < 3:
-#                 continue
-#             seq_id, vdj, raw = line.strip().split()
-#             fastas.append('>{}\n{}'.format(seq_id, raw))
-#     return fastas
-
-
-
-
-# =========================================
+# =================================
 #
-#           CD-HIT CLUSTERING
+#           CLUSTERING
 #
-# =========================================
+# =================================
 
 
-
-def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
-    infile = make_cdhit_input(seq_db, args, uaid=uaid)
-    outfile = os.path.join(args.temp_dir, 'clust')
-    logfile = open(os.path.join(args.temp_dir, 'log'), 'a')
-    threshold = 1.0 if uaid else args.identity_threshold
-    do_cdhit(infile.name, outfile, logfile, threshold, args)
-    if centroid:
-        cent_handle = open(outfile, 'r')
-        # if not uaid:
-        clust_handle = open('{}.clstr'.format(outfile), 'r')
-        sizes = parse_cluster_sizes(clust_handle)
-        seqs = parse_centroids(cent_handle, seq_db, args, sizes=sizes)
-        # else:
-        #     seqs = parse_centroids(cent_handle, seq_db, args)
-    else:
-        clust_handle = open('{}.clstr'.format(outfile), 'r')
-        seqs, sizes = parse_clusters(clust_handle, seq_db, args)
-    if not args.debug:
-        os.unlink(infile.name)
-        os.unlink(os.path.join(args.temp_dir, 'log'))
-        os.unlink(outfile)
-        os.unlink(outfile + '.clstr')
-    if uaid:
-        return seqs
-    return seqs, sizes
-
-
-def make_cdhit_input(seq_db, args, uaid=True):
-    infile = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
-    fastas = []
-    if uaid:
+def initial_clustering(seq_db_path, args):
+    logger.info('\n{} clustering with CD-HIT...'.format('Initial UAID' if args.uaid else 'Identity-based'))
+    start = time.time()
+    conn = sqlite3.connect(seq_db_path)
+    seq_db = conn.cursor()
+    if args.uaid:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
     else:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.clustering_seq FROM seqs''')
-    for s in seqs:
-        fastas.append('>{}\n{}'.format(s[0], s[1]))
-    infile.write('\n'.join(fastas))
-    infile.close()
-    return infile
-
-
-def do_cdhit(fasta, clust, log, threshold, args):
-    seq_type = 'UAIDs' if args.uaid else 'sequences'
-    logger.info('Clustering {} with CD-HIT...'.format(seq_type))
-    start_time = time.time()
-    cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T 0 -M 35000'.format(fasta, clust, threshold)
-    cluster = sp.Popen(cdhit_cmd, shell=True, stdout=log)
-    cluster.communicate()
-    logger.info('Clustering took {} seconds'.format(round(time.time() - start_time, 2)))
-    logger.info('')
-
-
-def parse_centroids(centroid_handle, seq_db, args, sizes=None):
-    cent_ids = []
-    counter = 0
-    for seq in SeqIO.parse(centroid_handle, 'fasta'):
-        # seq_id = '{}_{}'.format(seq.id, sizes[counter]) if sizes is not None else seq.id
-        seq_id = seq.id
-        cent_ids.append(seq_id)
-    return get_cluster_seqs(cent_ids, seq_db, sizes, args)
-    # counter = 0
-    # centroids = []
-    # for seq in SeqIO.parse(centroid_handle, 'fasta'):
-    #     if sizes:
-    #         size = sizes[counter]
-    #         centroids.append('>{}_{}\n{}'.format(seq.id, size, str(seq.seq)))
-    #     else:
-    #         centroids.append('>{}\n{}'.format(seq.id, str(seq.seq)))
-    #     counter += 1
-    # return centroids
-
-
-def parse_clusters(cluster_handle, seq_db, args):
-    logger.info('Parsing CD-HIT cluster file...')
-    clusters = [c.split('\n') for c in cluster_handle.read().split('\n>')]
-    logger.info('{} total clusters identified.\n'.format(len(clusters)))
-    logger.info('Retrieving cluster sequences...')
-    cluster_seqs = []
-    start = time.time()
-    lengths = []
-    for cluster in clusters:
-        size = len(cluster) - 1
-        lengths.append(size)
-        if size >= args.min_seqs:
-            cluster_ids = get_cluster_ids(cluster)
-            cluster_seqs.append(get_cluster_seqs(cluster_ids, seq_db, None, args))
-    logger.info('{} clusters meet the minimum size cutoff ({} sequences)'.format(len(cluster_seqs), args.min_seqs))
-    logger.info('The average cluster contains {} sequences; the largest contains {} sequences.'.format(round(1. * sum(lengths) / len(lengths), 2), max(lengths)))
-    logger.info('Cluster parsing and sequence retrieval took {} seconds\n'.format(round(time.time() - start, 2)))
-    return cluster_seqs, lengths
-
-
-def parse_cluster_sizes(cluster_handle):
-    clusters = [c.split('\n') for c in cluster_handle.read().split('\n>')]
-    lengths = []
-    for cluster in clusters:
-        lengths.append(len(cluster) - 1)
-    return lengths
-
-
-def get_cluster_ids(cluster):
-    ids = []
-    for c in cluster[1:]:
-        if c:
-            ids.append(c.split()[2][1:-3])
-    return ids
-
-
-def chunker(l, size=900):
-    return (l[pos:pos + size] for pos in xrange(0, len(l), size))
-
-
-def get_cluster_seqs(seq_ids, seq_db, sizes, args):
-    seqs = []
-    for chunk in chunker(seq_ids):
-        seq_chunk = seq_db.execute('''SELECT seqs.seq_id, seqs.output_seq
-                                   FROM seqs
-                                   WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
-        seqs.extend(seq_chunk)
-    if args.include_cluster_size and sizes is not None:
-        return ['>{}_{}\n{}'.format(seq[0], size, s[1]) for seq, size in zip(seqs, sizes)]
-    else:
-        return ['>{}\n{}'.format(s[0], s[1]) for s in seqs]
-
-
-
-
-
-# =========================================
-#
-#       UAID CENTROID CLUSTERING
-#
-# =========================================
-
-
-
-def get_uaid_centroids(uaid_clusters, args):
-    logger.info('Calculating centroid sequences with USEARCH:')
-    start_time = time.time()
-    centroids = []
-    singletons = [c[0] for c in uaid_clusters if len(c) == 1]
-    for s in singletons:
-        seq_id = s.split('\n')[0].replace('>', '')
-        seq = s.split('\n')[1]
-        centroids.append('>{}\n{}'.format(seq_id, seq))
-    sizes = [1] * len(centroids)
-    clusters = [c for c in uaid_clusters if len(c) > 1]
-    if args.debug:
-        for cluster in clusters:
-            centroid, size = do_usearch_centroid(cluster, args)
-            centroids.extend(centroid)
-            sizes.extend(size)
-    else:
-        p = mp.Pool(maxtasksperchild=100)
-        async_results = []
-        for c in clusters:
-            async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
-        monitor_mp_jobs(async_results)
-        for a in async_results:
-            centroid, size = a.get()
-            centroids.extend(centroid)
-            sizes.extend(size)
-        p.close()
-        p.join()
-        logger.info('Centroids were calculated in {} seconds.'.format(round(time.time() - start_time), 2))
-    return centroids, sizes
-
-
-def do_usearch_centroid(uaid_group_seqs, args):
-    # '''
-    # Clusters sequences at 90% identity using USEARCH.
-
-    # Inputs
-    # uaid_group_seqs: a list of fasta strings corresponding to sequences from a single UAID group.
-
-    # Outputs
-    # A list of fasta strings, containing centroid sequences for each cluster.
-    # '''
-    fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-    results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-    centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
-    fasta.write('\n'.join(uaid_group_seqs))
-    fasta.close()
-    usearch = ['usearch',
-               '-cluster_fast',
-               fasta.name,
-               '-maxaccepts', '0',
-               '-maxrejects', '0',
-               '-id', '0.9',
-               '-sizeout',
-               '-uc', results.name,
-               '-centroids', centroids.name]
-    p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
-    stdout, stderr = p.communicate()
-    centroid_seqs = []
-    sizes = []
-    for cent in SeqIO.parse(open(centroids.name, 'r'), 'fasta'):
-        seq_id = cent.id.split(';')[0]
-        size = int(cent.id.split(';')[1].replace('size=', ''))
-        centroid_seqs.append('>{}\n{}'.format(seq_id, str(cent.seq)))
-        sizes.append(size)
-    if args.only_largest_cluster:
-        cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
-        centroid_seqs = [cents_plus_sizes[0][0], ]
-        sizes = [cents_plus_sizes[0][1], ]
-    os.unlink(fasta.name)
-    os.unlink(results.name)
-    os.unlink(centroids.name)
-    return centroid_seqs, sizes
-
-
-
-
-
-# =========================================
-#
-#          CONSENSUS SEQUENCES
-#
-# =========================================
-
-
-
-def get_consensus(clusters, germs, args):
-    fastas = []
-    all_sizes = []
-    if args.min_seqs == 1:
-        singletons = [c[0] for c in clusters if len(c) == 1]
-        clusters = [c for c in clusters if len(c) > 1]
-        singleton_count = len(singletons)
-        logger.info('')
-        logger.info('{} clusters contained only a single sequence. Processing singletons...'.format(len(singletons)))
-        progress_bar(0, singleton_count)
-        for i, s in enumerate(singletons):
-            seq_id = str(uuid.uuid4())
-            if args.include_cluster_size:
-                seq_id += '_1'
-            seq = s.split('\n')[-1]
-            fastas.append('>{}\n{}'.format(seq_id, seq))
-            all_sizes.append(1)
-            progress_bar(i + 1, singleton_count)
-        logger.info('')
-    logger.info('')
-    logger.info('Building consensus sequences...')
-    if args.debug:
-        results = []
-        cluster_count = len(clusters)
-        progress_bar(0, cluster_count)
-        for i, cluster in enumerate(clusters):
-            results.append(do_usearch_consensus(cluster, germs, args))
-            progress_bar(i + 1, cluster_count)
-        logger.info('')
-        logger.info('')
-        # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
-    else:
-        p = mp.Pool()
-        # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
-        async_results = [p.apply_async(do_usearch_consensus, (cluster, germs, args)) for cluster in clusters]
-        monitor_mp_jobs(async_results)
-        results = [a.get() for a in async_results]
-        p.close()
-        p.join()
-    for r in results:
-        seqs = r[0]
-        sizes = r[1]
-        all_sizes.extend(sizes)
-        fastas.extend(seqs)
-    return fastas, all_sizes
-
-
-def do_usearch_consensus(cluster, germs, args):
-    # '''
-    # Clusters sequences at using USEARCH and calculates consensus sequences for each cluster.
-
-    # Inputs
-    # cluster, germs: a list of fasta strings corresponding to sequences from a single UAID group.
-
-    # Outputs
-    # A list of fasta strings, containing consensus sequences for each cluster.
-    # '''
-    fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-    results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-    consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
-    msa = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='msa_', delete=False)
-    fasta.write('\n'.join(cluster))
-    fasta.close()
-    usearch = ['usearch',
-               '-cluster_fast',
-               fasta.name,
-               '-maxaccepts', '0',
-               '-maxrejects', '0',
-               '-id', str(args.identity_threshold),
-               '-sizeout',
-               '-uc', results.name,
-               '-consout', consensus.name,
-               '-msaout', msa.name]
-    p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
-    stdout, stderr = p.communicate()
-    consensus_seqs = []
-    sizes = []
-    with open(consensus.name, 'r') as f:
-        for cons in SeqIO.parse(f, 'fasta'):
-            seq_id = cons.id.split(';')[0]
-            size = int(cons.id.split(';')[1].replace('size=', ''))
-            if args.include_cluster_size:
-                seq_id += '_{}'.format(size)
-            consensus_seqs.append('>{}\n{}'.format(seq_id, str(cons.seq)))
-            sizes.append(size)
-        if args.only_largest_cluster:
-            cons_plus_sizes = sorted(zip(consensus_seqs, sizes), key=lambda x: x[1], reverse=True)
-            consensus_seqs = [cons_plus_sizes[0][0], ]
-            sizes = [cons_plus_sizes[0][1], ]
-    if not args.debug:
-        os.unlink(fasta.name)
-        os.unlink(results.name)
-        os.unlink(consensus.name)
-        os.unlink(msa.name)
-    return consensus_seqs, sizes
-
-
-def calculate_consensus(cluster, germs, args):
-    if len(cluster) == 1:
-        return (cluster[0].split('\n')[1].upper(), 1)
-    fasta_string = consensus_alignment_input(cluster, germs, args)
-
-    if len(cluster) < 100:
-        alignment = muscle(fasta_string)
-    elif len(cluster) < 1000:
-        alignment = muscle(fasta_string, maxiters=2)
-    else:
-        alignment = muscle(fasta_string, maxiters=1, diags=True)
-    ambig = 'X' if args.aa else 'N'
-    summary_align = AlignInfo.SummaryInfo(alignment)
-    consensus = summary_align.gap_consensus(threshold=0.51, ambiguous=ambig)
-    consensus = str(consensus).replace('-', '')
-    return (consensus.upper(), len(cluster))
-
-
-def consensus_alignment_input(cluster, germs, args):
-    if germs is not None:
-        try:
-            v_gene = vgene_lookup(cluster, args)
-            germ = '>{}\n{}'.format(v_gene, germs[v_gene])
-        except KeyError:
-            germ = ''
-    else:
-        germ = ''
-    cluster.append(germ)
-    return '\n'.join(cluster)
-
-
-def vgene_lookup(cluster, args):
-    v_genes = []
-    seq_ids = [seq.split('\n')[0].replace('>', '') for seq in cluster]
-    db_path = os.path.join(args.temp_dir, 'seq_db')
-    conn = sqlite3.connect(db_path)
-    seq_db = conn.cursor()
-    for chunk in chunker(seq_ids):
-        v_chunk = seq_db.execute('''SELECT seqs.v_gene
-                                    FROM seqs
-                                    WHERE seqs.seq_id IN ({})'''.format(','.join('?' * len(chunk))), chunk)
-        v_genes.extend(v_chunk)
-    v_gene = Counter(v_genes).most_common()[0][0]
+    seqs = [Sequence(s[1], id=s[0]) for s in seqs]
+    all_clusters = cluster(seqs, args.identity_threshold, temp_dir=args.temp_dir,
+                           quiet=True, max_memory=0, debug=args.debug)
+    passed_clusters = [c for c in all_clusters if c.size >= args.min_seqs]
+    sizes = [c.size for c in passed_clusters]
+    logger.info('{} total clusters identified'.format(len(all_clusters)))
+    logger.info('{} clusters meet the minimum size cutoff ({} sequence{})'.format(len(passed_clusters), args.min_seqs, 's' if args.min_seqs > 1 else ''))
+    logger.info('The average cluster contains {} sequences; the largest contains {} sequences'.format(round(1. * sum(sizes) / len(sizes), 2), max(sizes)))
+    logger.info('Initial clustering took {} seconds\n'.format(round(time.time() - start, 2)))
+    conn.commit()
     conn.close()
-    return v_gene
+    return passed_clusters
 
 
+def process_initial_clusters(initial_clusters, seq_db_path, args):
+    logger.info('Calculating {} sequences...'.format('consensus' if args.consensus else 'centroid'))
+    consentroids = []
+    if args.debug:
+        num_clusters = len(initial_clusters)
+        update_progress(0, num_clusters, sys.stdout)
+        for i, initial_cluster in enumerate(initial_clusters):
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            _consentroids = process_initial_cluster(clustering_seqs, output_seqs, args)
+            consentroids.extend(_consentroids)
+            update_progress(i + 1, num_clusters, sys.stdout)
+    else:
+        async_results = []
+        num_clusters = len(initial_clusters)
+        p = mp.Pool(maxtasksperchild=10)
+        for i, initial_cluster in enumerate(initial_clusters):
+            clustering_seqs = retrieve_clustering_seqs(initial_cluster.ids, seq_db_path)
+            output_seqs = retrieve_output_seqs(initial_cluster.ids, seq_db_path)
+            async_results.append(p.apply_async(process_initial_cluster, (clustering_seqs, output_seqs, args)))
+            update_progress(i + 1, num_clusters, sys.stdout)
+        sys.stdout.flush()
+        print('')
+        # monitor_mp_jobs(async_results)
+        for ar in async_results:
+            consentroids.extend(ar.get())
+        p.close()
+        p.join()
+    return consentroids
+
+
+def process_initial_cluster(clustering_seqs, output_seqs, args):
+    consentroid_func = calculate_consensus if args.consensus else calculate_centroid
+    consentroids = consentroid_func(clustering_seqs, output_seqs, args)
+    return consentroids
+
+
+def calculate_consensus(clustering_seqs, output_seqs, args):
+    consensus_seqs = []
+    clusters = cluster(clustering_seqs,
+                       temp_dir=args.temp_dir,
+                       threshold=args.identity_threshold,
+                       return_just_seq_ids=True,
+                       make_db=False,
+                       threads=1,
+                       quiet=True,
+                       debug=args.debug)
+    for clust_ids in clusters:
+        _output_seqs = [s for s in output_seqs if s.id in clust_ids]
+        consensus = make_consensus(_output_seqs)
+        consensus_seqs.append(consensus)
+    return consensus_seqs
+
+
+def make_consensus(seqs):
+    if len(seqs) == 1:
+        return (Sequence(seqs[0].sequence), 1)
+    _aln = muscle(seqs, as_file=True)
+    aln = AlignIO.read(open(_aln, 'r'), 'fasta')
+    summary_align = AlignInfo.SummaryInfo(aln)
+    consensus = summary_align.gap_consensus(threshold=0.51, ambiguous='n')
+    consensus_string = str(consensus).replace('-', '')
+    consensus_seq = Sequence(consensus_string.upper())
+    os.unlink(_aln)
+    return (consensus_seq, len(seqs))
+
+
+def calculate_centroid(clustering_seqs, output_seqs, args):
+    threshold = args.identity_threshold if args.uaid else 0.7
+    clustering_seqs = retrieve_clustering_seqs(seq_ids, seq_db_path)
+    out_file, clust_file = cdhit(clustering_seqs, threads=1, quiet=True, temp_dir=args.temp_dir, debug=args.debug)
+    centroids = parse_centroids(clust_file, output_seqs)
+    os.unlink(out_file)
+    os.unlink(clust_file)
+    if args.only_largest_cluster:
+        centroids = sorted(centroids, key=lambda x: x[1], reverse=True)[:1]
+    return centroids
+
+
+def parse_centroids(clust_file, output_seqs):
+    centroid_ids = []
+    sizes = []
+    raw_clusters = [c.split('\n') for c in open(clust_file, 'r').read().split('\n>')]
+    for rc in raw_clusters:
+        size = 0
+        for line in rc:
+            if line.strip():
+                size += 1
+            if '*' in line:
+                centroid_id = line.split()[2][1:-3]
+                centroid_ids.append(centroid_id)
+        sizes.append(size)
+    centroids = []
+    for c, s in zip(centroid_ids, sizes):
+        c_seq = [_c for _c in output_seqs if _c.id == c][0]
+        centroids.append((c_seq, size))
+    return centroids
+
+
+def process_singleton_clusters(singletons, seq_db_path, args):
+    consentroids = []
+    num_singletons = len(singletons)
+    update_progress(0, num_singletons, sys.stdout)
+    for i, singleton in enumerate(singletons):
+        seq = retrieve_output_seqs(singleton.ids, seq_db_path)[0]
+        seq.id = '{}_1'.format(uuid.uuid4()) if args.consensus else '{}_1'.format(seq.id)
+        consentroids.append((seq, 1))
+        update_progress(i + 1, num_singletons, sys.stdout)
+    sys.stdout.flush()
+    logger.info('')
+    return consentroids
 
 
 
@@ -771,18 +551,25 @@ def _log_params(args):
     logger.info('OUTPUT DIR: {}'.format(args.output))
     logger.info('TEMP DIR: {}'.format(args.temp_dir))
     logger.info('UAIDs: {}'.format(args.uaid))
+    logger.info('OUTPUT TYPE: {}'.format('Consensus' if args.consensus else 'Centroid'))
     logger.info('CLUSTERING TYPE: {}'.format('sort/uniq' if args.non_redundant else 'CD-HIT'))
     if args.non_redundant:
+        logger.info('NON-REDUNDANT CLUSTERING FIELD: {}'.format(args.clustering_field))
         logger.info('IDENTITY THRESHOLD: 1.0')
         logger.info('MIN SEQS: 1')
         return
-    elif args.uaid == 0:
+    elif not args.uaid:
+        logger.info('CLUSTERING FIELD: {}'.format(args.clustering_field))
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
         logger.info('GERMLINES: {}'.format(args.germs))
     else:
-        logger.info('PARSE UAIDS: {}'.format(args.parse_uaids))
+        logger.info('PARSE UAIDS: {}'.format('False' if args.parse_uaids == 0 else args.parse_uaids))
     logger.info('MIN SEQS: {}'.format(args.min_seqs))
     logger.info('LARGEST CLUSTER ONLY: {}'.format(args.only_largest_cluster))
+    if args.uaid:
+        logger.info('INTRA-BIN CLUSTERING THRESHOLD: {}'.format(args.identity_threshold))
+        logger.info('INTRA-BIN CLUSTERING FIELD: {}'.format(args.clustering_field))
+        logger.info('{} FIELD: {}'.format('CONSENSUS' if args.consensus else 'CENTROID', args.output_field))
 
 
 
@@ -808,13 +595,13 @@ def update_progress(finished, jobs, log, failed=None):
     sys.stdout.write(prog_bar)
 
 
-def write_output(collection, fastas, sizes, collection_start_time, args):
+def write_output(collection, sequences, sizes, collection_start_time, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
     logger.info('Writing {} sequences to output file...'.format(seq_type))
-    write_fasta_output(collection, fastas, args)
+    write_fasta_output(collection, sequences, args)
     if sizes is not None:
         write_stats_output(collection, sizes, args)
-    logger.info('{} {} sequences were identified.'.format(len(fastas), seq_type))
+    logger.info('{} {} sequences were identified.'.format(len(sequences), seq_type))
     logger.info('{} was processed in {} seconds.'.format(collection,
         round(time.time() - collection_start_time, 2)))
     logger.info('')
@@ -842,14 +629,14 @@ def write_nr_output(collection, unique_file, collection_start_time, args):
     logger.info('')
 
 
-def write_fasta_output(collection, fastas, args):
+def write_fasta_output(collection, sequences, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
     oname = collection
     if os.path.isfile(collection):
         oname = os.path.basename(collection).rstrip('.json')
     outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
-    out_handle.write('\n'.join(fastas))
+    out_handle.write('\n'.join([s.fasta for s in sequences]))
     out_handle.close()
 
 
@@ -870,11 +657,12 @@ def write_stats_output(collection, sizes, args):
 
 
 
-def print_collection_info(collection):
+def print_collection_info(collection, sample_name):
     logger.info('')
     logger.info('')
     logger.info(collection)
     logger.info('-' * len(collection))
+    logger.info('SAMPLE NAME: {}'.format(sample_name))
 
 
 def countdown(args):
@@ -1016,12 +804,13 @@ def main(args):
     else:
         germs = args.germs
     # check whether JSON files have been passed
-    if args.json is not None and all([args.db is None, args.collections is None]):
-        if os.path.isfile(args.json) and args.json.endswith('.json'):
-            collections = [args.json, ]
-        else:
-            collections = list_files(args.json, extension='json')
+    if args.json is not None and all([args.db is None, args.collection is None]):
+    	if os.path.isfile(args.json) and args.json.endswith('.json'):
+    		collections = [args.json, ]
+    	else:
+        	collections = list_files(args.json, extension='json')
         db = None
+        sample_names = [os.path.basename(c).replace('.json', '') for c in collections]
     # check whether MINIMAL files have been passed:
     if args.minimal_input is not None and all([args.db is None, args.collection is None]):
         if os.path.isfile(args.minimal_input) and args.minimal_input.endswith('.txt'):
@@ -1034,37 +823,31 @@ def main(args):
     else:
         db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
         collections = mongodb.get_collections(db, collection=args.collection)
-    for collection in collections:
+        sample_names = collections
+    for collection, sample_name in zip(collections, sample_names):
         collection_start = time.time()
-        print_collection_info(collection)
+        print_collection_info(collection, sample_name)
         if args.non_redundant:
             seqs = get_seqs(db, collection, args, make_seq_db=False)
             unique_file = unix_sort_unique(seqs, args)
             write_nr_output(collection, unique_file, collection_start, args)
-        elif args.uaid:
-            seq_db = get_seqs(db, collection, args)
-            uaid_clusters = cdhit_clustering(seq_db, args)
-            if args.consensus:
-                sequences, sizes = get_consensus(uaid_clusters, germs, args)
-            else:
-                sequences, sizes = get_uaid_centroids(uaid_clusters, args)
         else:
-            seq_db = get_seqs(db, collection, args)
-            if args.consensus:
-                seq_clusters, sizes = cdhit_clustering(seq_db, args, uaid=False)
-                sequences, sizes = get_consensus(seq_clusters, germs, args)
+            seq_db_path = get_seqs(db, collection, args)
+            initial_clusters = initial_clustering(seq_db_path, args)
+            if args.min_seqs == 1:
+                singletons = [ic for ic in initial_clusters if ic.size == 1]
+                initial_clusters = [ic for ic in initial_clusters if ic.size > 1]
+                logger.info('{} clusters contained only a single sequence. Processing singletons...'.format(len(singletons)))
+                singleton_consentroids = process_singleton_clusters(singletons, seq_db_path, args)
+                logger.info('')
             else:
-                filtered_seqs = []
-                filtered_sizes = []
-                sequences, sizes = cdhit_clustering(seq_db, args, uaid=False, centroid=True)
-                for seq, size in zip(sequences, sizes):
-                    if size >= args.min_seqs:
-                        filtered_seqs.append(seq)
-                        filtered_sizes.append(size)
-                sequences = filtered_seqs
-                sizes = filtered_sizes
-        if not args.non_redundant:
-            write_output(collection, sequences, sizes, collection_start, args)
+                singleton_consentroids = []
+            consentroids = process_initial_clusters(initial_clusters, seq_db_path, args)
+            consentroids += singleton_consentroids
+            sequences, sizes = zip(*consentroids)
+            write_output(sample_name, sequences, sizes, collection_start, args)
+            for ic in initial_clusters:
+                ic.cleanup()
             remove_sqlite_db(args)
 
 
