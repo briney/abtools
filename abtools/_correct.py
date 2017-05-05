@@ -660,7 +660,6 @@ def do_usearch_consensus(cluster, germs, args):
     fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
     results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
     consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
-    msa = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='msa_', delete=False)
     fasta.write('\n'.join(cluster))
     fasta.close()
     usearch = ['usearch',
@@ -672,7 +671,7 @@ def do_usearch_consensus(cluster, germs, args):
                '-sizeout',
                '-uc', results.name,
                '-consout', consensus.name,
-               '-msaout', msa.name]
+               ]
     p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
     stdout, stderr = p.communicate()
     consensus_seqs = []
@@ -693,7 +692,6 @@ def do_usearch_consensus(cluster, germs, args):
         os.unlink(fasta.name)
         os.unlink(results.name)
         os.unlink(consensus.name)
-        os.unlink(msa.name)
     return consensus_seqs, sizes
 
 
