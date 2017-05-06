@@ -632,7 +632,7 @@ def get_consensus(clusters, germs, args):
         logger.info('')
         # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
     else:
-        p = mp.Pool()
+        p = mp.Pool(maxtasksperchild=50)
         # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
         async_results = [p.apply_async(do_usearch_consensus, (cluster, germs, args)) for cluster in clusters]
         monitor_mp_jobs(async_results)
