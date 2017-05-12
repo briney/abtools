@@ -242,7 +242,7 @@ def query(db, collection, args):
                         # identify the UID (either by parsing or by field)
                         if args.parse_uaids:
                             uid = parse_uid(l[raw_index], args)
-                        elif args.no_uaid:
+                        elif not args.uaid:
                             uid = ''
                         else:
                             uid = l[uid_index]
