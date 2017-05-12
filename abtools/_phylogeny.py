@@ -32,8 +32,8 @@ import seaborn as sns
 
 from Bio import SeqIO
 
-from abtools.phylogeny.utils import msa, tree
-from abtools.phylogeny.utils.timepoint import Timepoint
+from abtools.phylogeny import msa, tree
+from abtools.phylogeny.timepoint import Timepoint
 from abtools.sequence import Sequence
 
 
