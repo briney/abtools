@@ -83,10 +83,23 @@ def parse_args():
                         Defaults to 1.")
     parser.add_argument('-U', '--no-uaid', dest='uaid', action='store_false', default=True,
                         help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
-    parser.add_argument('-P', '--parse-uaids', dest='parse_uaids', type=int, default=0,
-                        help="Length of the UAID to parse, if the UAID was not parsed during AbStar processing. \
+    parser.add_argument('-P', '--parse-uids', dest='parse_uaids', action='append', default=[],
+                        help="Parameters for UID parsing. \
+                        If UIDs are present in multiple locations (for example, short UIDs at both the start \
+                        and end of a sequencing read), multiple parameters may be supplied by providing --parse-uids \
+                        multiple times at runtime. \
+                        Supplying a single positive integer will result in that number of nucleotides being parsed \
+                        from the start (5' end) of the raw sequence. A single negative integer will result in that number of nucleotides \
+                        being parsed from the end (3' end) of the raw sequence. \
+                        for locations other than the start/end of the sequence, two positions may be supplied (0-based indexing) \
+                        separated by a comma (no whitespace) that indicate the start and end of the index position. \
                         If the '--no-uaid' flag is also used, this option will be ignored. \
-                        For a UAID of length 20, option should be passed as '--parse-uaids 20'. \
+                        For a UAD of length 20 at the start of the sequence, option should be passed as '--parse-uids 20'. \
+                        For a UID of length 20 at the end of the sequence, option should be passed as '--parse-uids -20'. \
+                        For a UID of length 20 that starts at the 5th position in the sequence, option should be passed as \
+                        '--parse-uids 4,24'. \
+                        For two UIDs, both length 20, one that starts at the 5th position and one at the 3' end of the sequence, \
+                        options should be passed as '--parse-uids 4,24 --parse-uids -20'. \
                         Default is to not parse UAIDs.")
     parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
@@ -190,6 +203,23 @@ def get_seqs(db, collection, args, make_seq_db=True):
     return build_seq_db(seqs, args)
 
 
+def parse_uid(raw_seq, args):
+    uid = ''
+    for uid_slice in args.parse_uaids:
+        if len(uid_slice.split(',')) == 2:
+            pos = [int(s) for s in uid_slice.strip().split(',')]
+            start = min(pos)
+            end = max(pos)
+            uid += raw_seq[start:end]
+        else:
+            pos = int(uid_slice)
+            if pos >= 0:
+                uid += raw_seq[:pos]
+            else:
+                uid += raw_seq[pos:]
+    return uid
+
+
 def query(db, collection, args):
     # parse MINIMAL file...
     if args.minimal_input:
@@ -209,8 +239,15 @@ def query(db, collection, args):
                 else:
                     try:
                         l = line.strip().split(',')
+                        # identify the UID (either by parsing or by field)
+                        if args.parse_uaids:
+                            uid = parse_uid(l[raw_index], args)
+                        elif args.no_uaid:
+                            uid = ''
+                        else:
+                            uid = l[uid_index]
                         d = {'seq_id': l[seq_id_index],
-                             'uaid': l[uid_index],
+                             'uaid': uid,
                              args.clustering_field: l[vdj_nt_index],
                              args.output_field: l[raw_index],
                              'v_gene': {'full': l[v_gene_index]},
@@ -236,12 +273,10 @@ def query(db, collection, args):
                      'raw_query': r[raw_field],
                      'v_gene': {'full': r['v_gene']['full']}}
                 if args.uaid and not args.non_redundant:
+                    # identify the UID (either by parsing or by field)
                     uid_field = 'uid' if 'uid' in r else 'uaid'
                     if args.parse_uaids:
-                        if args.parse_uaids > 0:
-                            d['uaid'] = r[raw_field][:args.parse_uaids]
-                        else:
-                            d['uaid'] = r[raw_field][args.parse_uaids:]
+                        d['uaid'] = parse_uid(r[raw_field], args)
                     elif uid_field in r:
                         d['uaid'] = r[uid_field]
                     else:
@@ -271,19 +306,18 @@ def query(db, collection, args):
             # raw_field and uid_field are necessary to maintain compatibility with legacy AbStar versions
             raw_field = 'raw_query' if 'raw_query' in r else 'raw_input'
             uid_field = 'uid' if 'uid' in r else 'uaid'
-            if 'uaid' in r:
-                seqs.append((r['seq_id'], r[uid_field], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
-            elif args.parse_uaids:
-                if args.parse_uaids > 0:
-                    seqs.append((r['seq_id'], r[raw_field][:args.parse_uaids], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
-                else:
-                    seqs.append((r['seq_id'], r[raw_field][args.parse_uaids:], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
+            if args.parse_uaids:
+                uid = parse_uid(r[raw_field], args)
             else:
-                err = 'ERROR: UAID field was not found. '
-                err += 'Ensure that UAIDs were parsed by AbStar, '
-                err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
-                err += 'or use the -u option for identity-based clustering.'
-                raise ValueError(err)
+                try:
+                    uid = r[uid_field, '']
+                except:
+                    err = 'ERROR: UAID field was not found. '
+                    err += 'Ensure that UAIDs were parsed by AbStar, '
+                    err += 'use the -parse_uaids option to parse the UAIDs from the raw query input, '
+                    err += 'or use the -u option for identity-based clustering.'
+                    raise ValueError(err)
+            seqs.append((r['seq_id'], uid, r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']))
     else:
         seqs = [(r['seq_id'], r[seq_field], r[args.clustering_field], r[args.output_field], r[raw_field], r['v_gene']['full']) for r in results]
     logger.info('Found {} sequences\n'.format(len(seqs)))
@@ -544,7 +578,7 @@ def get_uaid_centroids(uaid_clusters, args):
             sizes.extend(size)
     elif args.cluster:
         async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], args) for cs in range(0, len(clusters), args.chunksize)]
-        succeeded, failed = monitor_celery_jobs(async_results)
+        succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
             results.extend(ar.get())
@@ -553,7 +587,7 @@ def get_uaid_centroids(uaid_clusters, args):
         async_results = []
         for c in clusters:
             async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
-        monitor_mp_jobs(async_results)
+        monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         for a in async_results:
             centroid, size = a.get()
             centroids.extend(centroid)
@@ -657,7 +691,7 @@ def get_consensus(clusters, germs, args):
         # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
     elif args.cluster:
         async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, args) for cs in range(0, len(clusters), args.chunksize)]
-        succeeded, failed = monitor_celery_jobs(async_results)
+        succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
             results.append(ar.get())
@@ -665,7 +699,7 @@ def get_consensus(clusters, germs, args):
         p = mp.Pool(maxtasksperchild=50)
         # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
         async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, args)) for cs in range(0, len(clusters), args.chunksize)]
-        monitor_mp_jobs(async_results)
+        monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
             results.append(ar.get())
@@ -822,24 +856,26 @@ def _log_params(args):
 
 
 
-def monitor_mp_jobs(results):
+def monitor_mp_jobs(results, total, chunksize):
     finished = 0
-    jobs = len(results)
+    # jobs = len(results)
+    jobs = total
     while finished < jobs:
         time.sleep(1)
         ready = [ar for ar in results if ar.ready()]
-        finished = len(ready)
+        finished = min(len(ready) * chunksize, jobs)
         update_progress(finished, jobs, sys.stdout)
     sys.stdout.write('\n')
 
 
-def monitor_celery_jobs(results):
+def monitor_celery_jobs(results, total, chunksize):
     finished = 0
-    jobs = len(results)
+    # jobs = len(results)
+    jobs = total
     while finished < jobs:
         time.sleep(1)
         succeeded = [ar for ar in results if ar.successful()]
-        finished = len(succeeded) + len(failed)
+        finished = min((len(succeeded) + len(failed)) * chunksize, jobs)
         update_progress(finished, jobs, sys.stdout)
     sys.stdout.write('\n\n')
     return succeeded, failed
