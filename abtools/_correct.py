@@ -40,6 +40,8 @@ from Bio import SeqIO
 from Bio import AlignIO
 from Bio.Align import AlignInfo
 
+from abstar.utils.queue.celery import celery
+
 from abtools import log, mongodb
 from abtools.alignment import muscle
 from abtools.pipeline import make_dir, list_files
@@ -117,6 +119,14 @@ def parse_args():
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
                         help="If set, the sequence name of the consensus/centroid will not include the cluster size. \
                         Default is to include the cluster size in the consensus/centroid name.")
+    parser.add_argument('-k', '--chunksize', dest='chunksize', default=50, type=int,
+                        help="Approximate number of sequences in each consensus/centroid calculation job. \
+                        Defaults to 50.")
+    parser.add_argument('--cluster', dest="cluster", default=False, action='store_true',
+                        help="Use if performing computation on a Celery cluster. \
+                        If set, input files will be split into many subfiles and passed \
+                        to a Celery queue. If not set, input files will still be split, but \
+                        will be distributed to local processors using multiprocessing.")
     parser.add_argument('-D', '--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
     parser.add_argument('-s', '--sleep', dest='sleep', type=int, default=0,
@@ -128,7 +138,7 @@ class Args(object):
     def __init__(self, db=None, collection=None, json=None,
                  output=None, log=None, temp=None,
                  ip='localhost', port=27017, user=None, password=None,
-                 min_seqs=1, identity_threshold=0.975,
+                 min_seqs=1, identity_threshold=0.975, chunksize=50, cluster=False,
                  uaid=True, parse_uaids=0, non_redundant=False,
                  consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, clustering_field='vdj_nt', output_field='oriented_input', debug=False, sleep=0):
@@ -152,6 +162,8 @@ class Args(object):
         self.parse_uaids = int(parse_uaids)
         self.consensus = consensus
         self.identity_threshold = float(identity_threshold)
+        self.chunksize = int(chunksize)
+        self.cluster = cluster
         self.only_largest_cluster = only_largest_cluster
         self.non_redundant = non_redundant
         self.germs = germs
@@ -530,6 +542,12 @@ def get_uaid_centroids(uaid_clusters, args):
             centroid, size = do_usearch_centroid(cluster, args)
             centroids.extend(centroid)
             sizes.extend(size)
+    elif args.cluster:
+        async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], args) for cs in range(0, len(clusters), args.chunksize)]
+        succeeded, failed = monitor_celery_jobs(async_results)
+        results = []
+        for ar in async_results:
+            results.extend(ar.get())
     else:
         p = mp.Pool(maxtasksperchild=100)
         async_results = []
@@ -539,14 +557,15 @@ def get_uaid_centroids(uaid_clusters, args):
         for a in async_results:
             centroid, size = a.get()
             centroids.extend(centroid)
-            sizes.extend(size)
+            sizes.append(size)
         p.close()
         p.join()
         logger.info('Centroids were calculated in {} seconds.'.format(round(time.time() - start_time), 2))
     return centroids, sizes
 
 
-def do_usearch_centroid(uaid_group_seqs, args):
+@celery.task
+def do_usearch_centroid(uaid_groups, args):
     # '''
     # Clusters sequences at 90% identity using USEARCH.
 
@@ -556,37 +575,42 @@ def do_usearch_centroid(uaid_group_seqs, args):
     # Outputs
     # A list of fasta strings, containing centroid sequences for each cluster.
     # '''
-    fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-    results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-    centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
-    fasta.write('\n'.join(uaid_group_seqs))
-    fasta.close()
-    usearch = ['usearch',
-               '-cluster_fast',
-               fasta.name,
-               '-maxaccepts', '0',
-               '-maxrejects', '0',
-               '-id', '0.9',
-               '-sizeout',
-               '-uc', results.name,
-               '-centroids', centroids.name]
-    p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
-    stdout, stderr = p.communicate()
-    centroid_seqs = []
-    sizes = []
-    for cent in SeqIO.parse(open(centroids.name, 'r'), 'fasta'):
-        seq_id = cent.id.split(';')[0]
-        size = int(cent.id.split(';')[1].replace('size=', ''))
-        centroid_seqs.append('>{}\n{}'.format(seq_id, str(cent.seq)))
-        sizes.append(size)
-    if args.only_largest_cluster:
-        cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
-        centroid_seqs = [cents_plus_sizes[0][0], ]
-        sizes = [cents_plus_sizes[0][1], ]
-    os.unlink(fasta.name)
-    os.unlink(results.name)
-    os.unlink(centroids.name)
-    return centroid_seqs, sizes
+    all_centroid_seqs = []
+    all_sizes = []
+    for uaid_group_seqs in uaid_groups:
+        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
+        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
+        centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
+        fasta.write('\n'.join(uaid_group_seqs))
+        fasta.close()
+        usearch = ['usearch',
+                   '-cluster_fast',
+                   fasta.name,
+                   '-maxaccepts', '0',
+                   '-maxrejects', '0',
+                   '-id', '0.9',
+                   '-sizeout',
+                   '-uc', results.name,
+                   '-centroids', centroids.name]
+        p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
+        stdout, stderr = p.communicate()
+        centroid_seqs = []
+        sizes = []
+        for cent in SeqIO.parse(open(centroids.name, 'r'), 'fasta'):
+            seq_id = cent.id.split(';')[0]
+            size = int(cent.id.split(';')[1].replace('size=', ''))
+            centroid_seqs.append('>{}\n{}'.format(seq_id, str(cent.seq)))
+            sizes.append(size)
+        if args.only_largest_cluster:
+            cents_plus_sizes = sorted(zip(centroid_seqs, sizes), key=lambda x: x[1], reverse=True)
+            centroid_seqs = [cents_plus_sizes[0][0], ]
+            sizes = [cents_plus_sizes[0][1], ]
+        os.unlink(fasta.name)
+        os.unlink(results.name)
+        os.unlink(centroids.name)
+        all_centroid_seqs += centroid_seqs
+        all_sizes += sizes
+    return all_centroid_seqs, all_sizes
 
 
 
@@ -631,12 +655,20 @@ def get_consensus(clusters, germs, args):
         logger.info('')
         logger.info('')
         # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
+    elif args.cluster:
+        async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, args) for cs in range(0, len(clusters), args.chunksize)]
+        succeeded, failed = monitor_celery_jobs(async_results)
+        results = []
+        for ar in async_results:
+            results.append(ar.get())
     else:
         p = mp.Pool(maxtasksperchild=50)
         # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
-        async_results = [p.apply_async(do_usearch_consensus, (cluster, germs, args)) for cluster in clusters]
+        async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, args)) for cs in range(0, len(clusters), args.chunksize)]
         monitor_mp_jobs(async_results)
-        results = [a.get() for a in async_results]
+        results = []
+        for ar in async_results:
+            results.append(ar.get())
         p.close()
         p.join()
     for r in results:
@@ -647,7 +679,8 @@ def get_consensus(clusters, germs, args):
     return fastas, all_sizes
 
 
-def do_usearch_consensus(cluster, germs, args):
+@celery.task
+def do_usearch_consensus(clusters, germs, args):
     # '''
     # Clusters sequences at using USEARCH and calculates consensus sequences for each cluster.
 
@@ -657,42 +690,47 @@ def do_usearch_consensus(cluster, germs, args):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
-    fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-    results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-    consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
-    fasta.write('\n'.join(cluster))
-    fasta.close()
-    usearch = ['usearch',
-               '-cluster_fast',
-               fasta.name,
-               '-maxaccepts', '0',
-               '-maxrejects', '0',
-               '-id', str(args.identity_threshold),
-               '-sizeout',
-               '-uc', results.name,
-               '-consout', consensus.name,
-               ]
-    p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
-    stdout, stderr = p.communicate()
-    consensus_seqs = []
-    sizes = []
-    with open(consensus.name, 'r') as f:
-        for cons in SeqIO.parse(f, 'fasta'):
-            seq_id = cons.id.split(';')[0]
-            size = int(cons.id.split(';')[1].replace('size=', ''))
-            if args.include_cluster_size:
-                seq_id += '_{}'.format(size)
-            consensus_seqs.append('>{}\n{}'.format(seq_id, str(cons.seq)))
-            sizes.append(size)
-        if args.only_largest_cluster:
-            cons_plus_sizes = sorted(zip(consensus_seqs, sizes), key=lambda x: x[1], reverse=True)
-            consensus_seqs = [cons_plus_sizes[0][0], ]
-            sizes = [cons_plus_sizes[0][1], ]
-    if not args.debug:
-        os.unlink(fasta.name)
-        os.unlink(results.name)
-        os.unlink(consensus.name)
-    return consensus_seqs, sizes
+    all_consensus_seqs = []
+    all_sizes = []
+    for cluster in clusters:
+        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
+        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
+        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
+        fasta.write('\n'.join(cluster))
+        fasta.close()
+        usearch = ['usearch',
+                   '-cluster_fast',
+                   fasta.name,
+                   '-maxaccepts', '0',
+                   '-maxrejects', '0',
+                   '-id', str(args.identity_threshold),
+                   '-sizeout',
+                   '-uc', results.name,
+                   '-consout', consensus.name,
+                   ]
+        p = sp.Popen(usearch, stdout=sp.PIPE, stderr=sp.PIPE)
+        stdout, stderr = p.communicate()
+        consensus_seqs = []
+        sizes = []
+        with open(consensus.name, 'r') as f:
+            for cons in SeqIO.parse(f, 'fasta'):
+                seq_id = str(uuid.uuid4())
+                size = int(cons.id.split(';')[1].replace('size=', ''))
+                if args.include_cluster_size:
+                    seq_id += '_{}'.format(size)
+                consensus_seqs.append('>{}\n{}'.format(seq_id, str(cons.seq)))
+                sizes.append(size)
+            if args.only_largest_cluster:
+                cons_plus_sizes = sorted(zip(consensus_seqs, sizes), key=lambda x: x[1], reverse=True)
+                consensus_seqs = [cons_plus_sizes[0][0], ]
+                sizes = [cons_plus_sizes[0][1], ]
+        if not args.debug:
+            os.unlink(fasta.name)
+            os.unlink(results.name)
+            os.unlink(consensus.name)
+        all_consensus_seqs += consensus_seqs
+        all_sizes += sizes
+    return all_consensus_seqs, all_sizes
 
 
 def calculate_consensus(cluster, germs, args):
@@ -795,11 +833,23 @@ def monitor_mp_jobs(results):
     sys.stdout.write('\n')
 
 
+def monitor_celery_jobs(results):
+    finished = 0
+    jobs = len(results)
+    while finished < jobs:
+        time.sleep(1)
+        succeeded = [ar for ar in results if ar.successful()]
+        finished = len(succeeded) + len(failed)
+        update_progress(finished, jobs, sys.stdout)
+    sys.stdout.write('\n\n')
+    return succeeded, failed
+
+
 def update_progress(finished, jobs, log, failed=None):
     pct = int(100. * finished / jobs)
     ticks = pct / 2
     spaces = 50 - ticks
-    if failed:
+    if failed is not None:
         prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
     else:
         prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
