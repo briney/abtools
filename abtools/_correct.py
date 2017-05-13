@@ -727,7 +727,29 @@ def do_usearch_consensus(clusters, germs, arg_dict):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
+
+
+    print('arg_dict type:', type(arg_dict))
+    print('arg_dict:', arg_dict)
+
+
+
+
+
     args = Args(**arg_dict)
+
+
+
+
+
+    print('args type:', type(args))
+    print('args:', args)
+
+
+
+
+
+
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
