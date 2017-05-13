@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
                         Default is to identify cluster centroids.")
-    parser.add_argument('-I', '--identity_threshold', dest='identity_threshold', default=0.975, type=float,
+    parser.add_argument('-I', '--identity-threshold', dest='identity_threshold', default=0.975, type=float,
                         help="If performing identity-based clustering, this threshold is used for the clustering. \
                         If performing UID-based correction, this threshold is used when clustering sequences assigned \
                         to the same UID bin. Default is 0.975.")
@@ -148,11 +148,11 @@ def parse_args():
 
 
 class Args(object):
-    def __init__(self, db=None, collection=None, json=None,
-                 output=None, log=None, temp=None,
+    def __init__(self, db=None, collection=None, json=None, minimal_input=None,
+                 output=None, log=None, temp_dir=None, include_cluster_size=True,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975, chunksize=50, cluster=False,
-                 uaid=True, parse_uaids=0, non_redundant=False,
+                 uaid=True, parse_uaids=None, non_redundant=False,
                  consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, clustering_field='vdj_nt', output_field='oriented_input', debug=False, sleep=0):
         super(Args, self).__init__()
@@ -163,19 +163,21 @@ class Args(object):
         self.db = db
         self.collection = collection
         self.json = json
+        self.minimal_input = minimal_input
         self.output = output
         self.log = log
-        self.temp_dir = temp
+        self.temp_dir = temp_dir
         self.ip = ip
         self.port = int(port)
         self.user = user
         self.password = password
         self.min_seqs = int(min_seqs)
         self.uaid = False if non_redundant else uaid
-        self.parse_uaids = int(parse_uaids)
+        self.parse_uaids = parse_uaids if parse_uaids is not None else []
         self.consensus = consensus
         self.identity_threshold = float(identity_threshold)
         self.chunksize = int(chunksize)
+        self.include_cluster_size = include_cluster_size
         self.cluster = cluster
         self.only_largest_cluster = only_largest_cluster
         self.non_redundant = non_redundant
