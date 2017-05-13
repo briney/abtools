@@ -879,6 +879,7 @@ def monitor_celery_jobs(results, total, chunksize):
     while finished < jobs:
         time.sleep(1)
         succeeded = [ar for ar in results if ar.successful()]
+        failed = [ar for ar in results if ar.failed()]
         finished = min((len(succeeded) + len(failed)) * chunksize, jobs)
         update_progress(finished, jobs, sys.stdout)
     sys.stdout.write('\n\n')
