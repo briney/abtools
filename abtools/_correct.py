@@ -573,11 +573,11 @@ def get_uaid_centroids(uaid_clusters, args):
     clusters = [c for c in uaid_clusters if len(c) > 1]
     if args.debug:
         for cluster in clusters:
-            centroid, size = do_usearch_centroid(cluster, args)
+            centroid, size = do_usearch_centroid(cluster, vars(args))
             centroids.extend(centroid)
             sizes.extend(size)
     elif args.cluster:
-        async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], args) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], vars(args)) for cs in range(0, len(clusters), args.chunksize)]
         succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -586,7 +586,7 @@ def get_uaid_centroids(uaid_clusters, args):
         p = mp.Pool(maxtasksperchild=100)
         async_results = []
         for c in clusters:
-            async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
+            async_results.append(p.apply_async(do_usearch_centroid, (c, vars(args))))
         monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         for a in async_results:
             centroid, size = a.get()
@@ -599,7 +599,7 @@ def get_uaid_centroids(uaid_clusters, args):
 
 
 @celery.task
-def do_usearch_centroid(uaid_groups, args):
+def do_usearch_centroid(uaid_groups, arg_dict):
     # '''
     # Clusters sequences at 90% identity using USEARCH.
 
@@ -609,6 +609,7 @@ def do_usearch_centroid(uaid_groups, args):
     # Outputs
     # A list of fasta strings, containing centroid sequences for each cluster.
     # '''
+    args = Args(**arg_dict)
     all_centroid_seqs = []
     all_sizes = []
     for uaid_group_seqs in uaid_groups:
@@ -684,13 +685,13 @@ def get_consensus(clusters, germs, args):
         cluster_count = len(clusters)
         progress_bar(0, cluster_count)
         for i, cluster in enumerate(clusters):
-            results.append(do_usearch_consensus(cluster, germs, args))
+            results.append(do_usearch_consensus(cluster, germs, vars(args)))
             progress_bar(i + 1, cluster_count)
         logger.info('')
         logger.info('')
         # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
     elif args.cluster:
-        async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, args) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, vars(args)) for cs in range(0, len(clusters), args.chunksize)]
         succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -698,7 +699,7 @@ def get_consensus(clusters, germs, args):
     else:
         p = mp.Pool(maxtasksperchild=50)
         # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
-        async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, args)) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, vars(args))) for cs in range(0, len(clusters), args.chunksize)]
         monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -714,7 +715,7 @@ def get_consensus(clusters, germs, args):
 
 
 @celery.task
-def do_usearch_consensus(clusters, germs, args):
+def do_usearch_consensus(clusters, germs, arg_dict):
     # '''
     # Clusters sequences at using USEARCH and calculates consensus sequences for each cluster.
 
@@ -724,6 +725,7 @@ def do_usearch_consensus(clusters, germs, args):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
+    args = Args(**arg_dict)
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
