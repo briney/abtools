@@ -717,7 +717,7 @@ def get_consensus(clusters, germs, args):
 
 
 @celery.task
-def do_usearch_consensus(clusters, germs, arg_dict):
+def do_usearch_consensus(clusters, germs, args):
     # '''
     # Clusters sequences at using USEARCH and calculates consensus sequences for each cluster.
 
@@ -727,13 +727,13 @@ def do_usearch_consensus(clusters, germs, arg_dict):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
-    args = Args(**arg_dict)
+    # args = Args(**arg_dict)
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
-        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
+        fasta = tempfile.NamedTemporaryFile(dir=args['temp_dir'], prefix='cluster_input_', delete=False)
+        results = tempfile.NamedTemporaryFile(dir=args['temp_dir'], prefix='results_', delete=False)
+        consensus = tempfile.NamedTemporaryFile(dir=args['temp_dir'], prefix='consensus_', delete=False)
         fasta.write('\n'.join(cluster))
         fasta.close()
         usearch = ['usearch',
@@ -741,7 +741,7 @@ def do_usearch_consensus(clusters, germs, arg_dict):
                    fasta.name,
                    '-maxaccepts', '0',
                    '-maxrejects', '0',
-                   '-id', str(args.identity_threshold),
+                   '-id', str(args['identity_threshold']),
                    '-sizeout',
                    '-uc', results.name,
                    '-consout', consensus.name,
@@ -754,15 +754,15 @@ def do_usearch_consensus(clusters, germs, arg_dict):
             for cons in SeqIO.parse(f, 'fasta'):
                 seq_id = str(uuid.uuid4())
                 size = int(cons.id.split(';')[1].replace('size=', ''))
-                if args.include_cluster_size:
+                if args['include_cluster_size']:
                     seq_id += '_{}'.format(size)
                 consensus_seqs.append('>{}\n{}'.format(seq_id, str(cons.seq)))
                 sizes.append(size)
-            if args.only_largest_cluster:
+            if args['only_largest_cluster']:
                 cons_plus_sizes = sorted(zip(consensus_seqs, sizes), key=lambda x: x[1], reverse=True)
                 consensus_seqs = [cons_plus_sizes[0][0], ]
                 sizes = [cons_plus_sizes[0][1], ]
-        if not args.debug:
+        if not args['debug']:
             os.unlink(fasta.name)
             os.unlink(results.name)
             os.unlink(consensus.name)
