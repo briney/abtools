@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument('-C', '--centroid', dest='consensus', action='store_false', default=True,
                         help="Generates consensus sequences for each UAID or homology cluster. \
                         Default is to identify cluster centroids.")
-    parser.add_argument('-I', '--identity_threshold', dest='identity_threshold', default=0.975, type=float,
+    parser.add_argument('-I', '--identity-threshold', dest='identity_threshold', default=0.975, type=float,
                         help="If performing identity-based clustering, this threshold is used for the clustering. \
                         If performing UID-based correction, this threshold is used when clustering sequences assigned \
                         to the same UID bin. Default is 0.975.")
@@ -148,34 +148,36 @@ def parse_args():
 
 
 class Args(object):
-    def __init__(self, db=None, collection=None, json=None,
-                 output=None, log=None, temp=None,
+    def __init__(self, db=None, collection=None, json=None, minimal_input=None,
+                 output=None, log=None, temp_dir=None, include_cluster_size=True,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975, chunksize=50, cluster=False,
-                 uaid=True, parse_uaids=0, non_redundant=False,
+                 uaid=True, parse_uaids=None, non_redundant=False,
                  consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, clustering_field='vdj_nt', output_field='oriented_input', debug=False, sleep=0):
         super(Args, self).__init__()
-        if not all([db, output, temp]):
-            print('\nERROR: Output and temp directories must be provided, \
-                as well as a MongoDB database name.\n')
-            sys.exit(1)
+        # if not all([db, output, temp]):
+        #     print('\nERROR: Output and temp directories must be provided, \
+        #         as well as a MongoDB database name.\n')
+        #     sys.exit(1)
         self.db = db
         self.collection = collection
         self.json = json
+        self.minimal_input = minimal_input
         self.output = output
         self.log = log
-        self.temp_dir = temp
+        self.temp_dir = temp_dir
         self.ip = ip
         self.port = int(port)
         self.user = user
         self.password = password
         self.min_seqs = int(min_seqs)
         self.uaid = False if non_redundant else uaid
-        self.parse_uaids = int(parse_uaids)
+        self.parse_uaids = parse_uaids if parse_uaids is not None else []
         self.consensus = consensus
         self.identity_threshold = float(identity_threshold)
         self.chunksize = int(chunksize)
+        self.include_cluster_size = include_cluster_size
         self.cluster = cluster
         self.only_largest_cluster = only_largest_cluster
         self.non_redundant = non_redundant
@@ -573,11 +575,11 @@ def get_uaid_centroids(uaid_clusters, args):
     clusters = [c for c in uaid_clusters if len(c) > 1]
     if args.debug:
         for cluster in clusters:
-            centroid, size = do_usearch_centroid(cluster, args)
+            centroid, size = do_usearch_centroid(cluster, vars(args))
             centroids.extend(centroid)
             sizes.extend(size)
     elif args.cluster:
-        async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], args) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [do_usearch_centroid.delay(clusters[cs:cs + args.chunksize], vars(args)) for cs in range(0, len(clusters), args.chunksize)]
         succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -586,7 +588,7 @@ def get_uaid_centroids(uaid_clusters, args):
         p = mp.Pool(maxtasksperchild=100)
         async_results = []
         for c in clusters:
-            async_results.append(p.apply_async(do_usearch_centroid, (c, args)))
+            async_results.append(p.apply_async(do_usearch_centroid, (c, vars(args))))
         monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         for a in async_results:
             centroid, size = a.get()
@@ -599,7 +601,7 @@ def get_uaid_centroids(uaid_clusters, args):
 
 
 @celery.task
-def do_usearch_centroid(uaid_groups, args):
+def do_usearch_centroid(uaid_groups, arg_dict):
     # '''
     # Clusters sequences at 90% identity using USEARCH.
 
@@ -609,6 +611,7 @@ def do_usearch_centroid(uaid_groups, args):
     # Outputs
     # A list of fasta strings, containing centroid sequences for each cluster.
     # '''
+    args = Args(**arg_dict)
     all_centroid_seqs = []
     all_sizes = []
     for uaid_group_seqs in uaid_groups:
@@ -684,13 +687,13 @@ def get_consensus(clusters, germs, args):
         cluster_count = len(clusters)
         progress_bar(0, cluster_count)
         for i, cluster in enumerate(clusters):
-            results.append(do_usearch_consensus(cluster, germs, args))
+            results.append(do_usearch_consensus(cluster, germs, vars(args)))
             progress_bar(i + 1, cluster_count)
         logger.info('')
         logger.info('')
         # results = [do_usearch_consensus(cluster, germs, args) for cluster in clusters]
     elif args.cluster:
-        async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, args) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [do_usearch_consensus.delay(clusters[cs:cs + args.chunksize], germs, vars(args)) for cs in range(0, len(clusters), args.chunksize)]
         succeeded, failed = monitor_celery_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -698,7 +701,7 @@ def get_consensus(clusters, germs, args):
     else:
         p = mp.Pool(maxtasksperchild=50)
         # async_results = [p.apply_async(calculate_consensus, (cluster, germs, args)) for cluster in clusters]
-        async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, args)) for cs in range(0, len(clusters), args.chunksize)]
+        async_results = [p.apply_async(do_usearch_consensus, (clusters[cs:cs + args.chunksize], germs, vars(args))) for cs in range(0, len(clusters), args.chunksize)]
         monitor_mp_jobs(async_results, len(clusters), args.chunksize)
         results = []
         for ar in async_results:
@@ -714,7 +717,7 @@ def get_consensus(clusters, germs, args):
 
 
 @celery.task
-def do_usearch_consensus(clusters, germs, args):
+def do_usearch_consensus(clusters, germs, arg_dict):
     # '''
     # Clusters sequences at using USEARCH and calculates consensus sequences for each cluster.
 
@@ -724,6 +727,7 @@ def do_usearch_consensus(clusters, germs, args):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
+    args = Args(**arg_dict)
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
@@ -875,6 +879,7 @@ def monitor_celery_jobs(results, total, chunksize):
     while finished < jobs:
         time.sleep(1)
         succeeded = [ar for ar in results if ar.successful()]
+        failed = [ar for ar in results if ar.failed()]
         finished = min((len(succeeded) + len(failed)) * chunksize, jobs)
         update_progress(finished, jobs, sys.stdout)
     sys.stdout.write('\n\n')
