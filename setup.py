@@ -30,7 +30,7 @@ config = {
     'url': 'https://www.github.com/briney/abtools',
     # 'download_url': 'www.github.com/briney/abtools/',
     'author_email': 'briney@scripps.edu',
-    'version': '0.1.7',
+    'version': '0.1.8',
     'install_requires': install_requires,
     'packages': ['abtools'],
     'scripts': ['bin/abcompare',
