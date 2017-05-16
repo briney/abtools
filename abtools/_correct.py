@@ -156,10 +156,10 @@ class Args(object):
                  consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, clustering_field='vdj_nt', output_field='oriented_input', debug=False, sleep=0):
         super(Args, self).__init__()
-        if not all([db, output, temp]):
-            print('\nERROR: Output and temp directories must be provided, \
-                as well as a MongoDB database name.\n')
-            sys.exit(1)
+        # if not all([db, output, temp]):
+        #     print('\nERROR: Output and temp directories must be provided, \
+        #         as well as a MongoDB database name.\n')
+        #     sys.exit(1)
         self.db = db
         self.collection = collection
         self.json = json
@@ -727,29 +727,7 @@ def do_usearch_consensus(clusters, germs, arg_dict):
     # Outputs
     # A list of fasta strings, containing consensus sequences for each cluster.
     # '''
-
-
-    print('arg_dict type:', type(arg_dict))
-    print('arg_dict:', arg_dict)
-
-
-
-
-
     args = Args(**arg_dict)
-
-
-
-
-
-    print('args type:', type(args))
-    print('args:', args)
-
-
-
-
-
-
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
