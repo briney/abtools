@@ -18,10 +18,12 @@
 from __future__ import print_function
 
 from collections import Counter
+# from itertools import cycle
 import json
 import math
 import multiprocessing as mp
 import os
+# import paramiko
 import shelve
 import sqlite3
 from StringIO import StringIO
@@ -129,6 +131,8 @@ def parse_args():
     parser.add_argument('--output_field', dest='output_field', default='oriented_input',
                         help="The MongoDB field to be used for creating consensus/centroid sequences. \
                         Default is 'oriented_input'.")
+    parser.add_argument('--cdhit-cluster-uids', dest='unix_sort_uids', action='store_false', default=True,
+                        help="If set, uses Unix sort rather than CD-HIT to cluster sequences by UID.")
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
                         help="If set, the sequence name of the consensus/centroid will not include the cluster size. \
                         Default is to include the cluster size in the consensus/centroid name.")
@@ -152,7 +156,7 @@ class Args(object):
                  output=None, log=None, temp_dir=None, include_cluster_size=True,
                  ip='localhost', port=27017, user=None, password=None,
                  min_seqs=1, identity_threshold=0.975, chunksize=50, cluster=False,
-                 uaid=True, parse_uaids=None, non_redundant=False,
+                 uaid=True, parse_uaids=None, non_redundant=False, unix_sort_uids=False,
                  consensus=True, only_largest_cluster=False, germs=None,
                  aa=False, clustering_field='vdj_nt', output_field='oriented_input', debug=False, sleep=0):
         super(Args, self).__init__()
@@ -181,6 +185,7 @@ class Args(object):
         self.cluster = cluster
         self.only_largest_cluster = only_largest_cluster
         self.non_redundant = non_redundant
+        self.unix_sort_uids = unix_sort_uids
         self.germs = germs
         self.aa = aa
         self.clustering_field = clustering_field
@@ -198,11 +203,11 @@ class Args(object):
 
 
 
-def get_seqs(db, collection, args, make_seq_db=True):
+def get_seqs(db, collection, args, make_seq_db=True, seq_db_name='seq_db'):
     seqs = query(db, collection, args)
     if not make_seq_db:
         return seqs
-    return build_seq_db(seqs, args)
+    return build_seq_db(seqs, args, seq_db_name)
 
 
 def parse_uid(raw_seq, args):
@@ -326,9 +331,9 @@ def query(db, collection, args):
     return seqs
 
 
-def build_seq_db(seqs, args):
+def build_seq_db(seqs, args, seq_db_name):
     logger.info('Building a SQLite database of sequences...')
-    db_path = os.path.join(args.temp_dir, 'seq_db')
+    db_path = os.path.join(args.temp_dir, seq_db_name)
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     create_cmd = get_seq_db_creation_cmd(args)
@@ -376,7 +381,7 @@ def parse_germs(germ_file):
 
 
 def unix_sort_unique(seqs, args):
-    sort_file, input_count = make_sort_input(seqs, args)
+    sort_file, input_count = make_sort_unique_input(seqs, args)
     logger.info('Found {} sequences'.format(input_count))
     unique_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
     sort_unique_cmd = 'sort -k2,2 -u -o {} {}'.format(unique_file.name, sort_file)
@@ -391,7 +396,7 @@ def unix_sort_unique(seqs, args):
 
 
 
-def make_sort_input(seqs, args):
+def make_sort_unique_input(seqs, args):
     raw_field = 'raw_query' if 'raw_query' in seqs[0] else 'raw_input'
     seq_field = args.clustering_field
     sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
@@ -451,6 +456,117 @@ def cdhit_clustering(seq_db, args, uaid=True, centroid=False):
     if uaid:
         return seqs
     return seqs, sizes
+
+
+def unix_sort_uids(seq_db, args):
+    sort_input, input_count = make_unix_uid_sort_input(seq_db, args)
+    logger.info('Found {} sequences'.format(input_count))
+    start_time = time.time()
+    sorted_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    sort_cmd = 'sort -k2,2 -o {} {}'.format(sorted_file.name, sort_input)
+    logger.info('Sorting sequences by UID...')
+    p = sp.Popen(sort_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+    stdout, stderr = p.communicate()
+    logger.info('Sorting took {} seconds'.format(round(time.time() - start_time, 2)))
+    seqs = process_unix_sorted_uid_file(sorted_file.name, seq_db, args)
+    if not args.debug:
+        os.unlink(sort_input)
+        os.unlink(sorted_file.name)
+    return seqs
+
+
+def make_unix_uid_sort_input(seq_db, args):
+    seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
+    seq_strings = [' '.join(s) for s in seqs]
+    sort_input = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    with open(sort_input.name, 'w') as f:
+        f.write('\n'.join(seq_strings))
+    return sort_input.name, len(seq_strings)
+
+
+def process_unix_sorted_uid_file(sorted_file, seq_db, args):
+    logger.info('')
+    logger.info('Parsing sorted UID file...')
+    start = time.time()
+    clusters = []
+    sizes = []
+    cluster_ids = []
+    prev = ''
+    with open(sorted_file) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            seq_id, uid = line.strip().split()
+            if uid != prev:
+                if cluster_ids:
+                    sizes.append(len(cluster_ids))
+                    cluster_seqs = get_cluster_seqs(cluster_ids, seq_db, None, args)
+                    clusters.append(cluster_seqs)
+                prev = uid
+                cluster_ids = [seq_id, ]
+            else:
+                cluster_ids.append(seq_id)
+        # process the last cluster
+        if cluster_ids:
+            cluster_seqs = get_cluster_seqs(cluster_ids, seq_db, None, args)
+            clusters.append(cluster_seqs)
+    passed_clusters = [c for c in clusters if len(c) >= args.min_seqs]
+    logger.info('{} total clusters identified.\n'.format(len(clusters)))
+    logger.info('{} clusters meet the minimum size cutoff ({} sequences)'.format(len(passed_clusters), args.min_seqs))
+    logger.info('The average cluster contains {} sequences; the largest contains {} sequences.'.format(round(1. * sum(sizes) / len(sizes), 2), max(sizes)))
+    logger.info('Cluster parsing and sequence retrieval took {} seconds\n'.format(round(time.time() - start, 2)))
+    return passed_clusters
+
+
+
+# def run_distributed_cdhit(collections, args):
+#     seq_dbs = {}
+#     fasta_files = {}
+#     cluster_files = {}
+#     cdhit_output = []
+#     logger.info('Building CD-HIT input files...')
+#     for i, collection in enumerate(collections):
+#         seq_db_name = os.path.basename(collection).replace('.txt', '')
+#         update_progress(i, len(collections), sys.stdout, extra_info=seq_db_name)
+#         seq_db = get_seqs(None, collection, args, make_seq_db=True, seq_db_name=seq_db_name)
+#         seq_dbs[collection] = seq_db
+#         fasta_file = make_cdhit_input(seq_db, args)
+#         fasta_files[collection] = fasta_file.name
+#     update_progress(len(collections), len(collections), sys.stdout, extra_info=' ' * len(seq_db_name))
+#     print('\n')
+#     node_ips = get_running_celery_node_ips()
+#     zip_list = zip(node_ips, cycle(collections)) if len(node_ips) > len(collections) else zip(cycle(node_ips), collections)
+#     async_results = []
+#     p = mp.Pool()
+#     for chunk in chunker(zip_list, size=len(node_ips)):
+#         for node_ip, collection in chunk:
+#             fasta = fasta_files[collection]
+#             clust_filename = seq_db_name = os.path.basename(collection).replace('.txt', '') + '_clust'
+#             clust = os.path.join(args.temp_dir, clust_filename)
+#             cdhit_output.append(clust)
+#             cluster_files[collection] = clust + '.clstr'
+#             cdhit_cmd = 'cd-hit -i {} -o {} -c {} -n 5 -d 0 -T 0 -M 35000'.format(fasta, clust, args.identity_threshold)
+#             async_results.append(p.apply_async(run_remote, (node_ip, cdhit_cmd)))
+#         monitor_mp_jobs(async_results, len(zip_list), trailing_newline=False)
+#     print('')
+#     for ff in fasta_files.values():
+#         os.unlink(ff)
+#     for cho in cdhit_output:
+#         os.unlink(cho)
+#     return cluster_files, seq_dbs
+
+
+# def run_remote(ip, cmd):
+#     with paramiko.SSHClient() as ssh:
+#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#         ssh.connect(ip)
+#         _stdin, stdout, stderr = ssh.exec_command(cmd)
+#         while not stdout.channel.exit_status_ready():
+#             time.sleep(1)
+#     return stdout.read(), stderr.read()
+
+
+
 
 
 def make_cdhit_input(seq_db, args, uaid=True):
@@ -549,6 +665,18 @@ def get_cluster_seqs(seq_ids, seq_db, sizes, args):
         return ['>{}_{}\n{}'.format(seq[0], size, s[1]) for seq, size in zip(seqs, sizes)]
     else:
         return ['>{}\n{}'.format(s[0], s[1]) for s in seqs]
+
+
+def get_running_celery_node_ips():
+    celery_info_cmd = '/home/ubuntu/anaconda2/bin/celery -A abstar.utils.queue.celery status'
+    ips = []
+    c = sp.Popen(celery_info_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+    stdout, stderr = c.communicate()
+    for inst in stdout.split('\n'):
+        if all(['celery@' in inst, 'OK' in inst]):
+            ip = inst.split(':')[0][10:].replace('-', '.')
+            ips.append(ip)
+    return ips
 
 
 
@@ -860,7 +988,7 @@ def _log_params(args):
 
 
 
-def monitor_mp_jobs(results, total, chunksize):
+def monitor_mp_jobs(results, total, chunksize=1, trailing_newline=True):
     finished = 0
     # jobs = len(results)
     jobs = total
@@ -869,7 +997,8 @@ def monitor_mp_jobs(results, total, chunksize):
         ready = [ar for ar in results if ar.ready()]
         finished = min(len(ready) * chunksize, jobs)
         update_progress(finished, jobs, sys.stdout)
-    sys.stdout.write('\n')
+    if trailing_newline:
+        sys.stdout.write('\n')
 
 
 def monitor_celery_jobs(results, total, chunksize):
@@ -886,12 +1015,14 @@ def monitor_celery_jobs(results, total, chunksize):
     return succeeded, failed
 
 
-def update_progress(finished, jobs, log, failed=None):
+def update_progress(finished, jobs, log, failed=None, extra_info=None):
     pct = int(100. * finished / jobs)
     ticks = pct / 2
     spaces = 50 - ticks
     if failed is not None:
         prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
+    elif extra_info is not None:
+        prog_bar = '\r({}/{}) |{}{}|  {}% ({})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, extra_info)
     else:
         prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
     sys.stdout.write(prog_bar)
@@ -1123,6 +1254,27 @@ def main(args):
     else:
         db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
         collections = mongodb.get_collections(db, collection=args.collection)
+
+    # Run distributed CD-HIT. This is really hacky, but CD-HIT is multithreaded and I only want to
+    # start one CD-HIT process on each worker node, but Celery won't allow me to set different
+    # levels of concurrency for different tasks (CD-HIT needs to be a concurrency of 1 per worker,
+    # but consensus calculation should use all available processors)
+
+    # if all([args.distributed_cdhit, args.cluster, args.minimal_input is not None]):
+    #     cluster_file_dict, seq_db_dict = run_distributed_cdhit(collections, args)
+    #     for collection in sorted(cluster_file_dict.keys()):
+    #         collection_start = time.time()
+    #         print_collection_info(collection)
+    #         cluster_file = cluster_file_dict[collection]
+    #         seq_db = seq_db_dict[collection]
+    #         with open(cluster_file) as cluster_handle:
+    #             seq_clusters, sizes = parse_clusters(cluster_handle, seq_db)
+    #         sequences, sizes = get_consensus(seq_clusters, germs, args)
+    #         write_output(collection, sequences, sizes, collection_start, args)
+    #         os.unlink(cluster_file)
+    #         remove_sqlite_db(args)
+    # else:
+
     for collection in collections:
         collection_start = time.time()
         print_collection_info(collection)
@@ -1132,7 +1284,10 @@ def main(args):
             write_nr_output(collection, unique_file, collection_start, args)
         elif args.uaid:
             seq_db = get_seqs(db, collection, args)
-            uaid_clusters = cdhit_clustering(seq_db, args)
+            if args.unix_sort_uids:
+                uaid_clusters = unix_sort_uids(seq_db, args)
+            else:
+                uaid_clusters = cdhit_clustering(seq_db, args)
             if args.consensus:
                 sequences, sizes = get_consensus(uaid_clusters, germs, args)
             else:
