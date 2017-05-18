@@ -131,7 +131,7 @@ def parse_args():
     parser.add_argument('--output_field', dest='output_field', default='oriented_input',
                         help="The MongoDB field to be used for creating consensus/centroid sequences. \
                         Default is 'oriented_input'.")
-    parser.add_argument('--unix-sort-uids', dest='unix_sort_uids', action='store_true', default=False,
+    parser.add_argument('--cdhit-cluster-uids', dest='unix_sort_uids', action='store_false', default=True,
                         help="If set, uses Unix sort rather than CD-HIT to cluster sequences by UID.")
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
                         help="If set, the sequence name of the consensus/centroid will not include the cluster size. \
