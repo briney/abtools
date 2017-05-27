@@ -1243,7 +1243,7 @@ def main(args):
             collections = list_files(args.json, extension='json')
         db = None
     # check whether MINIMAL files have been passed:
-    if args.minimal_input is not None and all([args.db is None, args.collection is None]):
+    elif args.minimal_input is not None and all([args.db is None, args.collection is None]):
         if os.path.isfile(args.minimal_input) and args.minimal_input.endswith('.txt'):
             collections = [args.minimal_input, ]
         else:
