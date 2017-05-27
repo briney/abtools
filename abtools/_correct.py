@@ -1236,7 +1236,7 @@ def main(args):
     else:
         germs = args.germs
     # check whether JSON files have been passed
-    if args.json is not None and all([args.db is None, args.collections is None]):
+    if args.json is not None and all([args.db is None, args.collection is None]):
         if os.path.isfile(args.json) and args.json.endswith('.json'):
             collections = [args.json, ]
         else:
