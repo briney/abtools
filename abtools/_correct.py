@@ -1066,7 +1066,7 @@ def write_fasta_output(collection, fastas, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
     oname = collection
     if os.path.isfile(collection):
-        oname = os.path.basename(collection).rstrip('.json')
+        oname = '.'.join(os.path.basename(collection).split('.')[:-1])
     outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
     out_handle.write('\n'.join(fastas))
@@ -1236,14 +1236,14 @@ def main(args):
     else:
         germs = args.germs
     # check whether JSON files have been passed
-    if args.json is not None and all([args.db is None, args.collections is None]):
+    if args.json is not None and all([args.db is None, args.collection is None]):
         if os.path.isfile(args.json) and args.json.endswith('.json'):
             collections = [args.json, ]
         else:
             collections = list_files(args.json, extension='json')
         db = None
     # check whether MINIMAL files have been passed:
-    if args.minimal_input is not None and all([args.db is None, args.collection is None]):
+    elif args.minimal_input is not None and all([args.db is None, args.collection is None]):
         if os.path.isfile(args.minimal_input) and args.minimal_input.endswith('.txt'):
             collections = [args.minimal_input, ]
         else:
