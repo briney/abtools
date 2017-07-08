@@ -1066,7 +1066,7 @@ def write_fasta_output(collection, fastas, args):
     seq_type = 'consensus' if args.consensus else 'centroids'
     oname = collection
     if os.path.isfile(collection):
-        oname = os.path.basename(collection).rstrip('.json')
+        oname = '.'.join(os.path.basename(collection).split('.')[:-1])
     outfile = os.path.join(args.output, '{}_{}.fasta'.format(oname, seq_type))
     out_handle = open(outfile, 'w')
     out_handle.write('\n'.join(fastas))

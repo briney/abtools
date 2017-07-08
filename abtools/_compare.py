@@ -86,12 +86,12 @@ def parse_args():
                         help="Number of iterations of the similarity calculation to perform. \
                         Default is 10000.")
     parser.add_argument('-s', '--similarity-method', dest='method',
-                        choices=['marisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
-                        default='marisita-horn',
+                        choices=['morisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
+                        default='morisita-horn',
                         help="The similarity calculation to use. \
-                        Options are 'marisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
+                        Options are 'morisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
                         Note that kullback-leibler is actually a divergence measure (lower values indicate greater similarity) \
-                        Default is 'marisita-horn'.")
+                        Default is 'morisita-horn'.")
     parser.add_argument('-c', '--control', dest='control_similarity', default=False, action='store_true',
                         help="Plot the control similarity of the two collections")
     parser.add_argument('-C', '--chain', dest='chain', default='heavy', choices=['heavy', 'kappa', 'lambda'],
@@ -266,7 +266,7 @@ def simdif_method(sample1, sample2, args):
     # bins: from binned scores, left-most boundary of each bin
     # similarities: raw similarity scores.
     # '''
-    methods = {'marisita-horn': (mh_similarity, False, False),
+    methods = {'morisita-horn': (mh_similarity, False, False),
                'kullback-leibler': (kl_divergence, True, True),
                'jensen-shannon': (js_similarity, False, True),
                'jaccard': (jaccard_similarity, False, False),
