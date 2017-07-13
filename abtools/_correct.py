@@ -240,7 +240,8 @@ def query(db, collection, args):
                     seq_id_index = header.index('seq_id')
                     uid_index = header.index('uid')
                     v_gene_index = header.index('v_gene')
-                    vdj_nt_index = header.index('vdj_nt')
+                    clustering_index = header.index(args.clustering_field)
+                    output_index = header.index(args.output_field)
                     raw_index = header.index('raw_input')
                 # parse sequence data
                 else:
@@ -255,8 +256,8 @@ def query(db, collection, args):
                             uid = l[uid_index]
                         d = {'seq_id': l[seq_id_index],
                              'uaid': uid,
-                             args.clustering_field: l[vdj_nt_index],
-                             args.output_field: l[raw_index],
+                             args.clustering_field: l[clustering_index],
+                             args.output_field: l[output_index],
                              'v_gene': {'full': l[v_gene_index]},
                              'raw_query': l[raw_index]}
                         results.append(d)
