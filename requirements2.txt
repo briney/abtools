@@ -4,8 +4,8 @@ celery
 ete3
 matplotlib
 numpy
-nwalign3
+nwalign
 pandas
 pymongo
-scikit-bio
+scikit-bio<=0.4.2
 seaborn
