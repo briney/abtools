@@ -32,7 +32,7 @@ import os
 import socket
 import select
 try:
-    import SocketServer
+    import socketserver
 except ImportError:
     import socketserver as SocketServer
 
@@ -45,12 +45,12 @@ SSH_PORT = 22
 DEFAULT_PORT = 27017
 
 
-class ForwardServer(SocketServer.ThreadingTCPServer):
+class ForwardServer(socketserver.ThreadingTCPServer):
     daemon_threads = True
     allow_reuse_address = True
 
 
-class Handler(SocketServer.BaseRequestHandler):
+class Handler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
             chan = self.ssh_transport.open_channel(

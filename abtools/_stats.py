@@ -20,13 +20,13 @@ import sys
 import uuid
 import time
 import shelve
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import sqlite3
 import tempfile
 import argparse
 import subprocess as sp
 import multiprocessing as mp
-from StringIO import StringIO
+from io import StringIO
 from collections import Counter
 
 import numpy as np
@@ -138,7 +138,7 @@ class Args(object):
 
 def get_db(db, ip='localhost', port=27017, user=None, password=None):
     if all([user is not None, password is not None]):
-        pwd = urllib.quote_plus(password)
+        pwd = urllib.parse.quote_plus(password)
         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
         conn = MongoClient(uri)
     else:
@@ -189,7 +189,7 @@ def aggregate(data, norm=True, sort_by='value', keys=None):
         vdict = {}
         for d in data:
             vdict[d] = vdict[d] + 1 if d in vdict else 1
-    vals = [(k, v) for k, v in vdict.iteritems()]
+    vals = [(k, v) for k, v in vdict.items()]
     if sort_by == 'value':
         vals.sort(key=lambda x: x[0])
     else:
@@ -211,7 +211,7 @@ def cdr3_plot(seqs, collection, make_plot, chain, output_dir):
         return None
     max_len = 40 if chain == 'heavy' else 20
     cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0 and s['cdr3_len'] <= max_len]
-    x, y = aggregate(cdr3s, keys=range(1, max_len + 1))
+    x, y = aggregate(cdr3s, keys=list(range(1, max_len + 1)))
     color = sns.hls_palette(7)[4]
     plot_file = os.path.join(output_dir, '{}_{}_cdr3_lengths.pdf'.format(collection, chain))
     x_title = 'CDR3 Length (AA)'
@@ -303,8 +303,8 @@ def group_by_vj(data, species, chain):
             continue
         vj[v][j] = vj[v][j] + 1 if j in vj[v] else 1
     total = len(data)
-    for v in vj.keys():
-        for j in vj[v].keys():
+    for v in list(vj.keys()):
+        for j in list(vj[v].keys()):
             vj[v][j] = 100. * vj[v][j] / total
     return vj
 

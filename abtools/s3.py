@@ -211,8 +211,8 @@ def configure(access_key=None, secret_key=None, logger=None):
         logger = log.get_logger('s3')
     if not all([access_key, secret_key]):
         logger.info('')
-        access_key = raw_input('AWS Access Key: ')
-        secret_key = raw_input('AWS Secret Key: ')
+        access_key = input('AWS Access Key: ')
+        secret_key = input('AWS Secret Key: ')
     _write_config(access_key, secret_key)
     logger.info('')
     logger.info('Completed writing S3 config file.')

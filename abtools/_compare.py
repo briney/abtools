@@ -32,12 +32,12 @@ import multiprocessing as mp
 import os
 import random
 import sqlite3
-from StringIO import StringIO
+from io import StringIO
 import subprocess as sp
 import sys
 import tempfile
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 
 import numpy as np
@@ -154,7 +154,7 @@ def get_collection_pairs(db, args):
         collections = [c for c in collections if c.startswith(args.collection_prefix)]
     if args.collection1:
         collections.sort()
-        pairs = zip([args.collection1] * len(collections), collections)
+        pairs = list(zip([args.collection1] * len(collections), collections))
         print_multiple_pairs_info(pairs)
         return pairs
     pairs = [p for p in itertools.combinations(sorted(collections), 2)]
@@ -285,12 +285,12 @@ def simdif_method(sample1, sample2, args):
 def calculate_similarities(s1, s2, args):
     if args.debug:
         similarities = []
-        for i in xrange(args.iterations):
+        for i in range(args.iterations):
             similarities.append(simdif_method(s1, s2, args))
     else:
         async_results = []
         p = mp.Pool()
-        for i in xrange(args.iterations):
+        for i in range(args.iterations):
             async_results.append(p.apply_async(simdif_method, (s1, s2, args)))
         monitor_mp_jobs(async_results, sys.stdout)
         similarities = [a.get() for a in async_results]

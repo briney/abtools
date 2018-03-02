@@ -22,7 +22,7 @@
 #
 
 
-import cPickle as pickle
+import pickle as pickle
 import os
 import sqlite3
 import time
@@ -246,7 +246,7 @@ class KeyValueDB(object):
 
             list: values, unpickled if necessary
         '''
-        if type(keys) in [str, unicode]:
+        if type(keys) in [str, str]:
             keys = [keys, ]
         results = []
         for chunk in self.chunker(keys):
@@ -286,7 +286,7 @@ class KeyValueDB(object):
             keys: a single key (as a ``str``) or iterable (``list`` or ``tuple``)
                 containing one or more keys
         '''
-        if type(keys) in [str, unicode]:
+        if type(keys) in [str, str]:
             keys = [keys, ]
         with self.connection as conn:
             conn.executemany(
@@ -314,5 +314,5 @@ class KeyValueDB(object):
         '''
         Yields successive n-sized chunks from l.
         '''
-        for i in xrange(0, len(l), n):
+        for i in range(0, len(l), n):
             yield l[i:i + n]

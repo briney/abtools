@@ -263,7 +263,7 @@ def query(db, collection, args):
 
 def chunker(l, n):
     'Generator that produces n-length chunks from iterable l.'
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield l[i:i + n]
 
 
@@ -366,7 +366,7 @@ def make_figure(standard_id, scores, collection, args):
     fig_file = os.path.join(args.output_dir, '{0}_{1}_{2}.pdf'.format(args.db, collection, standard_id))
     x = list(scores['germ_divergence'].values)
     y = list(scores['identity'].values)
-    xy_vals = zip(x, y)
+    xy_vals = list(zip(x, y))
     trunc_xy_vals = [v for v in xy_vals if v[0] <= args.x_max and v[1] >= args.y_min]
     x = [v[0] for v in trunc_xy_vals]
     y = [v[1] for v in trunc_xy_vals]

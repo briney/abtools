@@ -26,12 +26,12 @@ import os
 # import paramiko
 import shelve
 import sqlite3
-from StringIO import StringIO
+from io import StringIO
 import subprocess as sp
 import sys
 import tempfile
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 
 import numpy as np
@@ -652,7 +652,7 @@ def get_cluster_ids(cluster):
 
 
 def chunker(l, size=900):
-    return (l[pos:pos + size] for pos in xrange(0, len(l), size))
+    return (l[pos:pos + size] for pos in range(0, len(l), size))
 
 
 def get_cluster_seqs(seq_ids, seq_db, sizes, args):
@@ -1077,8 +1077,8 @@ def write_fasta_output(collection, fastas, args):
 def write_stats_output(collection, sizes, args):
     sizes = [int(s) for s in sizes]
     bin_counts = np.bincount(sizes)[1:]
-    bins = range(1, len(bin_counts))
-    binned_data = zip(bins, bin_counts)
+    bins = list(range(1, len(bin_counts)))
+    binned_data = list(zip(bins, bin_counts))
     bin_string = 'Cluster Size\tCount\n'
     bin_string += '\n'.join(['{}\t{}'.format(b[0], b[1]) for b in binned_data])
     oname = collection
