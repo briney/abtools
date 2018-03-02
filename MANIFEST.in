@@ -6,11 +6,3 @@ include abtools/utils/*
 include abtools/utils/germline_genes/*
 include abtools/utils/matrices/*
 include abtools/queue/*
-# include ab_finder/nw/*
-# include ab_finder/ssw/*
-# include ab_finder/ssw/dbs/*
-# include ab_finder/ssw/isotypes/*
-# include ab_correct/germ_dbs/*.db
-# include ab_correct/germ_dbs/fastas/*
-include abtools/phylogeny/*
-include abtools/phylogeny/utils/*

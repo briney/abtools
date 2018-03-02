@@ -32,7 +32,7 @@ import os
 import socket
 import select
 try:
-    import socketserver
+    import SocketServer
 except ImportError:
     import socketserver as SocketServer
 

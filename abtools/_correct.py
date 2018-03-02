@@ -44,10 +44,10 @@ from Bio.Align import AlignInfo
 
 from abstar.utils.queue.celery import celery
 
-from abtools import log, mongodb
-from abtools.alignment import muscle
-from abtools.pipeline import make_dir, list_files
-from abtools.utils.progbar import progress_bar
+from abutils.utils import log, mongodb
+from abutils.utils.alignment import muscle
+from abutils.utils.pipeline import make_dir, list_files
+from abutils.utils.progbar import progress_bar
 
 
 def parse_args():

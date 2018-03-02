@@ -27,7 +27,10 @@ import os
 import subprocess as sp
 import tarfile
 
-from abtools import log
+from abutils.utils import log
+
+if sys.version_info[0] > 2:
+    raw_input = input
 
 
 def compress_and_upload(data, compressed_file, s3_path, multipart_chunk_size_mb=500,

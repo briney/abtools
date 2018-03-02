@@ -38,7 +38,7 @@ import seaborn as sns
 
 from pymongo import MongoClient
 
-from abtools import log, mongodb
+from abutils.utils import log, mongodb
 
 from abstar.core.germline import get_germlines
 

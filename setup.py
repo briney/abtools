@@ -36,7 +36,6 @@ config = {
     'scripts': ['bin/abcompare',
                 'bin/abcorrect',
                 'bin/abfinder',
-                'bin/abphylogeny',
                 'bin/abstats',
                 'bin/ssh_tunnel'],
     'name': 'abtools',
