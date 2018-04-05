@@ -27,11 +27,11 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
-from abtools import _correct as correct
+from abtools import abcorrect
 
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    parser = correct.parse_args()
+    parser = abcorrect.parse_args()
     args = parser.parse_args()
-    correct.run_standalone(args)
+    abcorrect.run_standalone(args)

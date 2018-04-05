@@ -30,11 +30,11 @@ import warnings
 import matplotlib as mpl
 mpl.use('Agg')
 
-from abtools import _finder as finder
+from abtools import abfinder
 
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    parser = finder.parse_args()
+    parser = abfinder.parse_args()
     args = parser.parse_args()
-    finder.run_standalone(args)
+    abfinder.run_standalone(args)

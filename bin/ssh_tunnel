@@ -27,7 +27,7 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
-from abtools.utils import ssh_tunnel
+from abutils.utils import ssh_tunnel
 
 
 if __name__ == '__main__':

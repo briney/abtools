@@ -27,11 +27,11 @@ from __future__ import print_function, unicode_literals
 
 import warnings
 
-from abtools import _compare as compare
+from abtools import abcompare
 
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    parser = compare.parse_args()
+    parser = abcompare.parse_args()
     args = parser.parse_args()
-    compare.run_standalone(args)
+    abcompare.run_standalone(args)
