@@ -864,7 +864,7 @@ def do_usearch_consensus(clusters, germs, arg_dict):
     for cluster in clusters:
         fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False, mode='w')
         results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False, mode='w')
-        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False, mlde='w')
+        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False, mode='w')
         fasta.write('\n'.join(cluster))
         fasta.close()
         usearch = ['usearch',
