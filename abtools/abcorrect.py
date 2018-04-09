@@ -1018,8 +1018,8 @@ def monitor_celery_jobs(results, total, chunksize):
 
 def update_progress(finished, jobs, log, failed=None, extra_info=None):
     pct = int(100. * finished / jobs)
-    ticks = pct / 2
-    spaces = 50 - ticks
+    ticks = int(pct / 2)
+    spaces = int(50 - ticks)
     if failed is not None:
         prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
     elif extra_info is not None:
