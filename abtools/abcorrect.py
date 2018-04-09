@@ -401,8 +401,9 @@ def make_sort_unique_input(seqs, args):
     raw_field = 'raw_query' if 'raw_query' in seqs[0] else 'raw_input'
     seq_field = args.clustering_field
     sort_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    sort_file.close()
     count = 0
-    with open(sort_file, 'a') as sort_handle:
+    with open(sort_file.name, 'a') as sort_handle:
         for s in seqs:
             sort_handle.write('{} {} {}\n'.format(s['seq_id'], s[seq_field], s[raw_field]))
             count += 1
@@ -480,6 +481,7 @@ def make_unix_uid_sort_input(seq_db, args):
     seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
     seq_strings = [' '.join(s) for s in seqs]
     sort_input = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    sort_input.close()
     with open(sort_input.name, 'w') as f:
         f.write('\n'.join(seq_strings))
     return sort_input.name, len(seq_strings)
@@ -571,7 +573,7 @@ def process_unix_sorted_uid_file(sorted_file, seq_db, args):
 
 
 def make_cdhit_input(seq_db, args, uaid=True):
-    infile = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
+    infile = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False, mode='w')
     fastas = []
     if uaid:
         seqs = seq_db.execute('''SELECT seqs.seq_id, seqs.uaid FROM seqs''')
@@ -744,9 +746,9 @@ def do_usearch_centroid(uaid_groups, arg_dict):
     all_centroid_seqs = []
     all_sizes = []
     for uaid_group_seqs in uaid_groups:
-        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-        centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False)
+        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False, mode='w')
+        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False, mode='w')
+        centroids = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='centroids_', delete=False, mode='w')
         fasta.write('\n'.join(uaid_group_seqs))
         fasta.close()
         usearch = ['usearch',
@@ -860,9 +862,9 @@ def do_usearch_consensus(clusters, germs, arg_dict):
     all_consensus_seqs = []
     all_sizes = []
     for cluster in clusters:
-        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False)
-        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False)
-        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False)
+        fasta = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='cluster_input_', delete=False, mode='w')
+        results = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='results_', delete=False, mode='w')
+        consensus = tempfile.NamedTemporaryFile(dir=args.temp_dir, prefix='consensus_', delete=False, mlde='w')
         fasta.write('\n'.join(cluster))
         fasta.close()
         usearch = ['usearch',
