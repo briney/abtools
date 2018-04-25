@@ -2,6 +2,8 @@ include README.md
 include requirements.txt
 include requirements2.txt
 include docs/*.txt
+include abtools/hiv/*
+include abtools/hiv/CATNAP_data/*
 include abtools/utils/*
 include abtools/utils/germline_genes/*
 include abtools/utils/matrices/*
