@@ -477,7 +477,7 @@ def print_update_info():
 
 
 def run_jobs(files, standard, args):
-    logger.info('Running AbCompare...')
+    logger.info('Running AbFinder...')
     if args.cluster:
         return _run_jobs_via_celery(files, standard, args)
     else:
