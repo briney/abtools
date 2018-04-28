@@ -551,7 +551,7 @@ def monitor_celery_jobs(results):
 
 def update_progress(finished, jobs):
     pct = int(100. * finished / jobs)
-    ticks = pct / 2
+    ticks = int(pct / 2)
     spaces = 50 - ticks
     prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
     sys.stdout.write(prog_bar)
