@@ -230,7 +230,7 @@ def get_sequences(db, collection, temp_dir, args):
 
 
 def write_to_temp_file(fastas, temp_dir):
-    tfile = tempfile.NamedTemporaryFile(dir=temp_dir, delete=False)
+    tfile = tempfile.NamedTemporaryFile(dir=temp_dir, delete=False, mode='w')
     tfile.write('\n'.join(fastas))
     tfile.close()
     return tfile.name
