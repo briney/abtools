@@ -313,7 +313,7 @@ def update(db, collection, data, standard, version, args):
     db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
     coll = db[collection]
     score = data[0]
-    ids = data[1]
+    ids = list(data[1])
     mab_id_field = 'mab_identity_aa' if args.is_aa else 'mab_identity_nt'
     if int(version.split('.')[0]) < 3:
         result = coll.update({'seq_id': {'$in': ids}},
