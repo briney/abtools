@@ -25,20 +25,21 @@
 
 from __future__ import print_function, absolute_import, division
 
-from collections import Counter
 import csv
 from io import StringIO
 import json
 import os
-import requests
 import sys
 
-from Bio import SeqIO, Medline
+import pandas as pd
 
-from abstar import run as run_abstar
-
-from abutils.core.pair import Pair, assign_pairs
+from abutils.core.pair import assign_pairs
 from abutils.core.sequence import Sequence
+
+from . import CATNAP_PATH
+from .metadata import Metadata
+from .neut import Neutralization
+from .paper import Paper
 
 if sys.version_info[0] > 2:
     STR_TYPES = [str, ]
@@ -46,169 +47,68 @@ else:
     STR_TYPES = [str, unicode]
 
 
-
-CATNAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'CATNAP_data')
-
+# CATNAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'CATNAP_data')
 
 
-class bnAbMetadata():
-    '''
-    Docstring for bnAbMetadata.
-    '''
-    def __init__(self, metadata):
-        self._raw = metadata
-        self._epitope = None
-        self._structures = None
-        self._donor = None
-        self._lineage = None
-        self._isolation_paper = None
-        self._neutralizing_antibody_feature_names = None
-        self._germline_paper = None
-        
+# class bnAbPaper(Paper):
+#     '''
+#     Docstring for bnAbPaper.
+#     '''
+#     def __init__(self, paper):
+#         self.raw = paper
+#         pmid = paper[paper.find('(')+1:paper.rfind(')')]
+#         super.__init__(pmid)
+
+
+# class bnAbMetadata():
+#     '''
+#     Docstring for bnAbMetadata.
+#     '''
+#     def __init__(self, metadata):
+#         self.raw = metadata
+#         self._epitope = None
+#         self._structures = None
+#         self._donor = None
+#         self._lineage = None
+#         self._isolation_paper = None
+#         self._neutralizing_antibody_feature_names = None
+#         self._germline_paper = None
+
     
-    @property 
-    def raw(self):
-        return self._raw
+#     @property
+#     def donor(self):
+#         return self.raw.get('Donor', None) 
     
-    @property
-    def donor(self):
-        return self.raw.get('Donor', None) 
+#     @property
+#     def epitope(self):
+#         return self.raw.get('Antibody binding type', None)
     
-    @property
-    def epitope(self):
-        return self.raw.get('Antibody binding type', None)
+#     @property
+#     def lineage(self):
+#         return self.raw.get('Clonal lineage', None)
     
-    @property
-    def lineage(self):
-        return self.raw.get('Clonal lineage', None)
+#     @property
+#     def structures(self):
+#         if self._structures is None:
+#             raw_structures = self.raw['PDB or other structure'].split(';')
+#             self._structures = [bnAbStructure(rs) for rs in raw_structures]
+#         return self._structures
     
-    @property
-    def structures(self):
-        if self._structures is None:
-            raw_structures = self.raw['PDB or other structure'].split(';')
-            self._structures = [bnAbStructure(rs) for rs in raw_structures]
-        return self._structures
-    
-    @property
-    def isolation_paper(self):
-        if self._isolation_paper is None:
-            if 'Isolation paper(Pubmed ID)' in self.raw:
-                paper_string = self.raw['Isolation paper(Pubmed ID)'].strip()
-                self._isolation_paper = bnAbPaper(paper_string)
-        return self._isolation_paper
+#     @property
+#     def isolation_paper(self):
+#         if self._isolation_paper is None:
+#             if 'Isolation paper(Pubmed ID)' in self.raw:
+#                 paper_string = self.raw['Isolation paper(Pubmed ID)'].strip()
+#                 self._isolation_paper = bnAbPaper(paper_string)
+#         return self._isolation_paper
             
-    @property
-    def germline_paper(self):
-        if self._germline_paper is None:
-            if 'Germline paper(Pubmed ID)' in self.raw:
-                paper_string = self.raw['Germline paper(Pubmed ID)'].strip()
-                self._germline_paper = bnAbPaper(paper_string)
-        return self._germline_paper
-
-
-class bnAbPaper():
-    '''
-    Docstring for bnAbPaper.
-    '''
-    def __init__(self, paper):
-        self._raw = paper
-        self._pmid = None
-        self._pmcid = None
-        self._doi = None
-        self._identifiers = self._retrieve_identifiers(paper)
-        self._medline = self._retrieve_medline()
-    
-    def __str__(self):
-        return self.citation
-    
-    def __repr__(self):
-        r = [self.title]
-        r.append(self.authors[0] + ' <...> ' + self.authors[-1])
-        r.append(self.citation)
-        return '\n'.join(r)
-        
-    @property
-    def raw(self):
-        return self._raw
-    
-    @property
-    def medline(self):
-        return self._medline
-    
-    @property
-    def identifiers(self):
-        return self._identifiers
-    
-    @property
-    def pmid(self):
-        if self.identifiers is not None:
-            return self.identifiers['records'][0]['pmid']
-        return None
-    
-    @property
-    def pmcid(self):
-        if self.identifiers is not None:
-            return self.identifiers['records'][0]['pmcid']
-        return None
-    
-    @property
-    def doi(self):
-        if self.identifiers is not None:
-            return self.identifiers['records'][0]['doi']
-        return None
-    
-    @property
-    def abstract(self):
-        return self._search_medline('AB')
-    
-    @property
-    def authors(self):
-        return self._search_medline('AU')
-    
-    @property
-    def citation(self):
-        return self._search_medline('SO')
-    
-    @property
-    def date(self):
-        return self._search_medline('DP')
-    
-    @property
-    def journal(self):
-        return self._search_medline('JT')
-    
-    @property
-    def mesh(self):
-        return self._search_medline('MH')
-    
-    @property
-    def title(self):
-        return self._search_medline('TI')
-    
-
-    def _retrieve_identifiers(self, paper):
-        convert_url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids={}&format=json'
-        pmid = paper[paper.find('(')+1:paper.rfind(')')]
-        r = requests.get(convert_url.format(pmid))
-        if r.status_code == requests.codes.ok:
-            return r.json()
-        else:
-            return None
-    
-    
-    def _retrieve_medline(self):
-        medline_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={}&rettype=medline'
-        r = requests.get(medline_url.format(self.pmid))
-        if r.status_code == requests.codes.ok:
-            return Medline.read(StringIO(r.text))
-        else:
-            return None
-    
-    
-    def _search_medline(self, term):
-        if self.medline is not None:
-            return self.medline.get(term, None)
-        return None
+#     @property
+#     def germline_paper(self):
+#         if self._germline_paper is None:
+#             if 'Germline paper(Pubmed ID)' in self.raw:
+#                 paper_string = self.raw['Germline paper(Pubmed ID)'].strip()
+#                 self._germline_paper = bnAbPaper(paper_string)
+#         return self._germline_paper
 
 
 class bnAbStructure():
@@ -244,6 +144,13 @@ class bnAbStructure():
         return pdb_id, description
 
 
+def get_bnab(name):
+    bnabs = get_bnabs([name, ])
+    if bnabs:
+        return bnabs[0]
+    return bnabs
+
+
 def get_bnabs(names=None):
     if type(names) in STR_TYPES:
         names = [names, ]
@@ -260,9 +167,21 @@ def get_bnabs(names=None):
         for row in reader:
             if row['Antibody'].strip():
                 metadata[row['Antibody']] = row
-    # attach metadata to each pair
+    # read the neut file
+    neutralization = {}
+    neut_file = os.path.join(CATNAP_PATH, 'neut.txt')
+    neutralization = pd.read_csv(neut_file,
+                                 sep='\t',
+                                 dtype=str,
+                                 index_col='Virus name')
+    neutralization = neutralization.T
+    for col in neutralization.columns.values:
+        if col['Antibody'].strip():
+            neutralization[col['Antibody']] = col
+    # attach metadata and neut info to each pair
     for p in pairs:
-        p.metadata = bnAbMetadata(metadata.get(p.name, None))
+        p.metadata = Metadata(metadata.get(p.name, None))
+        p.neut = Neutralization(neutralization.get(p.name, None))
     return pairs
 
 

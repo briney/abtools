@@ -1,0 +1,1055 @@
+Virus name	Subtype	Country	Patient health	Days post infection	Days from seroconversion	Fiebig	Risk factor	Accession	Tier	Infection stage	Alias	HIV DB name	Seq data	LANL comments	# of Abs tested
+0013095_2_11	C	INDIA	acute infection		45	4	Heterosexual	EF117267	2	intermediate	0013095.2.11, HIV_0013095_2_11, 0013095, HIV-0013095-2.11, 0013095-2.11	HIV_0013095_2	Yes		183
+001428_2_42	C	INDIA	acute infection		45	4	Heterosexual	EF117266	2	intermediate	HIV-001428-2.42, HIV_001428_2_42, 001428, 001428-2.42	HIV_001428_2	Yes		175
+0041_V3_C18	C	TANZANIA			early	5 or 6	Heterosexual	HM215253	2	early	0041.V3.C18	0041_v3_c18	Yes		23
+0077_V1_C16	C	TANZANIA			early	5 or 6	 	HM215254	2	early	0077_V1.C16, 0077, 0077.V1.C16	0077_v1_c16	Yes		95
+00836_2_5	C	INDIA	acute infection		45	6	Heterosexual	EF117265	1B or 2	early	HIV_00836_2, 836, 00836-2.5.SG3, 00836-2.5, HIV_00836_2_5, HIV-00836-2.5	HIV_00836_2	Yes		97
+0260_V5_C1	A1	TANZANIA				5 or 6	Heterosexual	HM215255	2	early	0260.5.1, 0260.v5.c1	0260_v5_c1	Yes		11
+0260_V5_C36	A1	TANZANIA			early		Heterosexual	HM215256		early	0260.5.36, 0260.v5.c36	0260_v5_c36	Yes		192
+0301_BM_A12	C	MALAWI					 	HM070481			0301_bmA12	0301bmL_A12	Yes		12
+0301_BM_A2	C	MALAWI					 	HM070482			0301_bmA2	0301bmL_A2	Yes		12
+0301_BM_A6	C	MALAWI					 	HM070484			0301_bmA6	0301bmL_A6	Yes		12
+0330_V4_C3	A1	TANZANIA				5 or 6	Heterosexual	HM215257	2	early	0330.v4.c3	0330_v4_c3	Yes	The sequence we provide is an upublished sequence that is 7 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	150
+0404_BM_B9	C	MALAWI					 	HQ595836			0404_bmB9	0404bmL_B9	Yes		12
+0404_BM_D4	C	MALAWI					 	HQ595839			0404_bmD4	0404bmL_D4	Yes		12
+0404_BM_F3	C	MALAWI					 	HQ595842			0404_bmF3	0404bmL_F3	Yes		12
+0404_BM_G3	C	MALAWI					 	HQ595847			0404_bmG3	0404bmL_G3	Yes		12
+0404_BM_H4	C	MALAWI					 	HQ595852			0404_bmH4	0404bmL_H4	Yes		12
+0439_V5_C1	A1	TANZANIA				5 or 6	Heterosexual	HM215258	2	early	439, 0439.v5.c1	0439_v5_c1	Yes		98
+0702_BM_B4	C	MALAWI					 	HM070516			0702_bmB4	0702bmL_B4	Yes		12
+0702_BM_B9	C	MALAWI					 	HM070517			0702_bmB9	0702bmL_B9	Yes		12
+0702_BM_D1	C	MALAWI					 	HM070518			0702_bmD1	0702bmL_D1	Yes		12
+0702_BM_H12	C	MALAWI					 	HM070525			0702_bmH12	0702bmL_H12	Yes		12
+0735_V4_C1	A1C	TANZANIA				5 or 6	Heterosexual	HM215259		early	0735.v4.c1	0735_v4_c1	Yes		5
+0815_V3_C3	A1D	TANZANIA				5 or 6	Heterosexual	HM215260	2	early	0815.V3.C3, 0815.v3.c3, 815	0815_v3_c3	Yes	The sequence we provide is an upublished sequence that is 12 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	180
+0907_V4_C12	A1D	TANZANIA				5 or 6	Heterosexual	HM215261		early	0907.v4.c12	0907_v4_c12	Yes		9
+0921_V2_C14	C	TANZANIA			early	5 or 6	Heterosexual	HM215262	2	early	0921.V2.C14, 921, 0921.v2.c14	0921_v2_c14	Yes		91
+0933_V4_C4	C	TANZANIA			early		Heterosexual	HM215352	3	early	933_V4_C4, 0933.v4.c4, 933.v4.c4	933_v4_c4	Yes		23
+0984_V2_C2	C	TANZANIA			early	5 or 6	Heterosexual	HM215263	3	early	0984.v2.c2	0984_v2_c2	Yes		23
+1006_11_C3_1601	B	UNITED STATES	acute infection		early	3	Sexual transmission, unspecified type	EU289183	2	acute	BB1006-11.C3.1601, 1006, 1006-11.C3.1601	1006_11_C3_1601	Yes		135
+1012_11_TC21_3257	B	UNITED STATES	acute infection		early	3	 	EU289184	1B or 2	acute	1012-11.TC21.3257, 1012, BB1012-11.TC21	1012_TC21_3257	Yes		122
+1051_12_C22_3325	B	UNITED STATES	acute infection		early	3	Heterosexual	EU575148	2	intermediate	BB1051-12.C22	1051_12_C22	Yes		5
+1051_12_TD12_3291	B	UNITED STATES	acute infection		early	3	Heterosexual	EU575170	2	intermediate	BB1051-12.TD12	1051_12_TD12	Yes		5
+1054_07_TC4_1499	B	UNITED STATES	acute infection		early	2	Sexual transmission, unspecified type	EU289185	2	acute	1054, BB1054-07.TC4.1499, 1054-07.TC4.1499	1054_TC4_1499	Yes		135
+1056_10_TA11_1826	B	UNITED STATES	acute infection		early	2	Not Recorded	EU289186	1B or 2	acute	BB1056-10.TA11.1826, 1056-10.TA11.1826, 1056	1056_TA11_1826	Yes		130
+1058_11_B11_1550	B	UNITED STATES	acute infection		early	4	 	EU289187	2	acute	1058-11.B11.1550, p1058_11.B11.1550	1058_11_B11_1550	Yes		7
+1059_09_A4_1460	B	UNITED STATES	acute infection		early	3	 	EU575376	2	intermediate	1059-09.A4.1460	1059_09_A4	Yes		4
+1105_P17_1	02_AG	SENEGAL				6	Sex worker	HM215264		early	1105.p17, 1105.p17.1	1105_p17_1	Yes		5
+1107356_07	C	SOUTH AFRICA			early	3	Not Recorded	JQ352794	1B	intermediate	1107356.07, BP0023_07	BP0023_07	Yes		21
+1143465_14	C	SOUTH AFRICA	acute infection		early	2	Not Recorded	JQ352799	1B	acute	1143465.14, BP0025_14	BP0025_14	Yes		21
+1170887_08	C	SOUTH AFRICA	acute infection		early	2	Not Recorded	JQ352801	2	acute	1170887.08, BP0028_08	BP0028_08	Yes		22
+1209_BM_A5	C	MALAWI					 	HM070562			1209_bmA5	1209bmL_A5	Yes		12
+1209_BM_B21	C	MALAWI					 	HM070564			1209_bmB21	1209bmL_B21	Yes		12
+1209_BM_G5	C	MALAWI					 	HM070569			1209_bmG5	1209bmL_G5	Yes		12
+1209_BM_H5	C	MALAWI					 	HM070570			1209_bmH5	1209bmL_H5	Yes		12
+1245045	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595742	2	acute		1245045	Yes		22
+1394_C9G1	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444527	2	acute	1394C9G1(Rev-), 1394C9G1(RevM), 1394C9_G1(Rev-), 1394C9G1, 1394, 1394C9G1_REV_, 1394_C9G1_Rev-, 1394C9G1_Rev-	CHV0011523_1394-C9	Yes		134
+16055_2_3	C	INDIA	acute infection		45	2	Heterosexual	EF117268	2	acute	HIV_16055_2_3, HIV-16055-2.3, 16055, 16055-2.3	HIV_16055_2	Yes		166
+1656_P21	06_cpx	SENEGAL				6	 	HM215265		early	1656.p21	1656_p21	Yes		5
+16845_2_22	C	INDIA	acute infection		45	5	Heterosexual	EF117269	2	early	HIV-16845-2.22, HIV_16845_2_22, 16845, 16845-2.22	HIV_16845_2	Yes		166
+16936_2_21	C	INDIA	acute infection		45	3	Heterosexual	EF117270	2	intermediate	16936-2.21, 16936, 16936-2.21.SG3	HIV_16936_2	Yes		98
+1811_B3_23	C	BOTSWANA			early	4	Heterosexual	KC154012	2	intermediate	1811_B3.23	1811_B3_23	Yes		21
+18814602_H8_F3	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615948	1B	acute		18814602_H8_F3	Yes		22
+190049	D	UGANDA			pre-seroconversion	1	Heterosexual	JX236668		acute		p190049	Yes		10
+191084_B7_19	A1	UGANDA	acute infection			4	Heterosexual	HM215266	2	intermediate	IAVI-191084, 191084_B7-19, 191084B7-19, 191084CB7M19	191084_B7_19	Yes		115
+19157834_V1	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595743	2	acute	19157834_v1	19157834_v1	Yes		22
+191647	D	UGANDA			pre-seroconversion	1	Heterosexual	JX236670		acute		p191647	Yes		10
+191727_D1_12	D	UGANDA	acute infection			4	Heterosexual	HM215267		intermediate	IAVI-191727	191727_D1_12	Yes		5
+191727_F6	D	UGANDA	acute infection			4	Heterosexual	HM215269		intermediate		191727_F6	Yes		15
+191821_E6_1	D	UGANDA	acute infection			4	Heterosexual	HM215270	2	intermediate	191821, 191821.E6.1, IAVI-191821	191821_E6_1	Yes		117
+191845_B11	A1	UGANDA	acute infection			4	Heterosexual	HM215271		intermediate	IAVI-191845, 191845	191845_B11	Yes		15
+191859	D	UGANDA			pre-seroconversion	1	Heterosexual	JX236672		acute		p191859	Yes		10
+191882	D	UGANDA			pre-seroconversion	1	Heterosexual	JX236673		acute		p191882	Yes		10
+191955_A11	A1	UGANDA	acute infection			4	Heterosexual	HM215272	2	intermediate	191955, IAVI-191955	191955_A11	Yes		117
+192018_B1_9	A1D	UGANDA	acute infection			4	Heterosexual	HM215273		intermediate	IAVI-192018	192018_B1_9	Yes		5
+19252094_A5_G2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615953	2	acute		19252094_A5_G2	Yes		22
+193003_B10	A1D	UGANDA				6	Heterosexual	HM215274		early	193003, IAVI-193003	193003_B10	Yes		5
+19314479_A2_5	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615958	2	acute		19314479_A2_5	Yes		22
+19707346_E8_C6	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615951	3	acute		19707346_E8_C6	Yes		22
+19715820_A10_H2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615950	2	acute		19715820_A10_H2	Yes		21
+20104663_E11_D2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615945	2	acute		20104663_E11_D2	Yes		22
+20198102_E9_G1	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615944	3	acute		20198102_E9_G1	Yes		22
+20258279_V2	C	SOUTH AFRICA	acute infection		early	4	Nosocomial	HQ595763	2	intermediate	20258279_v2	20258279_v2	Yes		22
+20286961_C1_H8	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615960	2	acute		20286961_C1_H8	Yes		22
+20355851_20	C	SOUTH AFRICA	acute infection		early	2	Not Recorded	JQ352789	3	acute	BP0016_20, 20355851.2, 20355851.20	BP0016_20	Yes		21
+20358510_01	C	SOUTH AFRICA	acute infection		early	2	Not Recorded	JQ352790	2	acute	20358510.01, BP0018_01	BP0018_01	Yes		22
+20417927_07	C	SOUTH AFRICA	acute infection		early	2	Not Recorded	JQ352785	2	acute	BP0002_07, 20417927.07	BP0002_07	Yes		22
+20721190	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ595747	3	acute		20721190	Yes		21
+20803520	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ595748	2	acute		20803520	Yes		21
+20883229_C9_H6	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615943	3	acute		20883229_C9_H6	Yes		22
+20915593	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ595749	2	acute		20915593	Yes		22
+20927783	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595750	3	acute		20927783	Yes		22
+20965238	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ595751	2	acute		20965238	Yes		22
+21020_13	A1	KENYA				6	Male Sex with Male	HM215275		early	21020, IAVI-21020	21020_13	Yes		20
+21023_B4	A1C	KENYA	acute infection			4	Male Sex with Male	HM215276		intermediate	21023	21023_B4	Yes		5
+211_9	02_AG	CAMEROON	chronic			6	Not Recorded	EU513187	2	early	211-9, T211, 211	211	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	120
+21197826_V1	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595753	3	acute	21197826_v1	21197826_v1	Yes		22
+21203310_G7_C3	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615946	2	acute		21203310_G7_C3	Yes		22
+21261106_C12_H2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615956	3	acute		21261106_C12_H2	Yes		21
+21283649	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595756	3	acute		21283649	Yes		22
+21369737_G11_F2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615941	3	acute		21369737_G11_F2	Yes		21
+21399975_E2_B3	C	SOUTH AFRICA			early	4	Not Recorded	HQ615957	2	intermediate		21399975_E2_B3	Yes		21
+21492713_B11_E3	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615947	2	acute		21492713_B11_E3	Yes		22
+21502011_F12_E2	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615949	2	acute	21502011F_12_E2	21502011F_12_E2	Yes		22
+21561324_D3_B5	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615961	2	acute		21561324_D3_B5	Yes		22
+216_F2_E3_5	A1C	TANZANIA				6	Heterosexual	HM215277		early	216-F2_E3_5	216_F2_E3_5	Yes		5
+231965_C1	D	UGANDA	acute infection		early	1 or 2	Heterosexual	JQ361079	2	acute	231965.c01, 231965_C01, 231965.c1, 231965, 231965sga_c1	231965_c01	Yes		186
+231966_C2	D	UGANDA	acute infection		early	1 or 2	Heterosexual	JX512899	2	acute	231966.c02, 231966_C02, 231966sga_c2	231966_c02	Yes		81
+234_F1_16_57	C	TANZANIA			early	5	Heterosexual	HM215278	2	early	234-F1-16-57	234_F1_16_57	Yes	The sequence we provide is an upublished sequence that is 236 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	23
+235080_3G7_REV	C	ZAMBIA	acute infection		early	4	Heterosexual	JN977604	1B	intermediate	235080, 235080_3G7env2(Rev-)	235080	Yes		22
+235_47	02_AG	CAMEROON	chronic			6	Not Recorded	EU513195	2	early	235-47, 235, 235-47.SG3	235	Yes	The sequence we provide differs from the GenBank sequence by 2 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	183
+242_14	02A1	CAMEROON	chronic			6	 	EU513188	1B or 2	early	242-14, 242	242	Yes	The sequence we provide differs from the GenBank sequence by 3 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	140
+246_F3_C10_2	A1C	TANZANIA				6	Heterosexual	HM215279	2	early	246-F3_C10_2, 246-F3.C10.2, 246F3, E246F3	246_F3_C10_2	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	71
+247_23	DU	CAMEROON					Not Recorded	EU683891	2		247, 247-23.SG3, 247-23	247	Yes		104
+249M_B10	C	ZAMBIA	acute infection		early	4	Heterosexual	EU166862	2	acute	249M, 249MB10	ZM249M_080503_SGA_B10	Yes		122
+25710_2_43	C	INDIA	acute infection		45	5	Heterosexual	EF117271	1B or 2	early	HIV-25710-2.43, 25710, 25710-2.43	HIV_25710_2	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	140
+25711_2_4	C	INDIA	acute infection		45	3	Heterosexual	EF117272	1B or 2	intermediate	25711, HIV-25711-2.4, 25711-2.4	HIV_25711_2	Yes		99
+25925_2_22	C	INDIA	acute infection		45	3	Heterosexual	EF117273	1B or 2	intermediate	HIV-25925-2.22, HIV_25925_2, 25925-2.22, 25925	HIV_25925_2	Yes		102
+26191_2_48	C	INDIA	acute infection		45	3	Heterosexual	EF117274	2	intermediate	HIV-26191-2.48, 26191-2.48, 26191	HIV_26191_2	Yes		99
+263_8	02_AG	CAMEROON	chronic			6	Not Recorded	EU513182	2	early	263-8, 263, 264	263	Yes	The sequence we provide differs from the GenBank sequence by 11 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	186
+269_12	02A1	CAMEROON	chronic			6	Not Recorded	EU513194	2	early	269-12, 269	269	Yes	The sequence we provide differs from the GenBank sequence by 3 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	99
+270015_J5_1	A1CD	UGANDA				6	Heterosexual	HM215280		early	IAVI-270015	270015_J5_1	Yes		5
+2705_P18_1	02_AG	SENEGAL				6	Sex worker	HM215281		early	2705.p18, 2705.p18.1	2705_p18_1	Yes		5
+2759058_F10_B6	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615959	2	acute		2759058_F10_B6	Yes		21
+2768732_C5_16	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615952	2	acute		2768732_C5_16	Yes		22
+2833264	C	SOUTH AFRICA	acute infection		early	1 or 2	Nosocomial	HQ595757	2	acute		2833264	Yes		21
+2843_P5_1	02A1	SENEGAL				6	Sex worker	HM215282		early	2843.p5, 2843.p5.1	2843_p5_1	Yes		5
+286_36	C	ETHIOPIA	chronic				 	JQ362420		chronic	286, 286.36	286.36	Yes		96
+2865_A11_12	C	BOTSWANA			early	3	Heterosexual	KC154013	2	intermediate	2865_A11.12	2865_A11_12	Yes		22
+2869751_A4_D3	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615954	2	acute		2869751_A4_D3	Yes		21
+288_38	C	ETHIOPIA	chronic				Not Recorded	JQ362421		chronic	288.38, 288	288.38	Yes		97
+2891391_A2_E1	C	SOUTH AFRICA	acute infection		early	1 or 2	Not Recorded	HQ615955	2	acute		2891391_A2_E1	Yes		21
+2969249	C	SOUTH AFRICA	acute infection		early	4	Not Recorded	HQ595766	2	intermediate		2969249	Yes		22
+3016_V5_C45	D	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215283	2	acute	3016.v5.c45, 3016	3016_v5_c45	Yes		196
+3016_V6_C22	D	TANZANIA			early		Heterosexual	HM215284		early	3016.v6.c22	3016_v6_c22	Yes		5
+3016_V6_C3	D	TANZANIA			early		Heterosexual	HM215285		early	3016.v6.c3	3016_v6_c3	Yes		17
+304_F2_1_11	C	TANZANIA			early	5	Heterosexual	HM215286	2	early		304_F2_1_11	Yes		21
+3103_V3_C10	A1CD	TANZANIA				5 or 6	Heterosexual	HM215288	2	early	3103.v3.c10, 3103	3103_v3_c10	Yes		122
+3168_V4_C10	C	TANZANIA			early	5 or 6	Heterosexual	HM215289		early	3168.v4.c10, 3168, 3168.V4.C10	3168_v4_c10	Yes		96
+3168_V4_C10_K651N	C	TANZANIA			early	5 or 6	Heterosexual	HM215289	2	early	3168.v4.c10.K651N.SG3	3168_v4_c10	Yes	K651N mutant viral nucleotide sequence provided by Nicole Doria-Rose. Sequence differs from wild type GenBank sequence by 1 nucleotide.	8
+3169_P4	02_AG	SENEGAL				6	Sex worker	HM215290		early	3169.p4	3169_p4	Yes		5
+3226_P15	02_AG	SENEGAL				6	Sex worker	HM215291		early	3226.p15	3226_p15	Yes		5
+3233_P12	02_AG	SENEGAL				6	Sex worker	HM215292		early	3233.p12	3233_p12	Yes		5
+3273_P21_1	02_AG	SENEGAL				6	Sex worker	HM215293		early	3273.p21, 3273.p21.1	3273_p21_1	Yes		5
+3301_V1_C24	C	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215294	2	acute	3301.v1.c24, 3301.V1.C24, 3301	3301_v1_c24	Yes		186
+3301_V2_C6	C	TANZANIA			early		Heterosexual	HM215295		early	3301.v2.c6	3301_v2_c6	Yes		5
+3305_BM_C1	C	MALAWI					 	HM070604			3305_bmC1	3305bmL_C1	Yes		12
+3305_BM_C11	C	MALAWI					 	HM070606			3305_bmC11	3305bmL_C11	Yes		12
+3305_BM_C9	C	MALAWI					 	HM070612			3305_bmC9	3305bmL_C9	Yes		12
+3305_BM_F4	C	MALAWI					 	HM070618			3305_bmF4	3305bmL_F4	Yes		12
+3305_BM_F6	C	MALAWI					 	HM070620			3305_bmF6	3305bmL_F6	Yes		12
+3312_D6_2	C	BOTSWANA			early	3	Heterosexual	KC154014	2	intermediate	3312_D6.2	3312_D6_2	Yes		22
+3326_V4_C3	CD	TANZANIA				5 or 6	Heterosexual	HM215296		early	3326, 3326.V4.C3, 3326.v4.c3	3326_v4_c3	Yes		96
+3337_V2_C6	CD	TANZANIA				5 or 6	Heterosexual	HM215297		early	3337.V2.C6, 3337, 3337.v2.c6	3337_v2_c6	Yes		97
+3365_V2_C20	A1	TANZANIA				5 or 6	Heterosexual	HM215298	2	early	3365_V2_C2, 3365.v2.c20, 3365.v2.c2	3365_v2_c20	Yes		133
+3415_V1_C1	A1	TANZANIA				5 or 6	Heterosexual	HM215299	2	early	3415.v1.c1	3415_v1_c1	Yes		137
+3426_V5_C17	C	TANZANIA			early		Heterosexual	HM215300	2	early	3426.5.17, 3426.v5.c17	3426_v5_c17	Yes		23
+3468_V1_C12	A1D	TANZANIA				5 or 6	Heterosexual	HM215301		early	3468.V1.C12, 3468.v1.c12, 3468, 3468-v1.c12	3468_v1_c12	Yes		96
+346_F4_D2_12	C	TANZANIA			early	6	Heterosexual	HM215302	1B	early		346_F4_D2_12	Yes		21
+3514597	C	SOUTH AFRICA	acute infection		early	3	Not Recorded	HQ595759	2	intermediate		3514597	Yes		22
+3545883_G1_E1	C	SOUTH AFRICA			early	4	Not Recorded	HQ615942	2	intermediate		3545883_G1_E1	Yes		21
+356272_C02	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JN944654		acute	356272.c02, 356272.02, 356272	356272_c02	Yes		12
+3589_V1_C4	A1C	TANZANIA				5 or 6	Heterosexual	HM215304		early	3589.v1.c4, 3589, 3589.V1.C4	3589_v1_c4	Yes		102
+3603_C11_13	C	BOTSWANA	acute infection		early	1 or 2	Heterosexual	KC154015	2	acute	3603_C11.13	3603_C11_13	Yes		22
+3637_V5_C3	C	TANZANIA			early	5 or 6	Heterosexual	HM215305	3	early	3637.V5.C3, 3637, 3637.v5.c3	3637_v5_c3	Yes		95
+3718_3_11	A1	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215306	2	acute	3718, 3718_V3_C11, 3718.v3.c11	3718_v3_c11	Yes		105
+3728_V2_C6	C	TANZANIA	acute infection		early	3 or 4	Heterosexual	HM215307	2	intermediate	3728.v2.c6	3728_v2_c6	Yes		22
+377_V4_C09	C	TANZANIA			early		Heterosexual	HM215308	2	early	0377.v4.c09, 377.4.09, 377.v4.c09	377_v4_c09	Yes		22
+3812_V6_C05	A1C	TANZANIA			early		Heterosexual	HM215309		early	3812.v6.c05	3812_v6_c05	Yes		5
+3817_V2_C59	CD	TANZANIA			early		Heterosexual	HM215310	2	early	3817, 3817.v2.c59	3817_v2_c59	Yes		179
+3873_V1_C24	C	TANZANIA			early	5 or 6	Heterosexual	HM215311	2	early	3873.V1.C24, 3873.v1.c24, 3873	3873_v1_c24	Yes		93
+3988_25	B	UNITED STATES		168	early	6	Homosexual	AY835436	2	early	3988, 3988.25	3988_25	Yes		99
+398_F1_F6_20	A1	TANZANIA				6	Heterosexual	HM215312	2	intermediate	398F1, 398, 398-F1_F6_20, 398-F1.F6.20	398_F1_F6_20	Yes	The sequence we provide is an upublished sequence that is 1100 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group). This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	103
+40061_V03_08	01_AE	THAILAND	acute infection		7	1 or 2	 	KY580548		acute	40061	40061v03_08	Yes		12
+40100_V01_09	01_AE	THAILAND	acute infection		2	1 or 2	 	KY580588		acute	40100Mj	40100v01_09	Yes		12
+40100_V01_MN01	01_AE	THAILAND	acute infection		2	1 or 2	 	MF622080		acute	40100mn	40100v01_mn01	Yes		34
+401_F1_8_10	CD	TANZANIA				6	Heterosexual	HM215313		early	401-F1_8_10	401_F1_8_10	Yes		5
+402288_C01	B	THAILAND	acute infection		early	1 or 2	Not Recorded	JQ352781		acute	402288.c01, 402288.01	402288_c01	Yes		5
+410_F2_1_30	C	TANZANIA				6	Heterosexual	HM215314		early	410-F2_1_30	410_F2_1_30	Yes		5
+427299_C12	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JN944655		acute	427299.c12, 427299, 427299.12	AA116_427299_c12	Yes		12
+434239_AA058_A04R	01_AE	THAILAND			early	3 or 4	Not Recorded	JX447346		early	AA058a04R, 434239	AA058a04R_434239	Yes		12
+4403_BM_B10	C	MALAWI					Not Recorded	HM070717			4403_bmB10	4403bmL_B10	Yes		12
+4403_BM_B6	C	MALAWI					Not Recorded	HM070721			4403_bmB6	4403bmL_B6	Yes		12
+4403_BM_C5	C	MALAWI					Not Recorded	HM070724			4403_bmC5	4403bmL_C5	Yes		12
+4403_BM_G1	C	MALAWI					Not Recorded	HM070737			4403_bmG1	4403bmL_G1	Yes		12
+4403_BM_H22	C	MALAWI					Not Recorded	HM070749			4403_bmH22	4403bmL_H22	Yes		12
+45_01DG5	B	UNITED STATES			late		Not Recorded	JQ609687		chronic	45_01dG5	45_01dG5	Yes		60
+4707_BM_F8	C	MALAWI					 	HM070818			4707_bmF8	4707bmL_F8	Yes		12
+4707_BM_H2	C	MALAWI					 	HM070822			4707_bmH2	4707bmL_H2	Yes		12
+477_F3_13_55	A1C	TANZANIA				6	Heterosexual	HM215315		early	477-F3_13_55	477_F3_13_55	Yes		5
+541_F1_A7_2	C	TANZANIA	asymptomatic		early	6	Heterosexual	HQ698049	3	early	541-F1_A7_2	541_F1_A7	Yes		23
+556_F2_3_25	C	TANZANIA			early	5	Heterosexual	HM215317	2	early		556_F2_3_25	Yes		22
+569_F1_37_10	C	TANZANIA			early	5 or 6	Heterosexual	HM215318	2	early	569-F1_37_10	569_F1_37_10	Yes		23
+57128_VRC15	D	UGANDA	chronic				Not Recorded	AY736829		chronic	98UG57128, 98UG_57128, 57128.vrc15	98UG_57128	Yes	According to Mark Louder (personal communication)  the accession number associated with 57128.vrc15 (AY736829)  is not for that specific clone, but rather the primary virus that it was isolated from.	136
+5768_4	B	UNITED STATES		56	early	5	Homosexual	AY835435	2	early	5768.4, 5768_04, 5768.04, 5768	5768_4	Yes		104
+5807_BM_D1	C	MALAWI					 	HQ596177			5807_bmD1	5807bmL_D1	Yes		12
+5807_BM_E7	C	MALAWI					 	HQ596182			5807_bmE7	5807bmL_E7	Yes		12
+6022_V7_C24	C	TANZANIA			early		Heterosexual	HM215319	2	early	6022.v7.c24	6022_v7_c24	Yes		23
+6040_V4_C15	C	TANZANIA			early	5 or 6	Heterosexual	HM215320	2	early	6040.v4.c15	6040_v4_c15	Yes		23
+6041_V3_C23	A1C	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215321	2	acute	6041.v3.c23, 6041	6041_v3_c23	Yes		117
+6095_V1_C10	A1D	TANZANIA				5 or 6	Heterosexual	HM215323		early	6095.v1.c10, 6095, 6095.V1.C10	6095_v1_c10	Yes		95
+6101_1	B	UNITED STATES		56	early	5	Homosexual	AY835434	2	early	6101_10, 6101, 6101.1	6101_10	Yes		168
+6146_V7_C23	C	TANZANIA			early		Heterosexual	HM215324	2	early	6146.v7.c23, 6146.7.23	6146_v7_c23	Yes		23
+620345_C1	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JX512900	2	acute	620345, AA081, 620345_C01, 620345.c01, 620345.c1, 620345_1	AA081_c01_620345	Yes		194
+620345_C10	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JN944656		acute	620345.1, 620345.c10	AA081_620345_c10	Yes		6
+62357_14_D3_4589	B	UNITED STATES	acute infection			2	Not Recorded	EU289189	2	acute	62357.14.D3.4589, 62357	62357_14_D3_4589	Yes		127
+6240_08_TA5_4622	B	UNITED STATES	acute infection			2	 	EU289190	2	acute	6240.08.TA5.4622, 6240	6240_08_TA5_4622	Yes		119
+6244_13_B5_4567	B	UNITED STATES	acute infection			2	 	EU289191	2	acute	6244.13.B5.4576, 6244, 6244_13_B5_4576, 6244.13.B5.4567	6244_13_B5_4576	Yes		122
+6322_V4_C1	C	TANZANIA			early	5 or 6	Heterosexual	HM215326	2	early	6322.v4.c1, 6322.V4.C1, 6322	6322_v4_c1	Yes		95
+63358_04_P3_4013	B	UNITED STATES	acute infection			2	 	EU289192	2	acute	63358.P3.4013	63358_p3_4013	Yes		4
+6405_V4_C34	D	TANZANIA			early		Heterosexual	HM215327		early	6405, 6405.v4.c34	6405_v4_c34	Yes		129
+6471_V1_C16	C	TANZANIA			early	5 or 6	Heterosexual	HM215328	3	early	6471, 6471.v1.c16, 6471.V1.C16	6471_v1_c16	Yes		97
+6480_V4_C25	CD	TANZANIA			early		Heterosexual	HM215329	2	early	6480, 6480.v4.c25	6480_v4_c25	Yes		107
+6535_3	B	UNITED STATES		42	early	5	Homosexual	AY835438	1B or 2	early	6535.3, 6535	6535_3	Yes		325
+6540_V4_C1	A1C	TANZANIA			early		Heterosexual	HM215330	2	early	6540.v4.c1, 6540	6540_v4_c1	Yes	6540 and 6545 are thought to be an epidemiologically linked pair of patients [Gnanakaran2010 PMID 20949103]	231
+6545_V3_C13	A1C	TANZANIA				5 or 6	Heterosexual	HM215331	2	early	6545.v3.c13, 6545.V3.C13, 6545.v4.c1.SG3, 6545_V4_C1	6545_v3_c13	Yes	6540 and 6545 are thought to be an epidemiologically linked pair of patients [Gnanakaran2010 PMID 20949103]	36
+6545_V4_C1	A1C	TANZANIA			early		Heterosexual	HM215332		early	6545.v4.c1, 6545, 6545.V4.C1	6545_v4_c1	Yes	6540 and 6545 are thought to be an epidemiologically linked pair of patients [Gnanakaran2010 PMID 20949103]	173
+6592_V7_C25	A1	TANZANIA			early		Heterosexual	HM215334		early	6592.v7.c25	6592_v7_c25_tp2	Yes		15
+6631_V3_C10	C	TANZANIA			early	5 or 6	Heterosexual	HM215335	3	early	6631, 6631.v3.c10, 6631.V3.C10	6631_v3_c10	Yes		100
+6644_V2_C33	C	TANZANIA			early	5 or 6	Heterosexual	HM215336	1B	early	6644, 6644.V2.C33, 6644.v2.c33	6644_v2_c33	Yes		96
+6650_V1_C8	41_CD	TANZANIA				5 or 6	Heterosexual	HM215337		early	6650.v1.c8	6650_v1_c8	Yes		9
+6785_V5_C14	C	TANZANIA			early	5 or 6	Heterosexual	HM215338	2	early	6785.v5.c14, 6785.V5.C14, 6785	6785_v5_c14	Yes		95
+6811_V5_C20	CD	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215339		acute	6811.v5.c20	6811_v5_c20	Yes		9
+6811_V7_C18	CD	TANZANIA			early		Heterosexual	HM215340	2	early	6811.v7.c18, 6811	6811_v7_c18	Yes		126
+6838_V1_C35	C	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215341	2	acute	6838, 6838.V1.C35, 6838.v1.c35	6838_v1_c35	Yes		93
+6952_V1_C20	41_CD	TANZANIA			early		Heterosexual	HM215343	2	early	6952.v1.c20, 6952	6952_v1_c20	Yes		122
+6980_V0_C31	C	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215344	2	acute	6980.v0.c31	6980_v0_c31	Yes		23
+6980_V1_C17	C	TANZANIA			early		Heterosexual	HM215345		early	6980.v1.c17	6980_v1_c17	Yes		5
+700010040_C9_4520	B	UNITED STATES			early	5	Male Sex with Male	EU289193	2	early	700010040.C9.4520	700010040_C9_4520	Yes		30
+700010058_A4_4375	B	UNITED STATES	acute infection			3	Male Sex with Male	EU289194	2	intermediate	700010058.A4.4375	700010058_A4_4375	Yes		3
+703010010_C4	C	MALAWI		19	10	3	Heterosexual	KC894105	2	acute	CHV0008273_703010010_F12, Ce703010010_C4	703010010_C4	Yes	Clones 703010010_F12 (FJ443533) and 703010010_C4 (KC894105) are identical.	21
+703010054_2A2	C	MALAWI			early	5	Heterosexual	FJ443808	2	early	Ce703010054_2A2, 703010054_2A2, pCenvPt703010054_2A2, CE703010054, CE703010054_2A2	CHV0008291_703010054_2_A2	Yes		121
+703010054_2A2_REV	C	MALAWI			early	5	Heterosexual	FJ443808	2	early	7030100542A2_REV_	CHV0008291_703010054_2_A2	Yes		14
+703010131_1E2	C	MALAWI				3	Sexual transmission, unspecified type	KC894107	2	intermediate	Ce703010131_1E2	703010131_1E2	Yes		22
+703010200_1E5	C	MALAWI	acute infection	18	7	4	Heterosexual	FJ443999	2	intermediate	7030102001E5(RevM), 703010200_1E5_Rev-, 7030102001E5_Rev-, 7030102001E5(Rev-), 7030102001, 7030102001E5NOREV, 7030102001E5_REV_	CHV0010211_703010200_1E5	Yes		127
+703010217_B6	C	MALAWI				5 or 6	Heterosexual	KC894109	2	early	CE0217, CE703010217_B6, pCenvPt703010217_B6, CE703010217.B6	703010217_B6	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	76
+703010217_B6_REV	C	MALAWI				5 or 6	Heterosexual	KC894109		early	703010217B6_REV_	703010217_B6	Yes		5
+703010228_1C4	C	MALAWI	acute infection	25	6	4	Heterosexual	FJ444031	2	intermediate	Ce703010228_1C4, CE703010228_1C4, pCenvPt703010228_1C4	CHV0010243_703010228_1C4	Yes		22
+703357_C2	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JN944658	2	acute	703357.C02, 703357, 703357_C02, 703357_2, 703357.2, 703357.c02	AA118_703357_c02	Yes		35
+704010042_2E5	C	SOUTH AFRICA	acute infection			4	Heterosexual	KC894113		acute	pCH042.c, 704010042_TF, CE704010042_2E5, 704010042	704010042_2E5	Yes	704010042_2E5 (KC894113) and 704010042_TF (KC156123) are 100% identical at the amino acid level, and are thus synonymized.	23
+704010069_C6	C	SOUTH AFRICA				4	Heterosexual	KC894114	2	intermediate	Ce704010069_C6, CHV0008392_704010069_F2	704010069_C6	Yes	Clones 704010069_C6 (KC894114) and 704010069_F2 (FJ443711) are identical.	21
+704010083_B8	C	SOUTH AFRICA	acute infection		early	3	Heterosexual	FJ443671	2	acute	CE704010083_B8, Ce704010083_B8, pCenvPt704010083_B8	CHV0008433_704010083_B8	Yes		22
+704809221_1B3	C	SOUTH AFRICA	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444103	2	acute	CE704809221, CE704809221_1B3, Ce704809221_1B3, pCenvPt704809221_1B	CHV0010316_704809221_1E1	Yes		128
+704809221_1B3_REV	C	SOUTH AFRICA	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444103	2	acute	Ce704809221_1B3, 7048092211B3_REV_	CHV0010316_704809221_1E1	Yes		5
+704810053_2B7	C	SOUTH AFRICA				1 or 2	Heterosexual	KC894119	2	acute	CHV0010337_704810053_2G6, Ce704810053_2B7	704810053_2B7	Yes	Clones 704810053_2B7 (KC894119) and 704810053_2G6 (FJ444124) are identical.	22
+705010067_TF	C	SOUTH AFRICA	acute infection		early	1 or 2	Heterosexual	KC156125	3	acute	705010067_CH067_TF, 705010067	705010067_CH067_TF	Yes		21
+705010185_TF	C	SOUTH AFRICA	acute infection		early	1 or 2	Heterosexual	KC156129	2	acute	705010185_CH185_TF, 705010185	705010185_CH185_TF	Yes		22
+705010198_TF	C	SOUTH AFRICA	acute infection		early	1 or 2	Heterosexual	KC156130	2	acute	CH198, 705010198, 705010198_CH198_TF	705010198_CH198_TF	Yes		24
+706010018_2E3	C	SOUTH AFRICA				6	Heterosexual	FJ444047		early	CenvPt706010018_2E3, CE706010018_2E3, Ce706010018_2E3	CHV0010259_706010018_2E3	Yes		5
+706010164_1A7	C	SOUTH AFRICA	acute infection		early	4	Heterosexual	FJ444076	2	intermediate	7060101641A7(Rev-), 7060101641A7_Rev-, CE706010164_1A7, 706010164_1A7_Rev-	CHV0010289_706010164_1A7	Yes		22
+706010164_1A7_REV	C	SOUTH AFRICA	acute infection		early	4	Heterosexual	FJ444076		intermediate	7060101641A7_REV_	CHV0010289_706010164_1A7	Yes		22
+7165_18	B	UNITED STATES		42	early	5	Homosexual	AY835437	2	early	7165.18, 7165	7165_18	Yes		117
+722_G4_16	C	SOUTH AFRICA		14	early	1 or 2	Heterosexual	JN967798	2	acute	SO722_G4_16	SO722_G4_16	Yes		22
+731027_AA104A_RH5	01_AE	THAILAND			early	3 or 4	Not Recorded	JX447986		early	731027, AA104a_RH5	AA104a_RH5_731027	Yes		12
+783_V0_C51	A1	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215347		acute	0783.0.51, 783.v0.c51, 0783.v0.c51	783_v0_c51_tp1	Yes		18
+783_V1_C21	A1	TANZANIA			early		Heterosexual	HM215348		early	783.v1.c21, 0783.v1.c21	783_v1_c21_tp2	Yes		5
+816763_C02	01_AE	THAILAND	acute infection		early	1 or 2	Heterosexual	JN944659		acute	816763.c02, 816763.02, 816763	AA119_816763_c02	Yes		12
+816769_AA107A_WG8	01_AE	THAILAND			early	3 or 4	Not Recorded	JX448026		early	AA107a_wg8, 816769	AA107a_wg8_816769	Yes		12
+851891_4_15	A1	KENYA	acute infection				 			early	851891, 851891.4.15		Yes	Unpublished Env sequence provided by David Montefiori group.	12
+89_6	B	UNITED STATES	AIDS		late		Bisexual	U39362	2	chronic	89.6.DG, 89, 89.6, 89_6_DG	P896_89_6	Yes		129
+89_F1_2_25	CD	TANZANIA	acute infection		early	1 or 2	Heterosexual	HM215349	2	acute	89-F1_2_25, 89_F1	89_F1_2_25	Yes		132
+9004SS_A3_4	A1	UGANDA	acute infection			4	Heterosexual	HM215350	2	intermediate	9004SS	9004SS_A3_4	Yes		86
+9009SA_A4_2	D	UGANDA				5	 	HM215351		intermediate		9009SA_A4_2	Yes		10
+9014_01_TB1_4769	B	UNITED STATES	acute infection		early	2	 	EU575786	2	acute	9014-01_TB1	9014_01_TB1	Yes		5
+9020_20_A13_4607	B	UNITED STATES	acute infection		early	2	 	EU575870	2	acute	9020.2.A13	9020_20_A13	Yes		5
+9021_14_B2_4571	B	UNITED STATES	acute infection			2	 	EU289196	2	acute	9021_14B24571, 9021.14.B2.4571, 9021-14.B2.4571	9021_14_B2_4571	Yes		16
+91US005_11	B	UNITED STATES			30	2	Heterosexual	U27434		acute	91US005.11	91US005_11_FASH_11	Yes		5
+928_28	02_AG	COTE D'IVOIRE	acute infection		early		Sex worker	EU513199	2	early	928-28	928	Yes		196
+92BR020	B	BRAZIL	asymptomatic		378		Homosexual	AY669718	1 or 2	chronic		92BR020	Yes		76
+92BR025_9	C	BRAZIL	asymptomatic		no data	6	Hemophiliac	U15121	1B or 2	early	BR025_9, 92BR025.9, BR025.9	BR025-9	Yes		109
+92RW008	A1	RWANDA	chronic		no data		Heterosexual	AY669703		chronic		92RW008	Yes		32
+92RW009	A1C	RWANDA	chronic		420		Heterosexual	AY669700		chronic	92RW009_06	92RW009	Yes		37
+92RW009_N276D	A1C	RWANDA	chronic		420		Heterosexual	AY669700		chronic		92RW009	Yes	Differs from accession sequence by one nucleotide to create N276D mutation (Balla-Jhagjhoorsingh2013).	6
+92RW020_2	A1	RWANDA	asymptomatic		291	6	Heterosexual	EU855131	2	early	92.RW020, RW020_2, RW020, 92RW020, 92RW020.2, RW020.2	RW020_2	Yes		259
+92RW020_2_T303A	A1	RWANDA	asymptomatic		291	6	Heterosexual	EU855131		early	RW020.2.T303A	RW020_2	Yes	T303A point mutant	4
+92RW020_5	A1	RWANDA	asymptomatic		291		Heterosexual	U08794	1	chronic	92RW020.5	92RW020_05	Yes		6
+92RW024	A1CD	RWANDA	chronic		no data		Not Recorded	AY669699		chronic		92RW024	Yes		32
+92RW026	A1C	RWANDA	chronic		no data		Heterosexual	AY669702		chronic		92RW026	Yes		31
+92TH021	01_AE	THAILAND	chronic				Heterosexual	AY669775	2	chronic		92TH021	Yes		73
+92UG001	D	UGANDA	chronic				Heterosexual	AY669754		chronic		92UG001	Yes		34
+92UG005	D	UGANDA	chronic				Heterosexual	AY669758		chronic		92UG005	Yes		31
+92UG031	A1	UGANDA	chronic		no data		Heterosexual	AY669701		chronic	UG031	92UG031	Yes		32
+92UG035	A1D	UGANDA			no data		Heterosexual	AY669755		delete or no value		92UG035	Yes		11
+92UG038	D	UGANDA					Heterosexual	AY669759				92UG038	Yes		11
+92UG046	D	UGANDA	chronic				Heterosexual	AY623599		chronic		CD4_dependent_92UG046	Yes		33
+92UG975_10	G	UGANDA	AIDS		late		Heterosexual	U27426		chronic	92UG975.10	92UG975_10_JW3	Yes		5
+92US715	B	UNITED STATES	asymptomatic		600		IV Drug User	U08451		chronic		92US715_6	Yes		22
+93IN905	C	INDIA	chronic				Blood Transfusion	AY669742	2	chronic		93IN905	Yes		69
+93MW959	C	MALAWI	asymptomatic		365		Heterosexual	AY669739		chronic		93MW959	Yes		32
+93RW029	A1	RWANDA	chronic		no data		Not Recorded	AY669697		chronic		93RW029	Yes		32
+93TH057	01_AE	THAILAND					IV Drug User	AF197338				93TH057	Yes		8
+93TH305	B	THAILAND	chronic				 	AY669729		chronic		93TH305	Yes		32
+93UG065	D	UGANDA					Heterosexual	HM215353				93UG065_ec3	Yes		19
+93UG070	D	UGANDA					Heterosexual	AY669756				93UG070	Yes		11
+93UG077	A1	UGANDA	chronic		no data		Not Recorded	AY669704		chronic		93UG077	Yes		32
+93UG082	D	UGANDA					 	AY669750				93UG082	Yes		11
+94KE105	A1C	KENYA	chronic				 	AY669768		chronic		94KE105	Yes		32
+94UG103	A1	UGANDA	chronic		no data		Not Recorded	AY669705	2	chronic		94UG103	Yes		73
+94UG114	D	UGANDA	chronic				Heterosexual	AY494966		chronic		94UG114	Yes		31
+94UG118	D	UGANDA					 	AY669751				94UG118	Yes		11
+96ZM651_02	C	ZAMBIA			no data	6	Not Recorded	AF286224	2	early	96ZM651, 96ZM651.02	96ZM651	Yes		138
+97ZA009	C	SOUTH AFRICA					 	AY118166				97ZA009	Yes		11
+98CN006	08_BC	CHINA	chronic		no data		Not Recorded	AY669745		chronic		98CN006	Yes		31
+98CN009	07_BC	CHINA	chronic		no data		Not Recorded	AY669747		chronic		98CN009	Yes		31
+98_F4_H5_13	C	TANZANIA			early	5	Heterosexual	HQ659642	3	early	98-F4_H5-13	98_F4_H5	Yes		22
+98IN022	C	INDIA	chronic		no data		Not Recorded	AY669748		chronic		98IN022	Yes		33
+98TZ017	C	TANZANIA			no data		Not Recorded	AF286235				98TZ017	Yes		11
+98_V3_C5	C	TANZANIA			early		Heterosexual	HM215355		early	98.v3.c5, 0098.v3.c10	98_v3_c5	Yes		5
+A03349M1_VRC4A	D	UGANDA					Not Recorded	HM215356			A03349M1.vrc4a, A03349M1	A03349M1_vrc4a	Yes		99
+A07412M1_VRC12	D	UGANDA					Not Recorded	HM215357	2		A07412M1.vrc12, A07412M1	A07412M1_vrc12	Yes	The sequence we provide is an upublished sequence that is 53 nucleotides longer at the 5' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	163
+A08483M1_VRC9	D	UGANDA					 	HM215358			A08483M1.vrc9	A08483M1_vrc9	Yes	Stage Unkown	10
+AC10_29	B	UNITED STATES	acute infection	28	0	3	Homosexual	AY835446	2	acute	AC10.0, AC10, AC10.29, AC10.0.29, AC10_0_29	AC10_29	Yes		254
+ADA	B	UNITED STATES	chronic		no data		Not Recorded	AY426119		chronic	ADA_DG, ADA.DG	ADA	Yes		135
+AE01	01_AE	CHINA	chronic			5 or 6	Nosocomial	EU363849		early		AE01	Yes		5
+AE02	01_AE	CHINA	chronic			5 or 6	IV Drug User	EU363850		early		AE02	Yes		3
+AE03	01_AE	CHINA	chronic			5 or 6	Sexual transmission, unspecified type	EU363851		early		AE03_SH188_6	Yes		6
+APV_13	B	UNITED STATES	acute infection		early		Heterosexual	DQ869019		early		APV_13	Yes		32
+APV_17	B	UNITED STATES	acute infection		early		Heterosexual	DQ869023		early		APV_17	Yes		32
+APV_6	B	UNITED STATES	acute infection		early		Male Sex with Male	DQ869030		early		APV_6	Yes		32
+B005018_8_F6_3	C	BOTSWANA			6	3	Not Recorded	KF114881	2	acute	B005018-8_F6.3	B005018-8_F6.3	Yes		22
+B005582_7_G7_8	C	BOTSWANA			16	3	Not Recorded	KF114882	2	intermediate	B005582-7_G7.8	B005582-7_G7.8	Yes		21
+B01	B	CHINA	chronic			5 or 6	Nosocomial	EU363825		early		B01	Yes	The sequence we provide differs from the GenBank sequence by 13 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	6
+B02	B	CHINA	chronic			5 or 6	Nosocomial	EU363826		early		B02	Yes		6
+B03	B	CHINA	chronic			5 or 6	Sexual transmission, unspecified type	EU363827		early		B03	Yes		3
+B04	B	CHINA	chronic			5 or 6	Nosocomial	EU363828		early		B04	Yes		6
+B05	B	CHINA	chronic			5 or 6	Nosocomial	EU363829		early		B05	Yes		3
+BAL_01	B	UNITED STATES	deceased		213	6	Mother-&gt;Child	DQ318210		early	BaL.01, BaL, BaL-PBMC, Bal.01, Bal	BaL_1	Yes		193
+BAL_26	B	UNITED STATES	deceased		213	6	Mother-&gt;Child	DQ318211	1B	early	BaL.26, Bal.26	BaL_26	Yes		167
+BB201_B42	A1	KENYA	acute infection		1		Mother-&gt;Child	DQ187171		acute	BB201.B42, BB201	BB201_CB_B42_v3	Yes	Sequence used in this database does not match accession; unpublished full length env sequence was provided by Stephanie Rainwater and Julie Overbaugh (personal communication).	104
+BB539_2B13	A1	KENYA	acute infection		30		Mother-&gt;Child	DQ187240		acute	BB539, BB539.2B13	BB539_M9M_2B13_v3	Yes	Sequence used in this database does not match accession; unpublished full length env sequence was provided by Stephanie Rainwater and Julie Overbaugh (personal communication).	98
+BC01	08_BC	CHINA	chronic			5 or 6	IV Drug User	EU363831		early		BC01_YN161_5	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	5
+BC03	BC	CHINA	chronic			5 or 6	IV Drug User	EU363833		early		BC03	Yes		5
+BC04	BC	CHINA	chronic			5 or 6	IV Drug User	EU363834		early		BC04	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	3
+BC05	BC	CHINA	chronic			5 or 6	IV Drug User	EU363835		early		BC05	Yes		5
+BC06	08_BC	CHINA	chronic			5 or 6	IV Drug User	EU363836		early		BC06_YNP45_45	Yes		5
+BC07	07_BC	CHINA	chronic			5 or 6	IV Drug User	EU363837		early		BC07_YN109_6	Yes		8
+BC08	BC	CHINA	chronic			5 or 6	IV Drug User	EU363838				BC08	Yes		1
+BC09	BC	CHINA	chronic			5 or 6	Sexual transmission, unspecified type	EU363839		early		BC09	Yes		5
+BC10	07_BC	CHINA	chronic			5 or 6	IV Drug User	EU363840		early		BC10_YN55_3	Yes		5
+BC11	BC	CHINA	chronic			5 or 6	IV Drug User	EU363841		early		BC11	Yes		5
+BC12	07_BC	CHINA	chronic			5 or 6	IV Drug User	EU363842		early		BC12_SC142_6	Yes	The sequence we provide differs from the GenBank sequence by 13 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	5
+BC13	BC	CHINA	chronic			5 or 6	IV Drug User	EU363843		early		BC13	Yes	The sequence we provide differs from the GenBank sequence by 21 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	5
+BC14	07_BC	CHINA	chronic			5 or 6	Sexual transmission, unspecified type	EU363844		early		BC14_BJ25_51	Yes		3
+BC15	BC	CHINA	chronic			5 or 6	Sexual transmission, unspecified type	EU363845		early		BC15	Yes		3
+BC17	08_BC	CHINA	chronic			5 or 6	IV Drug User	EU363847		early		BC17_YN78_8	Yes	The sequence we provide differs from the GenBank sequence by 6 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	3
+BC18	07_BC	CHINA	chronic			5 or 6	IV Drug User	EU363848		early		BC18_XJ153_35	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	3
+BCF02	O	FRANCE	AIDS	late	late		Not Recorded	AJ236391		chronic		BCF02_gp41	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+BCF03	O	FRANCE	asymptomatic	no data	no data		Not Recorded	AJ133055		chronic		BCF03	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+BCF108	O	FRANCE	AIDS	late	late		Heterosexual	AJ238865		chronic		BCF108	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	24
+BF1266_431A	C	MALAWI	acute infection		early	1 or 2	Mother-&gt;Child	HM215360	2	acute	BF1266, BF1266.431a	BF1266_431a	Yes		137
+BF1677F2_613A	C	MALAWI					Mother-&gt;Child	HM215361			BF1677F2.613a, BF1677F2_613a	BF1677F2_613a	Yes		13
+BF329	C	MALAWI					Mother-&gt;Child	JN983803				329MW_BF2002	Yes		12
+BF535_A1	AD	KENYA			21		Mother-&gt;Child	DQ208431	2	early	BF535_W6M_ENV_A1, BF535.A1	BF535_W6M_ENV_A1	Yes		9
+BF591	C	MALAWI					Mother-&gt;Child	JN983804				591MW_BF2002	Yes		12
+BF703	C	MALAWI					Mother-&gt;Child	JN983805				703MW_BF2002	Yes		12
+BF942_218D	C	MALAWI					Mother-&gt;Child	HM215362			BF942a, BF942.218d	BF942_218d	Yes		13
+BG1168_1	B	UNITED STATES	acute infection	28	0	3	Male Sex with Male	AY835443	2	intermediate	BG1168.1, BG1168.01, BG1168, 1168, BG1168_01	BG1168_1	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	177
+BG505_DELTA_CT_T332N	A1	KENYA			21		Mother-&gt;Child	DQ208458		acute	BG505ΔCT/T332N, BG505.T332NΔCT, BG505_T332N_DELTA_CT	BG505_W6M_ENV_C2	Yes	BG505_W6M_C2 clone with T332N point mutation and deletion of the cytoplasmic tail	3
+BG505_W6M_A5_T332N	A1	KENYA			21		Mother-&gt;Child	DQ208456		acute	BG505_W6M_ENV_A5_T332N	BG505_W6M_ENV_A5	Yes	T332N point mutant	20
+BG505_W6M_C2	A1	KENYA			21		Mother-&gt;Child	DQ208458	2	acute	BG505.W6M.C2, BG505.W6M.C2.WT, BG505.w6m, BG505.W6M.ENV.C2	BG505_W6M_ENV_C2	Yes		163
+BG505_W6M_C2_N301A	A1	KENYA			21		Mother-&gt;Child	DQ208458		acute		BG505_W6M_ENV_C2	Yes	N301A point mutant	4
+BG505_W6M_C2_T332N	A1	KENYA			21		Mother-&gt;Child	DQ208458	2	acute	BG505.W6M.C2.T332N, BG505.T332N	BG505_W6M_ENV_C2	Yes	T332N point mutant	49
+BI206_W6P_A1	A1	KENYA			21		Mother-&gt;Child	DQ208465		acute		BI206_W6P_ENV_A1	Yes		3
+BI369_9A	A1	KENYA	acute infection		30		Mother-&gt;Child	DQ187019		acute	BI369.9A, BI369	BI369_M15M_9A	Yes	Sequence used in this database does not match accession; unpublished full length env sequence provided by Stephanie Rainwater and Julie Overbaugh.	104
+BJ613_E1	A1	KENYA			21		Mother-&gt;Child	DQ208448	2	early	BJ613.E1, BJ613_W6M_ENV_E1	BJ613_W6M_ENV_E1	Yes		9
+BJOX002000_03_2	07_BC	CHINA	acute infection		early	1 or 2	IV Drug User	HM215364	2	acute	BJOX002000.03.2, BJOX002000, BJOX2000	BJOX002000_03_2	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	76
+BJOX003000_19_1	B	CHINA	acute infection			1 or 2	Male Sex with Male	HM215365		acute	MG01, BJOX3, BJOX003000.19.1	BJOX003000_19_1	Yes	Alias MG01 given by Wu2018.	13
+BJOX005000_09_2	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215367		acute	MG03, BJOX5, BJOX005000.09.2	BJOX005000_09_2	Yes	Alias MG03 given by Wu2018.	13
+BJOX006000_13_3	B	CHINA	acute infection			4	Male Sex with Male	HM215369		intermediate	MG08, BJOX006000.13.3, BJOX6	BJOX006000_13_3	Yes	Alias MG08 given by Wu2018.	7
+BJOX007000_02_3	B	CHINA			early	5	Male Sex with Male	HM215370		early	MG04, BJOX7, BJOX007000.02.3	BJOX007000_02_3	Yes	Alias MG04 given by Wu2018.	7
+BJOX008000_04_3	01_AE	CHINA				5 or 6	Heterosexual	HM215371		early	BJOX008000.04.3	BJOX008000_04_3	Yes		5
+BJOX009000_02_4	01_AE	CHINA	acute infection			4	Male Sex with Male	HM215372	2	intermediate	BJOX009000, BJOX09, BJOX009000.02.4	BJOX009000_02_4	Yes		165
+BJOX010000_06_2	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215373	2	acute	MG07, BJOX010000.06.2, BJOX010000, BJOX10	BJOX010000_06_2	Yes	Alias MG07 given by Wu2018.	155
+BJOX011000_01_3	07_BC	CHINA			early	5	Male Sex with Male	HM215375		early	BJOX11, BJOX011000.01.3	BJOX011000_01_3	Yes		7
+BJOX015000_11_5	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215377	2	acute	BJOX15, BJOX015000, BJOX015000.11.5	BJOX015000_11_5	Yes		100
+BJOX017000_07_1	01_AE	CHINA				6	Male Sex with Male	HM215378			BJOX017, BJOX17	BJOX017000_07_1	Yes		2
+BJOX018000_02_3	01_AE	CHINA	acute infection			4	Male Sex with Male	HM215379		intermediate	BJOX018000.02.3, MG10, BJOX18	BJOX018000_02_3	Yes	Alias MG10 given by Wu2018.	7
+BJOX019000_02_1	07_BC	CHINA	acute infection			1 or 2	Male Sex with Male	HM215380		acute	BJOX19, BJOX019000.02.1	BJOX019000_02_1	Yes		13
+BJOX020000_03_3	B	CHINA	acute infection			1 or 2	Male Sex with Male	HM215382		acute	BJOX020000.03.3, MG09, BJOX20	BJOX020000_03_3	Yes	Alias MG09 given by Wu2018.	18
+BJOX021000_03_3	01_AE	CHINA				6	Male Sex with Male	HM215383		early	BJOX21, BJOX021000.03.3, MG11	BJOX021000_03_3	Yes	Alias MG11 given by Wu2018.	7
+BJOX022000_02_3	B	CHINA	acute infection			4	Male Sex with Male	HM215384		intermediate	BJOX022000.02.3, BJOX22, MG13	BJOX022000_02_3	Yes	Alias MG13 given by Wu2018.	7
+BJOX023000_05_4	01_AE	CHINA	acute infection			4	Male Sex with Male	HM215385		intermediate	BJOX23, BJOX023000.05.4	BJOX023000_05_4	Yes		7
+BJOX025000_01_1	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215386	2	acute	MG15.33, BJOX025000, BJOX025000.01.1, BJOX25.01	BJOX025000_01_1	Yes	Alias MG15.33 given by Wu2018.	155
+BJOX025000_05_5	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215387		acute	BJOX25.05, MG15.36	BJOX025000_05_5	Yes	Alias MG15.36 given by Wu2018.	7
+BJOX027000_02_1	07_BC	CHINA				5	Male Sex with Male	HM215388		early	M14, BJOX27, BJOX027000.02.1	BJOX027000_02_1	Yes	Alias MG14 given by Wu2018.	7
+BJOX028000_10_3	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215389	2	acute	BJOX028000.10.3, BJOX028000, MG18, BJOX28.10	BJOX028000_10_3	Yes	Alias MG18 given by Wu2018.	151
+BJOX028000_34_2	01_AE	CHINA	acute infection			1 or 2	Male Sex with Male	HM215390		acute	BJOX28.34, BJOX028000.34.2	BJOX028000_34_2	Yes		7
+BJOX028000_43_5	01_AE	CHINA	acute infection			2	Male Sex with Male	HM215391		acute	BJOX28.43, BJOX028000.43.5	BJOX028000_43_5	Yes		7
+BJOX029000_03_1	07_BC	CHINA	acute infection		early	5	Male Sex with Male	HM215392		early	BJOX29, BJOX029000.03.1, MG17	BJOX029000_03_1	Yes	Alias MG17 given by Wu2018.	13
+BJOX030000_02_5	01_AE	CHINA				5 or 6	Heterosexual	HM215393		early	BJOX030000.02.5	BJOX030000_02_5	Yes		5
+BJOX031000_02_2	01_AE	CHINA			early	5	Male Sex with Male	HM215394		early	BJOX31, BJOX031000.02.2	BJOX031000_02_2	Yes		7
+BJOX035000_04_8	B	CHINA	acute infection			1 or 2	Male Sex with Male	HM215395		acute	BJOX035000.04.8	BJOX035000_04_8	Yes		5
+BL01	B	UNITED STATES	AIDS		late		Not Recorded	AY124970		chronic	BL01.DG, ABL01, BL01_DG	aBL01	Yes		107
+BORI_D9_4D7_1410	B	UNITED STATES	acute infection	37	early	2	Male Sex with Male	EU576296	2	acute	BORI_d9_4D7_1410, BORI-d9.4D7	BORId9_4D7	Yes		5
+BORI_D9_4F8_1413	B	UNITED STATES	acute infection	37	early	2	Male Sex with Male	EU576299	2	acute	BORI_d9_4F8_1413, BORI-d9.4F8	BORId9_4F8	Yes		5
+BR07	B	UNITED STATES	AIDS		late		Not Recorded	AY124979		chronic	BR07_DG, BR07.DG, CBR07	cBR07	Yes		97
+BS208_B1	A1D	KENYA	acute infection		30		Mother-&gt;Child	KX364401		acute	BS208.M6.B1, BS208, BS208.B1	BS208.M6.B1	Yes		99
+BX08_16	B	FRANCE				6	Not Recorded	GQ855765	1B	early	BX08.16, BX08	Bx08	Yes		141
+BZ167_12	B	BRAZIL				6	Not Recorded	GQ855764	1B	early	BZ167.12	BZ167_12	Yes		35
+C1080_C3	01_AE	THAILAND			late	6	Heterosexual	JN944660	2	early	C1080rsga, C1080.c03, C1080, C1080_C03, C1080.c3, C1080rsga_c3	C1080_c03	Yes		239
+C2101_C1	01_AE	THAILAND			late	6	Heterosexual	JN944661	2	early	C2101, C2101rsga_c1, C2101_C01, C2101.c01, C2101.c1, C2101.01	C2101_c01	Yes		144
+C27_B	C	UNITED KINGDOM					Not Recorded	FJ977091				27_C27_b	Yes		4
+C28_D	C	UNITED KINGDOM					Not Recorded	FJ977092				28_C38_d	Yes		4
+C3198_C05	B	THAILAND			early		 	HM215396		early	C3198.05, C3198.c05	C3198_c05	Yes		5
+C3347_C11	01_AE	THAILAND	deceased				Heterosexual	JX512902	2	chronic	C3347.11, C3347, C3347.c11	C3347_c11	Yes		166
+C4118_9	01_AE	THAILAND				6	Heterosexual	JQ352782	2	early	C4118_C09, C4118.09, C4118.c09, C4118, 00TH_C4118, C4118_C9, C4118_09	C4118_c09	Yes		171
+CA146_H3_3	C	SOUTH AFRICA		26	early		Heterosexual	JN681219	1B	acute		CA146_H3_3	Yes		22
+CA240_A5_5	C	SOUTH AFRICA	acute infection		70		Heterosexual	KC154016	1B	early	CA240_A5.5	CA240_A5_5	Yes		22
+CA327_D2_2	C	SOUTH AFRICA		71	early		Heterosexual	JN681220	2	intermediate		CA327_D2_2	Yes		21
+CA392_H2_6	C	SOUTH AFRICA		15	early	1 or 2	Heterosexual	JN681221	2	acute	CA392_H2_6C	CA392_H2_6C	Yes		22
+CA457_H1_1	C	SOUTH AFRICA		46	early		Heterosexual	JN681222	3	early	CA457_H1_1C	CA457_H1_1C	Yes		21
+CAAN5342	B	UNITED STATES		84	early	6	Homosexual	AY835452	2	early	CAAN.A2, CAAN5342_A2, CAAN_A2, CAAN, pCAAN5342.A2, CAAN5342.A2	CAAN_A2	Yes		356
+CAP129_1_15_B2_13	C	SOUTH AFRICA		14	early	4	Sex worker	JN681223	2	intermediate	CAP129.1.15_B2_13	CAP129_1_15_B2_13	Yes		21
+CAP136_1_16_E6_1	C	SOUTH AFRICA		7	early	5	Sex worker	JN967790	2	early	CAP136_1_16E6_1, CAP136.1.16_E6_1	CAP136_1_16E6_1	Yes		22
+CAP174_1_06_F3_1B	C	SOUTH AFRICA		14	early	5	Sex worker	JN967791	1B	early	CAP174_1_06F3_1B, CAP174.1.06_F3_1B	CAP174_1_06F3_1B	Yes		22
+CAP177_1A3	C	SOUTH AFRICA				1 or 2	 	KC894133	2	acute	CHV0005565_CAP177.1.11A4, CeCAP177_1A3	CAP177_1A3	Yes	Clones CAP177_1A3 (KC894133) and CAP177.1.11A4 (FJ443382) are identical.	22
+CAP188_1_D1_14_REV	C	SOUTH AFRICA					Sex worker	KC894134	2		CHV0008573_CAP188.1.22D1, CeCAP188_1_D1_14(Rev-)	pCeCAP188_1_D1_14m	Yes	Clones CAP188_1_D1_14 (KC894134) and CAP188.1.22D1 (FJ443841) are identical.	22
+CAP200_B8A	C	SOUTH AFRICA				4	Sex worker	KC894135	1B	intermediate	CHV0005450_CAP200.1.06B8a, CeCAP200_B8a	CAP200_B8a	Yes	Clones CAP200_B8A (KC894135) and CAP200.1.06B8a (FJ443274) are identical.	22
+CAP206_1_B5	C	SOUTH AFRICA			early	5	Sex worker	FJ443358	2	acute	CAP206.B5, CAP206 T/F	CHV0005540_CAP206.1.05B5	Yes		17
+CAP206_1_B5_Y681D	C	SOUTH AFRICA			early	5	Sex worker	KJ700457	1B or 2	acute	CAP206.1.B5.Y681D, CAP206 T/F Y681D	CAP206.1.B5.Y681D	Yes	The virus most often used in neutralization studies corresponds to the sequence with 681D, KJ700457 (Montefiori group). Tier 2 in Rademeyer2016. Tier 1B in Bradley2016a.	30
+CAP210_E8	C	SOUTH AFRICA	acute infection		45	4	Sex worker	DQ435683	2	intermediate	CAP210.E8, CAP210, CAP210_2_00_E8, CAP210.2.00.E8	CAP210_2_00_E8	Yes		272
+CAP210_TA5	C	SOUTH AFRICA				1 or 2	Sex worker	KC894136	2	acute	CHV0004195_CAP210.1.00TA5, CeCAP210_TA5	CAP210_TA5	Yes		22
+CAP220_2_00_A8_5B	C	SOUTH AFRICA		21	early	6	Sex worker	JN967792	2	early	CAP220.2.00_A8_5B, CAP220_2_00A8_5B	CAP220_2_00A8_5B	Yes		21
+CAP221_B14	C	SOUTH AFRICA				1 or 2	 	KC894137	2	acute	CHV0005496_CAP221.1.10B5, CeCAP221_B14	CAP221_B14	Yes	Clones CAP221_B14 (KC894137) and CAP221.1.10B5 (FJ443316) are identical.	21
+CAP224_1_18_C7_3	C	SOUTH AFRICA		21	early	5	Sex worker	JN967793	2	early	CAP224.1.18_C7_3, CAP224_1_18C7_3	CAP224_1_18C7_3	Yes		21
+CAP225_1_06_A2_18	C	SOUTH AFRICA		14	early	3	Sex worker	JN681225	3	intermediate	CAP225.1.06_A2_18	CAP225_1_06_A2_18	Yes		22
+CAP237_1_22_B2_2_39	C	SOUTH AFRICA		14	early	3	Sex worker	JN681226	3	intermediate	CAP237_1_22_B2_2, CAP237.1.22_B2_2_39	CAP237_1_22_B2_2	Yes		21
+CAP244_D3	C	SOUTH AFRICA			56	5	Sex worker	DQ435684	2	early	CAP244.2.00.D3, CAP244_2_00_D3, CAP244.D3, CAP244	CAP244_2_00_D3	Yes		132
+CAP256_PI	C	SOUTH AFRICA		42	early	6	Sex worker	EF203981		early	CAP256 7C, CAP256.2.00.C7J	CAP256_2_00_C7J	Yes		30
+CAP256_SU	C	SOUTH AFRICA		108	early	6	Sex worker	KF241776		early	CAP256.206sp.032.C9, CAP256.206.C9	CAP256.206sp.032.C9	Yes	CAP256 SU is the superinfecting strain of donor CAP256 at the 15-week timepoint.	86
+CAP258_2_00_X_23	C	SOUTH AFRICA		49	early		Sex worker	JN681227	2	early	CAP258.2.00_X_23	CAP258_2_00_X_23	Yes		21
+CAP260_2_00_TA1_1B	C	SOUTH AFRICA		14	early	5	Heterosexual	JN681228	3	early	CAP260.2.00_TA1_1B	CAP260_2_00_TA1_1B	Yes		21
+CAP266_2_00_E9_H6	C	SOUTH AFRICA		48	early		Heterosexual	JN681229	2	early	CAP266.2.00_E9_h6	CAP266_2_00_E9_H6	Yes		22
+CAP269_2_00_F11_1	C	SOUTH AFRICA		28	early	6	Sex worker	JN967794	2	early	CAP269_2_00F11_1, CAP269.2.00_F11_1	CAP269_2_00F11_1	Yes		21
+CAP290_2_00_23_6	C	SOUTH AFRICA		21	early		Heterosexual	JN681253	2	acute	CAP290.2.00_23_6, TRP290_2_00_23_6, TRP290.2.00_23_6	TRP290_2_00_23_6	Yes		22
+CAP291_2_00_H2_15	C	SOUTH AFRICA			77		Heterosexual	KF114884	3	intermediate	CAP291.2.00_H2.15	CAP291.2.00_H2.15	Yes		22
+CAP292_2_00_12_4	C	SOUTH AFRICA		40	early		Heterosexual	JN681254	2	early	TRP292_2_00_12_4, TRP292.2.00_12_4, CAP292.2.00_12_4	TRP292_2_00_12_4	Yes		21
+CAP301_2_00_C3_20	C	SOUTH AFRICA	acute infection		25		Heterosexual	KC154017	1B	acute	CAP301.2.00_C3.20	CAP301_2_00_C3_20	Yes		21
+CAP304_2_00_F6_6	C	SOUTH AFRICA	acute infection		28		Heterosexual	KC154018	2	acute	CAP304.2.00_F6.6	CAP304_2_00_F6_6	Yes		22
+CAP306_2_00_F9_1	C	SOUTH AFRICA	acute infection		11		Heterosexual	KC154019	2	acute	CAP306.2.00_F9.1	CAP306_2_00_F9_1	Yes		21
+CAP307_2_00_24_1	C	SOUTH AFRICA		28	early		Heterosexual	JN681255	2	acute	CAP307.2.00_24_1, TRP307_2_00_24_1, TRP307.2.00_24_1	TRP307_2_00_24_1	Yes		22
+CAP308_2_00_E11_35	C	SOUTH AFRICA	acute infection		70		Heterosexual	KC154020	2	intermediate	CAP308.2.00_E11.35	CAP308_2_00_E11_35	Yes		22
+CAP310_2_00_20_2	C	SOUTH AFRICA		30	early		Heterosexual	JN681256	2	acute	TRP310.2.00_20_2, TRP310_2_00_20_2, CAP310.2.00_20_2	TRP310_2_00_20_2	Yes		21
+CAP317_2_00_D4_10	C	SOUTH AFRICA			early		 	KC154022	2	early	CAP317.2.00_D4.10	CAP317_2_00_D4_10	Yes		21
+CAP323_2_00_B6_45	C	SOUTH AFRICA			early		Heterosexual	KC154023	2	early	CAP323.2.00_B6.45	CAP323_2_00_B6_45	Yes		22
+CAP326_2_00_D9_2	C	SOUTH AFRICA			early		Heterosexual	KC154024	2	early	CAP326.2.00_D9.2	CAP326_2_00_D9_2	Yes		21
+CAP327_2_00_C6_37	C	SOUTH AFRICA			21		Heterosexual	KF114885	2	acute	CAP327.2.00_C6.37	CAP327.2.00_C6.37	Yes		21
+CAP330_2_00_F2_41	C	SOUTH AFRICA			early		Heterosexual	KC154025	2	early	CAP330.2.00_F2.41	CAP330_2_00_F2_41	Yes		22
+CAP331_2_00_D7_39	C	SOUTH AFRICA			42		Heterosexual	KF114886	2	acute	CAP331.2.00_D7.39	CAP331.2.00_D7.39	Yes		21
+CAP332_2_00_C10_1	C	SOUTH AFRICA			5		Heterosexual	KF114887	2	acute	CAP332.2.00_C10.1	CAP332.2.00_C10.1	Yes		21
+CAP340_2_00_B3_16	C	SOUTH AFRICA			early		Heterosexual	KC154026	1B	early	CAP340.2.00_B3.16	CAP340_2_00_B3_16	Yes		21
+CAP341_2_00_C10_18	C	SOUTH AFRICA			early		Heterosexual	KC154027	2	early	CAP341.2.00.C10.18	CAP341_2_00_C10_18	Yes		21
+CAP343_2_00_21_2	C	SOUTH AFRICA		63	early		Heterosexual	JN681257	2	intermediate	TRP343.2.00_21_2, CAP343.2.00_21_2, TRP343_2_00_21_2	TRP343_2_00_21_2	Yes		21
+CAP347_2_00_B1_1	C	SOUTH AFRICA		17	early		Heterosexual	JN681258	2	acute	TRP347_2_00_B1_1, CAP347.2.00_B1_1, TRP347.2.00_B1_1	TRP347_2_00_B1_1	Yes		21
+CAP363_2_00_10_3	C	SOUTH AFRICA		38	early		Heterosexual	KJ598853	2	early	CAP363.2.00_10_3, TRP363.2.00_10_3a, TRP363.2.00_10_3	TRP363.2.00_10_3a	Yes		22
+CAP37_1_18_D2_19	C	SOUTH AFRICA		14	early	4	Sex worker	JN681230	1B	intermediate	CAP37.1.18_D2_19	CAP37_1_18_D2_19	Yes		21
+CAP378_2_00_D2_5	C	SOUTH AFRICA			105		Heterosexual	KF114888	2	chronic	CAP378.2.00_D2.5	CAP378.2.00_D2.5	Yes		21
+CAP382_2_00_D7_19	C	SOUTH AFRICA			early		Heterosexual	KC154028	2	early	CAP382.2.00_D7.19	CAP382_2_00_D7_19	Yes		21
+CAP40_2_01_A3_5	C	SOUTH AFRICA		28	early		Sex worker	JN681231	2	acute	CAP40.2.01_A3_5	CAP40_2_01_A3_5	Yes		21
+CAP45_G3	C	SOUTH AFRICA	acute infection		45	4	Sex worker	DQ435682	2	intermediate	CAP45.2.00.G3, CAP45.G3, CAP45.2.00_G3, CAP45, CAP45.2.00.E8, CAP45_2_00_G3	CAP45_2_00_G3	Yes	The alias CAP45.2.00.E8 was probably a typographical error, as the adjacent cell had another virus name ending in E8 (Sun2017).	275
+CAP69_1_12_TA7_1	C	SOUTH AFRICA	acute infection	7	early	1 or 2	Sex worker	JX131327	2	acute	CAP69.1.12.TA7_1, CAP69.1.12_TA7.1	CAP69.1.12.TA7_1	Yes		22
+CAP88_6M_C10	C	SOUTH AFRICA		183			Sex worker	KU198436	2	early		CAP88.6m.c10	Yes		20
+CE0089_G2	C	MALAWI				5	Heterosexual	KC894073	2	early	Ce0089_G2, CHV0011362_089-G2	089-G2	Yes		21
+CE0393_C3	C	MALAWI	acute infection		early	4	Heterosexual	FJ444215	2	intermediate	CE0393, pCenvFs4_Pt0393_C3uncp, Ce0393_C3, pCenvPt0393_C3	CHV0011210_0393-C3	Yes		128
+CE0626_E6	C	MALAWI			early	4	Heterosexual	FJ444284	2	intermediate	CHV0011280_0626-B4, Ce0626_E6	CHV0011280_0626-B4	Yes	Clones CE0626_E6 (KC894075) and 0626-B4 (FJ444284) are identical.	21
+CE0665_F2	C	MALAWI				4	Heterosexual	KC894076	2	intermediate	CHV0011311_0665-D7, Ce0665_F2	0665-F2	Yes	Clones CE0665_F2 (KC894076) and 0665-D7 (FJ444315) are identical.	22
+CE0682_E4	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444325	2	acute	CE0682, Ce0682_E4, pCenvFs2_pt0682_E4uncp	CHV0011321_0682-A1	Yes		103
+CE0985_H7	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444391	2	acute	Ce0985_H7(Rev-), 0985_H7_Mut13-2	CHV0011387_0985-H7	Yes		22
+CE1086_B2	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444395	2	acute	pCenvFs2_Pt1086_B2, pCenvFs2_Pt1086_B2uncp, Ce1086_B2, CE1086	CHV0011391_1086-B2	Yes		104
+CE1172_H1	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444434	2	acute	pCenvPt1172_H1, CE1172, Ce1172_H1, pCenvFs2_pt1172_H1uncp	CHV0011430_1172-H1	Yes		123
+CE1176_A3	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444437	2	acute	pCenvFs2_Pt1176_A3uncp, pCenvPt1176_A3, CE1176, Ce1176_A3, Ce1176.A3	CHV0011433_1176-A3	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	170
+CE2010_F5	C	MALAWI	acute infection		early	4	Heterosexual	FJ444561	2	intermediate	pCenvPt2010_F5, CE2010, Ce2010_F5, pCenvFs4_Pt2010_F5uncp	CHV0011557_2010-F5	Yes		119
+CE2010_F5_REV	C	MALAWI	acute infection		early	4	Heterosexual	FJ444561	2	intermediate	2010F5_REV_, Ce2010_F5	CHV0011557_2010-F5	Yes		5
+CE2052_G10	C	MALAWI				1 or 2	Heterosexual	KC894084	2	acute	Ce2052_G10, CHV0011582_2052-H3	2052-G10	Yes	Clones CE2052_G10 (KC894084) and 2052-H3 (FJ444586) are identical.	22
+CE2060_G9	C	MALAWI	acute infection		pre-seroconversion	1 or 2	Heterosexual	FJ444607	2	acute	CE2060, Ce2060_G9, pCenvPt2060_G9	CHV0011604_2060-G9	Yes		131
+CE2103_E8	C	MALAWI	acute infection		early	1 or 2	Heterosexual	KC894086	3	acute	pCenvPt2103_E8, Ce2103_E8, pCenvFs2_pt2103_E8uncp, CHV0011609_2103-A7	2103-E8	Yes	Clones 2103-A7 (FJ444612) and 2103-E8 (KC894086) are identical.	22
+CH0219_E4	A1	TANZANIA			late		 	HM204621		chronic	CH0219.e4	CH0219_e4	Yes		10
+CH038_12	BC	CHINA				6	IV Drug User	EF042692	2 or 3	early	CH038.12, CH038	CH038	Yes		115
+CH040_C	B	UNITED STATES				5	Male Sex with Male	JN944939		early	CH040	pCH040_c	Yes		7
+CH058_C	B	UNITED STATES				3	Male Sex with Male	JN944940		intermediate		pCH058_c	Yes		8
+CH064_20	07_BC	CHINA				6	IV Drug User	EF117254	2	early	CH064.env, CH064.2, CH064.20	CH064	Yes	There is confusion in the literature between viruses CH064 (EF117254) and CH0694 (KJ700458).	36
+CH0694	C	MALAWI			early	3	Heterosexual	KJ700458	2	intermediate	CH0694.ENV, CH0694.ENVa	CH0694.ENVa	Yes	There is confusion in the literature between viruses CH064 (EF117254) and CH0694 (KJ700458).	21
+CH070_1	07_BC	CHINA				6	IV Drug User	EF117255	3	early	CH070.1, CH70.1, CH070	CH070	Yes		105
+CH077_C	B	UNITED STATES				5	Male Sex with Male	JN944941		early		pCH077_t	Yes		8
+CH091_9	07_BC	CHINA				6	IV Drug User	EF117256	2	early	CH091.9	CH091	Yes		24
+CH106_C	B	UNITED STATES	acute infection			2	Male Sex with Male	JN944942		acute	pCH106_c	pCH106_c	Yes		6
+CH110_2	07_BC	CHINA				6	IV Drug User	EF117257	2	early	CH110.2	CH110	Yes		34
+CH111_8	07_BC	CHINA				6	IV Drug User	EF117258	2	early	CH111.8	CH111	Yes		18
+CH114_8	07_BC	CHINA				6	IV Drug User	EF117264	2 or 3	early	CH114.8	CH114	Yes		21
+CH115_12	07_BC	CHINA				6	IV Drug User	EF117263	2 or 3	early	CH115.12	CH115	Yes		20
+CH117_4	07_BC	CHINA				6	IV Drug User	EF117262	2	early	CH117.4, CH117	CH117	Yes		105
+CH119_10	07_BC	CHINA	chronic			6	IV Drug User	EF117261	2	early	CH119.1, CH119, CH119.10	CH119	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	85
+CH120_6	07_BC	CHINA				6	IV Drug User	EF117260	2 or 3	early	CH120.6	CH120	Yes		22
+CH181_12	07_BC	CHINA				6	IV Drug User	EF117259	2	early	CH181, CH181.12	CH181	Yes		115
+CH505_TF	C	MALAWI	acute infection	28	0	4	Heterosexual	KC247556	2	acute	703010505_w4_02	703010505_w4_02	Yes		24
+CH505_W4_3	C	MALAWI	acute infection	28	0	4	Heterosexual	KC247557	1A or 1B	acute	CH0505.w4.3, 703010505_w4_03	703010505_w4_03	Yes	Differs from CH505 T/F by one amino acid, W680G. Tier is given as 1A (Rademeyer2016) or 1B (Bradley2016).	31
+CM235_2	01_AE	THAILAND	chronic		late	6	Heterosexual	JN944662		chronic		CM235_2	Yes		12
+CM235_C11	01_AE	THAILAND	chronic		late	6	Heterosexual	JQ715395		chronic	CM235.c11, CM235.env	CM235	Yes		5
+CM244_90TH	01_AE	THAILAND	chronic		late	6	Not Recorded	AY713425		chronic		90TH_CM244	Yes		12
+CM244_EC1	01_AE	THAILAND	chronic		late	6	Not Recorded	JQ715397	2	chronic	CM244.ec1, CM244	CM244	Yes		108
+CM246_C1	01_AE	THAILAND			late	6	Heterosexual	JN944663		early	CM246_env, CM246.c1	CM246_c1	Yes		5
+CMU02	01_AE	THAILAND	chronic				Heterosexual	AY669779		chronic		CMU02	Yes		34
+CNE1	B	CHINA	chronic				IV Drug User	HQ699949		chronic		CNE1	Yes		5
+CNE10	B	CHINA	chronic			6	Blood Transfusion	HM215397		early	CN-04-LN1009	CNE10	Yes		100
+CNE107	01_AE	CHINA	chronic				IV Drug User	HQ699986		chronic		CNE107	Yes		7
+CNE11	B	CHINA	chronic			6	Blood Transfusion	HM215398		early	CN-05-JL37	CNE11	Yes		9
+CNE12	B	CHINA	chronic			6	Heterosexual	HM215399		early	CN-04-JL103	CNE12	Yes		97
+CNE14	B	CHINA	chronic			6	Heterosexual	HM215400		early	CN-04-JL112	CNE14	Yes		100
+CNE15	BC	CHINA	chronic			6	IV Drug User	HM215401		early	CN-07-YN08	CNE15	Yes		98
+CNE16	BC	CHINA	chronic			6	IV Drug User	HM215402		early	CN-07-YN13	CNE16	Yes		12
+CNE17	C	CHINA	chronic			6	IV Drug User	HM215403	2	early	CN-07-YN18	CNE17	Yes		134
+CNE18	BC	CHINA	chronic			6	IV Drug User	HM215404		early	CN-07-YN22	CNE18	Yes		10
+CNE19	07_BC	CHINA	chronic			6	Heterosexual	HM215405	2	early	CN-07-XJ12	CNE19	Yes		158
+CNE2	C	CHINA	chronic				 	HQ699950		chronic		CNE2	Yes		8
+CNE20	07_BC	CHINA	chronic			6	Heterosexual	HM215406	2	early	CN-07-XJ23	CNE20	Yes		167
+CNE21	07_BC	CHINA	chronic			6	Heterosexual	HM215407	2	early	CNE21.SG3, CN-07-XJ40	CNE21	Yes		163
+CNE23	C	CHINA	chronic			6	IV Drug User	HM215408		early	CN-07-YN6-3	CNE23	Yes		12
+CNE26	01_AE	CHINA	chronic				 	HQ699955		chronic		CNE26	Yes		5
+CNE28	01_AE	CHINA				6	IV Drug User	HM215409		early	CN-07-YN13-4	CNE28	Yes		9
+CNE3	01_AE	CHINA	chronic			6	IV Drug User	HM215410		early	CN-06-YN103	CNE3	Yes		134
+CNE30	C	CHINA	chronic			6	IV Drug User	HM215411	2	early	CN-07-YN50-4	CNE30	Yes		188
+CNE31	C	CHINA	chronic			6	IV Drug User	HM215412		early	CN-07-YN53-1	CNE31	Yes	The sequence we provide is an upublished sequence that is 66 nucleotides longer at the 5' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	97
+CNE4	B	CHINA	chronic			6	IV Drug User	HM215413		early	CN-06-YN108	CNE4	Yes		106
+CNE40	BC	CHINA	chronic			6	IV Drug User	HM215414	2	early	CN-07-YN58-3	CNE40	Yes		101
+CNE46	08_BC	CHINA	chronic				IV Drug User	HQ699971		chronic		CNE46	Yes		8
+CNE47	08_BC	CHINA	chronic				IV Drug User	HQ699972		chronic		CNE47	Yes		9
+CNE48	08_BC	CHINA					 	HQ699973				CNE48	Yes		4
+CNE49	08_BC	CHINA	chronic				IV Drug User	HQ699974		chronic		CNE49	Yes		8
+CNE5	01_AE	CHINA	chronic			6	Heterosexual	HM215415	2	early	CN-06-HA409	CNE5	Yes		179
+CNE52	08_BC	CHINA				6	IV Drug User	HM215416	2	early	CN-07-YN78-6	CNE52	Yes		122
+CNE53	08_BC	CHINA	chronic			6	IV Drug User	HM215417	2	early	CN-07-YN79-2	CNE53	Yes		171
+CNE55	01_AE	CHINA	chronic			6	IV Drug User	HM215418	2	early	CN-07-YN81-5	CNE55	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	112
+CNE56	01_AE	CHINA				6	IV Drug User	HM215419		early	CNE56.SG3, CN-07-YN89-5	CNE56	Yes		103
+CNE57	B	CHINA	chronic			6	Male Sex with Male	HM215420		early	CNE57.SG3, CN-05-LN92	CNE57	Yes		105
+CNE58	C	CHINA	chronic			6	IV Drug User	HM215421	2	early	CN-06-YN09	CNE58	Yes		212
+CNE59	01_AE	CHINA	chronic			6	IV Drug User	HM215422	2	early	CN-06-YN114	CNE59	Yes		126
+CNE59_N651K	01_AE	CHINA	chronic			6	IV Drug User	HM215422		early	CNE59.N651K.SG3	CNE59	Yes	N651K mutant viral nucleotide sequence provided by Nicole Doria-Rose. Sequence differs from wild type GenBank sequence by 1 nucleotide.	8
+CNE6	B	CHINA	chronic			6	IV Drug User	HM215423		early	CN-06-YN06	CNE6	Yes		10
+CNE64	B	CHINA	chronic				Blood Transfusion	HQ699979		chronic		CNE64	Yes		5
+CNE65	C	CHINA	chronic				IV Drug User	HQ699980		chronic		CNE65	Yes		5
+CNE67	BC	CHINA				6	IV Drug User	HM215425		early	CN-07-YN48	CNE67	Yes		5
+CNE68	07_BC	CHINA	chronic				Heterosexual	HQ699982		chronic		CNE68	Yes		7
+CNE7	BC	CHINA	chronic			6	IV Drug User	HM215426		early	CN-06-YN28	CNE7	Yes		104
+CNE8	01_AE	CHINA	chronic			6	IV Drug User	HM215427	2 or 3	early	CN-06-YN02	CNE8	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	158
+CNE9	B	CHINA	chronic			6	Heterosexual	HM215428		early	CN-05-HA205	CNE9	Yes		10
+CNHLJBF06044	B	CHINA					 	EU131805			CHLJBF06044	CNHLJBF06044	Yes		1
+CNHLJBM06050	B	CHINA					 	EU131798			CHLJBM06050	CNHLJBM06050	Yes		1
+CNXJ0031_12	BC	CHINA			late		 	KC807962		chronic		CNXJ0031_R12	Yes		10
+CNXJ0031_3	BC	CHINA			late		 	KC807958		chronic		CNXJ0031_R3	Yes		10
+CNXJ0031_9	BC	CHINA			late		 	KC807961		chronic		CNXJ0031_R9	Yes		10
+CNXJ0651_1	BC	CHINA			late		 	KC807932		chronic		CNXJ0651_R1	Yes		10
+CNXJ0651_10	BC	CHINA			late		 	KC807941		chronic		CNXJ0651_R10	Yes		10
+CNXJ0651_5	BC	CHINA			late		 	KC807936		chronic		CNXJ0651_R5	Yes		10
+CNXJ0651_6	BC	CHINA			late		 	KC807937		chronic		CNXJ0651_R6	Yes		10
+CNXJ0651_8	BC	CHINA			late		 	KC807939		chronic		CNXJ0651_R8	Yes		10
+CNXJ0651_9	BC	CHINA			late		 	KC807940		chronic		CNXJ0651_R9	Yes		10
+CNXJ09277_1	BC	CHINA			late		 	KC807969		chronic		CNXJ09277_R1	Yes		10
+CNXJ09277_2	BC	CHINA			late		 	KC807970		chronic		CNXJ09277_R2	Yes		10
+CNXJ09277_7	BC	CHINA			late		 	KC807974		chronic		CNXJ09277_R7	Yes		10
+CNXJ09277_8	BC	CHINA			late		 	KC807975		chronic		CNXJ09277_R8	Yes		10
+CNXJ1081_1	BC	CHINA			late		 	KC807943		chronic		CNXJ1081_R1	Yes		10
+CNXJ1081_10	BC	CHINA			late		 	KC807949		chronic		CNXJ1081_R10	Yes		10
+COT6_15	C	SOUTH AFRICA	AIDS		731		Mother-&gt;Child	DQ447266		chronic	COT6, COT6.15	COT6	Yes		14
+CT072_56_7	C	SOUTH AFRICA		14	early		Heterosexual	JN681232	1B	acute	CT072_56_7C	CT072_56_7C	Yes		22
+CT140_140_B6	C	SOUTH AFRICA		14	early		Heterosexual	JN681233	2	acute	CT140_B6_12	CT140_B6_12	Yes		22
+CT184_D3_15	C	SOUTH AFRICA			67		Heterosexual	KF114889	1B	intermediate	CT184_D3.15	CT184_D3_15	Yes		22
+CT349_39_16	C	SOUTH AFRICA		31	early		Heterosexual	JQ061131	1B	early		CT349_39_16	Yes		21
+CT431_G6_6	C	SOUTH AFRICA		20	early		Heterosexual	JN681234	2	acute	CT431_G6_6C	CT431_G6_6C	Yes		21
+CT533_T23B_36	A1	SOUTH AFRICA		81			Heterosexual	JN681235		acute	CT533.T23b.36	CT533_T23b_36C	Yes		10
+CT565_C7_48	C	SOUTH AFRICA			51		Heterosexual	KF114890	3	intermediate	CT565_C7.48	CT565_C7.48	Yes		22
+CT810_G4_7	C	SOUTH AFRICA			35		Heterosexual	KF114891	2	acute	CT810_G4-7, CT810_G4.7	CT810_G4.7	Yes		22
+CT823_B6_1	C	SOUTH AFRICA		12	early	1 or 2	Heterosexual	JN681236	2	acute		CT823_B6_1	Yes		21
+CT885_H3_2	C	SOUTH AFRICA		38	early		Heterosexual	JN967797	2	early		CT885_H3_2	Yes		21
+CT966_E1_7	C	SOUTH AFRICA		81	early		Heterosexual	JN681238	2	intermediate	CT966_E1_7C, CT966_E1-7	CT966_E1_7C	Yes		22
+CT977_69_12	C	SOUTH AFRICA		77	early		Heterosexual	JN681239	2	intermediate		CT977_69_12	Yes		21
+DH12	B	UNITED STATES	AIDS		late		Homosexual	AF069140		chronic		DH12_3	Yes		35
+DJ263_8	02_AG	FRANCE	chronic			6	Bisexual	EU855130	1B	early	DJ263, DJ263.8	DJ263_8	Yes	The sequence we provide is an upublished sequence that is 70 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	159
+DU123_06	C	SOUTH AFRICA	chronic		122	6	Sex worker	DQ411850	2	early	Du123.6, DU123.06, DU123_6, DU123	Du123_6	Yes		102
+DU151_02	C	SOUTH AFRICA		45		5	Sex worker	DQ411851	2	early	DU151.02, Du151.2, DU151_2, DU151.2, DU151	Du151_2	Yes		105
+DU156_12	C	SOUTH AFRICA	acute infection		24		Sex worker	DQ411852	2	acute	DU156.12, Du156.12, DU156	Du156_12	Yes		353
+DU172_17	C	SOUTH AFRICA	chronic		84	6	Sex worker	DQ411853	2	early	DU172, DU172.17, Du172.17	Du172_17	Yes		314
+DU422_1	C	SOUTH AFRICA			56	5	Sex worker	DQ411854	2	early	DU422.01, Du422.1, DU422_01, DU422	Du422_1	Yes		349
+E08364M4_EC3	D						 				E08364M4.ec3		Yes	Stage Unknown	10
+ELI	D	DEM REP OF CONGO	AIDS		late		Not Recorded	K03454		chronic		ELI	Yes		11
+ETH2220_11B	C	ETHIOPIA	AIDS		no data		Not Recorded	U46016		chronic	ETH2220	ETH2220	Yes		2
+FE	07_BC	CHINA					 						Yes	Unpublished Env sequence for strain FE was provided by Youchun Wang and Wenbo Wang (personal correspondence).	8
+FE_N133Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	8
+FE_N142Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	8
+FE_N197D	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	8
+FE_N289D	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N301Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N339Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N355Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N392Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N408Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N411Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N442Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N448Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N463Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N466Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N611Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N625Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N637Q	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+FE_N88D	07_BC	CHINA					 						Yes	This mutant viral sequence differs from wild-type FE by one amino acid (Wang et al. 2013).	7
+GIL	F1	FRANCE	symptomatic				 	AF321084		chronic		FGIL	Yes		6
+GX2010_36	01_AE	CHINA				4	 	GU475026		early	GX2010.36	GX2010_36	Yes		4
+H022_7	B	PERU				6	Sexual transmission, unspecified type	EF210725	2	early	H022.7	H022_7	Yes		13
+H029_12	B	PERU				6	Sexual transmission, unspecified type	EF210726	1B or 2	early	H029.12	H029_12	Yes		24
+H030_7	B	PERU				6	Sexual transmission, unspecified type	EF210727	2	early	H030.7	H030_7	Yes		24
+H031_7	B	PERU				6	Sexual transmission, unspecified type	EF210728	2	early	H031.7	H031_7	Yes	The sequence we provide is an upublished sequence that is 204 nucleotides longer at the 3' end, but otherwise identical to the GenBank sequence (personal communication, David Montefiori group).	38
+H035_18	B	PERU				6	Sexual transmission, unspecified type	EF210729	2 or 3	early	H035.18	H035_18	Yes		24
+H061_14	B	PERU				6	Sexual transmission, unspecified type	EF210730	2 or 3	early	H061.14	H061_14	Yes		24
+H077_31	B	PERU				6	Sexual transmission, unspecified type	EF210734	1B or 2	early	H077.31	H077_31	Yes		13
+H078_14	B	PERU				6	Sexual transmission, unspecified type	EF210733	2 or 3	early	H078.14	H078_14	Yes		13
+H079_2	B	PERU				6	Sexual transmission, unspecified type	EF210731	2 or 3	early	H079.2	H079_2	Yes		13
+H080_23	B	PERU				6	Sexual transmission, unspecified type	EF210735	2	early	H080.23	H080_23	Yes		13
+H086_8	B	PERU				6	Sexual transmission, unspecified type	EF210732	1B or 2	early	HO86_8, H086.8*, H086.8, HO86.8, H086	H086_8	Yes		113
+H086_8_N651K	B	PERU				6	Sexual transmission, unspecified type	EF210732		early	H086.8.N651K.SG3	H086_8	Yes	N651K mutant viral nucleotide sequence provided by Nicole Doria-Rose. Sequence differs from wild type GenBank sequence by 1 nucleotide.	8
+HB5_3	07_BC	CHINA					 	HQ326124			HB5.3, HB5-3	HB5_3	Yes		4
+HT593_1	B	HAITI	asymptomatic		no data		Heterosexual	U08444		chronic	HT593.1, 92HT593	92HT593_1_301593N	Yes		107
+HXB2	B	FRANCE	AIDS		late		Homosexual	K03455	1B	chronic	IIIB, HXB2_DG, HXB2.DG, HXBC2	HXB2-LAI-IIIB-BRU	Yes		185
+JRCSF	B	UNITED STATES	chronic		late		Homosexual	AY669726	2	chronic	JRCSF.JB, JR CSF, JRCSF_JB, JR_CSF, JR-CSF	JRCSFclone	Yes		225
+JRFL	B	UNITED STATES	chronic		late		Homosexual	AY669728	2	chronic	JRFL_JB, JRFL.JB, JR FL, JRFL-JB, JR_FL, JRFL.JB.SG3, JR-FL	JRFLclone	Yes		284
+JRFL_JR2	B	UNITED STATES	chronic		late		Homosexual	AY669728		chronic	JR2, JR-FL/JR2	JRFLclone	Yes	Pseudovirus JR2 was described by Zwick et al. 2005 [PMID 15613352]. It consists of JRFL with the introduction of 4 nucleotide mutations, which produce 3 amino acid changes (S668N, T676S, and K677N) so that the sequence of the gp41 MPER of JR2 is that of the HIV-1 R2 strain.	2
+KER2008_12	A1	KENYA	chronic				Not Recorded	AY736809		chronic	KER2008, 00KE_KER2008, KER2008.12	00KE_KER2008	Yes		143
+KER2018_11	A1	KENYA	chronic				Not Recorded	AY736810		chronic	KER2018, 00KE_KER2018, KER2018.11	00KE_KER2018	Yes		198
+KNH1144	A1	KENYA			no data		Not Recorded	AF457066				KNH1144	Yes		35
+KNH1209_18	A1	KENYA	chronic				Not Recorded	AY736813		chronic	KNH1209, 00KE_KNH1209, KNH1209.18	00KE_KNH1209	Yes		99
+KO224_T87_2_4	C	SOUTH AFRICA		74	early		Heterosexual	JN681240	2	intermediate	Ko224_T87_2_4	KO224_T87_2_4	Yes		21
+KO243_H6_3	C	SOUTH AFRICA			58		Heterosexual	KF114892	3	intermediate	Ko243_H6.3	Ko243_H6.3	Yes		21
+KO426_T78_10	C	SOUTH AFRICA		91	early		Heterosexual	JN681241	2	early	Ko426_T78_10, KO426_T78_10C, 426c	KO426_T78_10C	Yes		54
+KO459_T68_4	C	SOUTH AFRICA		91	early		Heterosexual	JN681242	2	intermediate	Ko459_T68_4	KO459_T68_4	Yes		22
+KO756_38_TB12	C	SOUTH AFRICA		77	early		Heterosexual	JN681243	2	intermediate	Ko756_38_Tb12, KO_756_38_12	KO_756_38_12	Yes		21
+KO870_C2_10	C	SOUTH AFRICA		78	early		Heterosexual	JN681244	2	intermediate	KO_870_C2_10C, Ko870_C2_10	KO_870_C2_10C	Yes		22
+KON	02_AG	FRANCE	AIDS				 	AF321079	2 or 3	chronic		AKON	Yes		10
+KSS_0514_13	01_AE	THAILAND					 	HM215429			KSS-0514.13	KSS_0514_13	Yes		5
+LAI	B	FRANCE	AIDS				Homosexual	K02013		chronic		LAI_BRU	Yes		11
+M02138	01_AE	THAILAND	chronic				 	AY713424		chronic	0503M02138.ec1, 0503M02138_EC1	96TH_M02138	Yes		100
+MB201_A1	A1	KENYA	chronic				 	DQ187026		chronic	MB201.A1, MB201	MB201_P32P_A1_v1v2	Yes	Sequence used in this database does not match accession; unpublished full length env sequence provided by Stephanie Rainwater and Julie Overbaugh.	131
+MB539_2B7	A1	KENYA	chronic				 	DQ187082		chronic	MB539, MB539.2B7	MB539_M6M_2B7_v1v2	Yes	Sequence used in this database does not match accession; unpublished full length env sequence provided by Stephanie Rainwater and Julie Overbaugh.	125
+MBA	C	FRANCE					 	AF321081				CMBA	Yes		6
+ME067_A10_15	C	SOUTH AFRICA		71	early		Heterosexual	JN681245	2	intermediate	ME067_A10-15	ME067_A10_15	Yes		21
+ME178_G6_16	C	SOUTH AFRICA			64		Heterosexual	KF114893	3	intermediate	Me178_G6.16	Me178_G6.16	Yes		22
+MG505_W0M_A2	A1	KENYA	chronic				 	DQ208449		chronic	MG505_W0M_ENV_A2	MG505_W0M_ENV_A2	Yes		21
+MGRM_AG_002	02_AG		chronic		late		 	MF510462		chronic	MGRM-002-8, MGRM8	MGRM_002_8_CRF_AG	Yes		32
+MI206_W0M_D1	A1	KENYA	chronic				 	DQ208462				MI206_W0M_ENV_D1	Yes		3
+MI369_A5	A1	KENYA	chronic				 	DQ187018		chronic	MI369.A5, MI369	MI369_M12B_A5	Yes	Sequence used in this database does not match accession; unpublished full length env sequence provided by Stephanie Rainwater and Julie Overbaugh.	104
+MJ613_W1M_A2	A1	KENYA	chronic				 	DQ208444		delete or no value		MJ613_W1M_ENV_A2	Yes		3
+ML274_W0M_B1	A1D	KENYA	chronic				 	DQ208493				ML274_W0M_ENV_B1	Yes		3
+MN_3	B	UNITED STATES	chronic			6	Mother-&gt;Child	HM215430	1A	early	MN.03, MN, MN/H9, MN.3	MN_3	Yes		167
+MOKW	B	JAPAN					Heterosexual	AB262959				MOKW_L	Yes		1
+MS208_A1	A1D	KENYA	chronic			6	 	DQ187010	1 or 2	early	MS208, MS208.A1	MS208w6BMCA1_gp160	Yes		195
+MW965_26	C	MALAWI	asymptomatic		360	6	Heterosexual	U08455	1A	early	93MW965, MW965.26	93MW965_26	Yes		154
+N1_FR_2011	N	FRANCE			early		Sexual transmission, unspecified type	JN572926		early		N1_FR_2011	Yes		24
+NAB13PRE_CL_9	G	SWITZERLAND	acute infection				Heterosexual	EU023937	2	acute		NAB13pre_cl_9	Yes		20
+NAB5PRE_CL_1	B	SWITZERLAND					 	EU023923	2	chronic		NAB5pre_cl_1	Yes		20
+NAB9PRE_CL_106	B	SWITZERLAND	chronic				IV Drug User	EU023928	2	chronic		NAB9pre_cl_106	Yes		20
+NI1046_EC3	01_AE	THAILAND					 	JQ715412			NI1046.ec3	NI1046	Yes		5
+NKR_0512_8	B	THAILAND					 	HM215431			NKR-0512.8	NKR_0512_8	Yes		5
+NKU3006_EC1	D	KENYA					Not Recorded	JQ715411			NKU3006.ec1, NKU3006	NKU3006	Yes		99
+NL43	B	FRANCE	chronic				Experimental	AY669735	1A	chronic	NL4-3	NL43clone	Yes		46
+NP03	01_AE	THAILAND	chronic				 	KC822430	1B	chronic	NP03.13	NP03	Yes		18
+P0402_C2_11	G	SPAIN	chronic		late		IV Drug User	EU885759	2	chronic	P0402_c2_11, P0402.c2.11, P0402	P402_2_11	Yes		151
+P1655_C8_B5	F1	SPAIN	chronic		late		Blood Transfusion	FJ817371		chronic		P1655_c8_B5	Yes		5
+P1741_A2	D	SPAIN					Heterosexual	HM068556		chronic		P1741_a2	Yes		10
+P1981_C5_3	G	SPAIN					IV Drug User	FJ817369	2		P1981.C5.3, P1981	P1981_c5_3	Yes		165
+P940_2_C3	D	CONGO					Not Recorded	HM068555		chronic		P940_2_C3	Yes		10
+PRB926_04_A9_4237	B	UNITED STATES	acute infection			2	Bisexual	EU289197	2	acute	PRB926-04.A9.4237	PRB926_04_A9_4237	Yes		16
+PRB931_06_TC3_4930	B	UNITED STATES	acute infection			3	Heterosexual	EU289198	2	intermediate	PRB931-06.TC3.4930	PRB931_06_TC3_4930	Yes		3
+PRB958_06_TB1_4305	B	UNITED STATES	acute infection			3	Heterosexual	EU289199	2	intermediate	PRB958-06.TB1.4305	PRB958_06_TB1_4305	Yes		4
+PSR_0508_2	01_AE	THAILAND					 	HM215432			PSR-0508.2	PSR_0508_2	Yes		5
+PVO_4	B	ITALY	acute infection	28	0	3	Male Sex with Male	AY835444	2 or 3	acute	PVO clone 4, B3(PVO.4), PVO_04, PVO, PVO4, PVO.4, PVO.04, PV0.4	PVO_4	Yes		371
+PWJ_0513_39	C	THAILAND					 	HM215433			PWJ-0513.39	PWJ_0513_39	Yes		5
+Q168_A2	A1D	KENYA	acute infection	23	7		Sex worker	AF407148	2	acute	Q168ENVa2, Q168a2, Q168, Q168.a2	Q168-a2_PNS32d	Yes		229
+Q168_B23	A1D	KENYA	acute infection	23	7		Sex worker	AF407149		acute	Q168b23	Q168_b23	Yes		14
+Q23_17	A1	KENYA	asymptomatic	485	406	6	Sex worker	AF004885	1B	early	Q23.17, Q23, Q23ENV17, Q23ENV.17	Q23_17	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	325
+Q259_17	A1	KENYA	acute infection	76	7		Sex worker	AF407152	2	intermediate	Q259.d2.17, Q259, Q259ENVd2.17, Q259_D2_17, Q259d2.17, Q259.17	Q259-d2.17	Yes		207
+Q259_D2_26	A1	KENYA	acute infection	76	7		Sex worker	AF407153		intermediate	Q259d2.26, Q259.d2.26	Q259-d2.26	Yes		9
+Q259_W6	A1	KENYA	acute infection	76	7		Sex worker	AF407151		intermediate	Q259.w6	Q259-w6_PNS59d	Yes	The sequence we provide differs from the GenBank sequence by 2 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	17
+Q461_C2	A1	KENYA	acute infection	17	-28		Sex worker	AF407154		acute	Q461c2	Q461_c2	Yes		7
+Q461_D1_PNS0D	A1	KENYA	acute infection	17	-28		Sex worker	AF407155		acute	Q461.d1, Q461d1	Q461-d1_PNS0d	Yes		16
+Q461_E2	A1	KENYA	acute infection	17	-28		Sex worker	AF407156	2	acute	Q461e2, Q461ENVe2, Q461.e2, Q461	Q461_e2	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	238
+Q769_B9_PNS79D	A1	KENYA	acute infection	56	36		Sex worker	AF407157	2	early	Q769.B9, Q769b9	Q769-b9_PNS79d	Yes		9
+Q769_D22	A1	KENYA	acute infection	56	36		Sex worker	AF407158	2	early	Q769, Q769d22, Q769ENVd22, Q769.d22	Q769-d22	Yes		236
+Q769_H5	A1	KENYA	acute infection	56	36		Sex worker	AF407159		early	Q765.h5, Q769.h5, Q769.h55, Q769h5	Q769-h5	Yes		164
+Q842_D12	A1	KENYA	acute infection	49	28		Sex worker	AF407160	2	early	Q842.d12, Q842d12, Q842, Q842_d12_PNS70d, Q842ENVd12	Q842-d12_PNS70d	Yes		232
+Q842_D14	A1	KENYA	acute infection	49	28		Sex worker	AF407161		early	Q842d14	Q842-d14	Yes		7
+Q842_D16	A1	KENYA	acute infection	49	28		Sex worker	AF407162	2	early	Q842.d16, Q842d16	Q842-d16	Yes		16
+QA013_70I_H1	D	KENYA			70		Sex worker	FJ866134		intermediate	QA013.70I.ENV.H1	QA013_70I_ENV_H1	Yes		7
+QA013_70I_M12	D	KENYA			70		Sex worker	FJ866135		intermediate	QA013.70I.ENV.M12	QA013_70I_ENV_M12	Yes		7
+QA465_59M_A1	D	KENYA			59		 	FJ866136		intermediate	QA465.59M.ENV.A1	QA465_59M_ENV_A1	Yes		7
+QA465_59M_D1	D	KENYA			59		 	FJ866137		intermediate	QA465.59M.ENV.D1	QA465_59M_ENV_D1	Yes		7
+QA790_204I_A4	A1D	KENYA			204		Heterosexual	FJ866124		chronic	QA790.204I.ENV.A4	QA790_204I_ENV_A4	Yes		7
+QA790_204I_C1	A1D	KENYA			204		Heterosexual	FJ866125		chronic	QA790.2041.ENV.C1, QA790.2041.c1	QA790_204I_ENV_C1	Yes		14
+QA790_204I_C8	A1D	KENYA			204		Heterosexual	FJ866126		chronic	QA790.2041.ENV.C8	QA790_204I_ENV_C8	Yes		7
+QA790_204I_E2	A1D	KENYA			204		Heterosexual	FJ866127		chronic	QA790.2041.ENV.E2	QA790_204I_ENV_E2	Yes		7
+QB099_391M_B1	C	KENYA			391		Heterosexual	FJ866131		chronic	QB099.391M.ENV.B1	QB099_391M_ENV_B1	Yes		7
+QB099_391M_C8	C	KENYA			391		Heterosexual	FJ866132		chronic	QB099.391M.ENV.C8	QB099_391M_ENV_C8	Yes		7
+QB726_70M_B3	A1	KENYA			70		Heterosexual	FJ866111		intermediate	QB726.70M.ENV.B3	QB726_70M_ENV_B3	Yes		7
+QB857_110I_B3	D	KENYA			110		 	FJ866138		chronic	QB857.110I.ENV.B3, QB857.B3	QB857_110I_ENV_B3	Yes		16
+QC406_70M_F3	C	KENYA			70		Heterosexual	FJ866133	2	intermediate	QC406.F3, QC406.70M.ENV.F3	QC406_70M_ENV_F3	Yes		16
+QD435_100M_A4	D	KENYA			100		 	FJ866139	2	chronic	QD435.100M.ENV.A4, QD435.A4	QD435_100M_ENV_A4	Yes		16
+QD435_100M_B5	D	KENYA			100		 	FJ866140		chronic	QD435.100M.ENV.B5	QD435_100M_ENV_B5	Yes		7
+QD435_100M_E1	D	KENYA			100		 	FJ866141		chronic	QD435.100M.ENV.E1	QD435_100M_ENV_E1	Yes		7
+QF495_23M_A1	A1	KENYA			23		Heterosexual	FJ866113		acute	QF495.23M.ENV.A1	QF495_23M_ENV_A1	Yes		7
+QF495_23M_A3	A1	KENYA			23		Heterosexual	FJ866114		acute	QF495.23M.ENV.A3	QF495_23M_ENV_A3	Yes		7
+QF495_23M_B2	A1	KENYA			23		Heterosexual	FJ866115		acute	QF495.23M.ENV.B2	QF495_23M_ENV_B2	Yes		7
+QF495_23M_D1	A1	KENYA			23		Heterosexual	FJ866116		acute	QF495.23M.ENV.D1	QF495_23M_ENV_D1	Yes		7
+QG393_60M_A1	21_A2D	KENYA			60		Heterosexual	FJ866128		intermediate	QG393.60M.ENV.A1	QG393_60M_ENV_A1	Yes		7
+QG393_60M_B7	21_A2D	KENYA			60		Heterosexual	FJ866129		intermediate	QG393.60M.ENV.B7	QG393_60M_ENV_B7	Yes		7
+QG393_60M_B8	21_A2D	KENYA			60		Heterosexual	FJ866130		intermediate	QG393.60M.ENV.B8	QG393_60M_ENV_B8	Yes		7
+QG984_21M_A3	A1	KENYA			21		Heterosexual	FJ866117		acute	QG984.21M.ENV.A3	QG984_21M_ENV_A3	Yes		7
+QH0515_1	B	TRINIDAD AND TOBAGO	acute infection	28	0	4	Heterosexual	AY835440	2	intermediate	QH0515.1, QHO515, QH0515.01, QH0515_01, QH0515	QH0515_1	Yes		105
+QH0692_42	B	TRINIDAD AND TOBAGO	acute infection	42	early	5	Heterosexual	AY835439	2	acute	QHO692.42, QH0692, QHO692, QH0692_M, QH0692 clone 42, QH0692.42	QH0692_42	Yes		303
+QH209_14M_A2	A1	KENYA	acute infection		14		Heterosexual	FJ866118		acute	QH209_14M_ENV_A2, QH209.14M.A2, QH209.14M.ENV.A2, QH029.14M.A2, QH209	QH209_14M_ENV_A2	Yes		95
+QH343_21M_A10	A1	KENYA			21		Heterosexual	FJ866119		acute	QH343.21M.ENV.A10	QH343_21M_ENV_A10	Yes		7
+QH343_21M_B5	A1	KENYA			21		Heterosexual	FJ866120		acute	QH343.21M.ENV.B5	QH343_21M_ENV_B5	Yes		7
+QH359_21M_C1	A1	KENYA			21		Heterosexual	FJ866121		acute	QH359.21M.ENV.C1	QH359_21M_ENV_C1	Yes		7
+QH359_21M_D1	A1	KENYA			21		Heterosexual	FJ866122		acute	QH359.21M.ENV.D1	QH359_21M_ENV_D1	Yes		7
+R1166_C1	01_AE	THAILAND				6	Heterosexual	JQ352783	2	early	R1166rsga, R1166_C01, R1166, R1166.c1, R1166rsga_c1, R1166.c01	R1166_c01	Yes		205
+R18553	A1	RWANDA	chronic			5	Heterosexual	HM215434	2	early		R18553_E1	Yes		15
+R2	B	UNITED STATES	chronic		no data		Not Recorded	AF128126		chronic		R2_envUS_R2	Yes		10
+R2184_C4	01_AE	THAILAND			late	6	Heterosexual	JN944665	2	early	R2184rsga_c4, R2184rsga4, R2184.c4, R2184_C04, R2184.c04, R2184	R2184_c04	Yes		176
+R3265_C6	01_AE	THAILAND				6	Heterosexual	JX512903	2	chronic	R3265.c06, R3265_C06, R3265.c6, R3265rsga, R3265rsga_c6	R3265_c06	Yes		159
+R880F_ENV	A1	RWANDA			early	3	Heterosexual	JX236678		intermediate	R880F.Env	pR880F	Yes		10
+RBF125	O	FRANCE					Not Recorded	GU935991				RBF125	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+RBF168	P	FRANCE	chronic		late		Heterosexual	GU111555		chronic		RBF168	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+RBF189	O	FRANCE					Not Recorded	GU936016				RBF189	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+RBF208	DO	FRANCE	AIDS		late		 	GQ351296		chronic		RBF208	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+REJO4541_67	B	UNITED STATES	acute infection	14	0	2	Heterosexual	AY835449	2	acute	REJO_67, REJ04541.67, REJO, REJO4541 clone 67, REJO.67, REJO4541.67, REJO4541	REJO_67	Yes		277
+REJO_C	B	UNITED STATES				5	Heterosexual	JN944943		early		pREJO_c	Yes		6
+RHPA4259_7	B	UNITED STATES		56	early	5	Heterosexual	AY835447	2	early	RHPA4259 clone 7, RHPA, RHPA_7, RHPA.7, RHPA4259.7, RHPA4259	RHPA_7	Yes		289
+RHPA_C	B	UNITED STATES				5	Heterosexual	JN944944		early		pRHPA_c	Yes		6
+RPW_0510_2	B	THAILAND					 	HM215435			RPW-0510.2	RPW_0510_2	Yes		5
+S018_18	C	MALAWI	acute infection				 			early	SO18.18, SO18_18, S018, S018.18		Yes	No GenBank accession. Unpublished sequence provided by Mark Louder.	117
+SC05_8C11_2344	B	TRINIDAD AND TOBAGO	acute infection		early	2	Heterosexual	EU289200	2	acute	SC05.8C11.2344, SC05	SC05_8C11_2344	Yes		129
+SC19_15	07_BC	CHINA					 	HQ326129			SC19-15	SC19_15	Yes		4
+SC422_8	B	TRINIDAD AND TOBAGO	acute infection	28	0	4	Heterosexual	AY835441	2	acute	SC422661, SC422, SC422661_8, SC422661.8, SC422.8	SC42_8	Yes		299
+SC45_4B5_2631	B	TRINIDAD AND TOBAGO				2	Heterosexual	EU289201	2	acute	SC45.4B5, SC45.4B5.2631	SC45_4B5_2631	Yes		7
+SF162	B	UNITED STATES	chronic			6	Homosexual	EU123924	1A	early	SF162_LS, SF162.LS	SF162	Yes		225
+SG3	B	UNITED STATES	AIDS		late		Not Recorded	L02317		chronic		BC_BCSG3	Yes		13
+SH188_6	01_AE	CHINA				2	Sexual transmission, unspecified type	GU475041		acute		SH188_6	Yes		1
+SO032_A2_8_1	C	SOUTH AFRICA			18	5 or 6	Heterosexual	KF114894	1A	early	SO032_A2.8-1	SO032_A2.8-1	Yes		22
+SO186_H6_5	C	SOUTH AFRICA		91	early		Heterosexual	JN681247	2	intermediate	SO186_H6_5C, So186_H6_5	SO186_H6_5C	Yes		21
+SO225_H11_12	C	SOUTH AFRICA		49	early		Heterosexual	JN681252	2	early	SO_225_H11_12C, So225_H11_12	SO_225_H11_12C	Yes		21
+SO405_T24_5	C	SOUTH AFRICA		88	early		Heterosexual	JN681248	2	intermediate	SO405_T24_5C, So405_T24_5	SO405_T24_5C	Yes		22
+SO431_C1_1	C	SOUTH AFRICA		90	early		Heterosexual	JN681246	2	intermediate	So431_C1_1, S0431_C1_1C	S0431_C1_1C	Yes		22
+SO607_B6_9	C	SOUTH AFRICA			early		Not Recorded	KF114895	3	early	SO607_B6.9	SO607_B6.9	Yes		22
+SO706_T10B_3	C	SOUTH AFRICA		91	early		Heterosexual	JN681249	2	intermediate	SO706_T10b_3C, So706_T10b_3	SO706_T10b_3C	Yes		21
+SPK_0525_13	01_AE	THAILAND					 	HM215436			SPK-0525.13	SPK_0525_13	Yes		5
+SS1196_1	B	UNITED STATES		112	early	5 or 6	Homosexual	AY835442	1B	early	SS1196.01, SS1196, SS1196.1, SS1196_01	SS1196_1	Yes		175
+SUMA_D5_8_2	B	UNITED STATES	acute infection		-11	2	Male Sex with Male	EU577054	2	acute	SUMA-d5.8-2, SUMA_d5_8_2	SUMAd5_A8	Yes		6
+T250_4	02_AG	CAMEROON	chronic			6	Not Recorded	EU513189	2	early	250_4, CRF02_AG_250, T250-4.SG3, 250-4, T250-4, 250, T250	250	Yes	The sequence we provide differs from the GenBank sequence by 3 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	221
+T251_18	02_AG	CAMEROON	chronic			6	Not Recorded	EU513196	2 or 3	early	T25118, T251, 251-18, T251-18, 251_18	251	Yes	The sequence we provide differs from the GenBank sequence by 15 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	202
+T252_7	A1G	CAMEROON	chronic			6	Not Recorded	EU513190	2	early	252-7, 252_7	252	Yes	The sequence we provide differs from the GenBank sequence by 15 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	28
+T253_11	02_AG	CAMEROON	chronic			6	Not Recorded	EU513191	2 or 3	early	253, T253-11, 253-11	253	Yes	The sequence we provide differs from the GenBank sequence by 2 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	106
+T255_34	02_AG	CAMEROON	chronic			6	Not Recorded	EU513184	2	early	255_34, T255, 255, 255-34, T255-34	255	Yes		180
+T257_31	02A1	CAMEROON	acute infection		early		Not Recorded	EU513185	2 or 3	early	T257, 257-31, 257_31, T257-31	257	Yes		204
+T278_50	02_AG	CAMEROON	chronic			6	Not Recorded	EU513198	2 or 3	early	278, 278-50, T278-50.SG3, T278-50, T278, 278_50	278	Yes	The sequence we provide differs from the GenBank sequence by 16 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	207
+T280_5	02A1	CAMEROON	chronic			6	Not Recorded	EU513183	2	early	T280-5, 280-5, 280_5, 280	280	Yes	The sequence we provide differs from the GenBank sequence by 5 amino acids. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	99
+TH023_6	01_AE	THAILAND	chronic		105	6	Heterosexual	KU562843	1A	chronic	TH023.6, TH023, 92TH023	TH023	Yes		79
+TH966_8	01_AE	THAILAND	asymptomatic		no data		Heterosexual	U08456		chronic	93TH966, TH966.8	93TH966_8	Yes		130
+TH976_17	01_AE	THAILAND	asymptomatic		no data		Heterosexual	U08458	2	chronic	TH976.17, 93TH976	93TH976_17	Yes		137
+THRO4156	B	UNITED STATES	acute infection	7	0	2	Homosexual	AY835448	2	acute	THR0.18, THRO4156_18, THRO_18, THRO, THRO4156.18, THRO.18, THR04156.18	THRO_18	Yes		306
+THRO_C	B	UNITED STATES				5	Homosexual	JN944946		early		pTHRO_c	Yes		6
+TRJO4551_58	B	UNITED STATES	acute infection		early	2	Male Sex with Male	AY835450	3	acute	TRJ0.58, TRJ04551.58, TRJO.58, TRJO4551.58, TRJO, TRJO4551, TRJO_58	TRJO_58	Yes		368
+TRO_11	B	ITALY	acute infection	28	0	3	Male Sex with Male	AY835445	2	acute	TRO, TRO clone 11, TRO.11, B4(TRO.11), TRO11	TRO_11	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	367
+TT29P_3A1_2769	B	TRINIDAD AND TOBAGO	acute infection		early	2	Heterosexual	EU577190	2	acute	TT29P-CRC01910.3A1	TT29P_3A1	Yes		5
+TT31P_2F10_2792	B	TRINIDAD AND TOBAGO	acute infection		early	2	Heterosexual	EU577213	2	acute	TT31P-CRC03428.2F10	TT31P_2F10	Yes		5
+TV1_21	C	SOUTH AFRICA				6	Heterosexual	HM215437	1 or 2	early	TV1.21.SG3, TV1.21	TV1_21	Yes		17
+TV1_29	C	SOUTH AFRICA	chronic				Heterosexual	EU855132		chronic	TV1.29, TV001, TV1.29.SG3	TV001_29	Yes		118
+TZA125_17	C	TANZANIA	chronic				Not Recorded	JQ362423		chronic	TZA125, TZA125.17	TZA125.17	Yes		107
+TZBD_02	C	TANZANIA	chronic				Not Recorded	JQ362424		chronic	TZBD.02, TZBD	TZBD.02	Yes		99
+UG021_16	D	UGANDA	asymptomatic		no data		Heterosexual	U27399		chronic	UG021.16, 92UG021	92UG021_16	Yes		82
+UG024_2	D	UGANDA	asymptomatic		no data		Heterosexual	U43386		chronic	92UG024_2, 92UG024_D, UG024.2, 92UG024	92UG024_2	Yes		121
+UG037_8	A1	UGANDA	asymptomatic		no data		Heterosexual	U09127	1	chronic	92UG037.8, UG037.8, 92UG037	92UG037_8	Yes		177
+UG037_8_K651N	A1	UGANDA	asymptomatic		no data		Heterosexual	U09127		chronic	UG037.8.K651N.SG3	92UG037_8	Yes	K651N mutant viral nucleotide sequence provided by Nicole Doria-Rose. Sequence differs from wild type GenBank sequence by 1 nucleotide.	8
+UNC6316_11	H	UNITED STATES	chronic		late		 	HM215438		chronic	UNC6316.11	UNC6316_11	Yes		5
+VI1090	02_AG	BELGIUM					Heterosexual	HQ912710				VI1090	Yes		6
+VI1090_N276D	02_AG	BELGIUM					Heterosexual	HQ912710				VI1090	Yes	Differs from accession sequence by one nucleotide to create N276D mutation (Balla-Jhagjhoorsingh2013).	6
+VI829	C	BELGIUM					 	EU191613				VI829_1	Yes		6
+VI829_N276D	C	BELGIUM					 	EU191613				VI829_1	Yes	Differs from accession sequence by one nucleotide to create N276D mutation (Balla-Jhagjhoorsingh2013).	6
+VLGC_A1	A1	BELGIUM	chronic		no data		Not Recorded	AY669698		chronic	VLGCA1	VLGC_A1	Yes		32
+VLGC_B3	B	BRAZIL			early		Not Recorded	AY669720		early	VLGCB3	VLGC_B3	Yes		32
+W61D_TCLA_71	B	NETHERLANDS					 	HM215359	1A		W61D-TCLA.71	ACH320_W61D_TCLA_71	Yes		7
+WEAU_D15_410	B	UNITED STATES	acute infection			2	Male Sex with Male	EU289202	2	acute	pWEAUd15.410.5017, WEAU_D15_410_787, WEAU, WEAU_D15_410_5017, WEAU_d15_410_787, WEAU-d15.410.787, WEAU_d15_410_5017	WEAUd15_410_5017	Yes		147
+WITO4160_33	B	UNITED STATES	acute infection		early	2	Heterosexual	AY835451	2	acute	WITO, WITO4160 clone 33, WITO_33, pWITO4160, WIT04160.33, WITO.33, WITO4160.33	WITO_33	Yes		254
+X1100_C7	BG	SPAIN			730		IV Drug User	EU885760		chronic	X1100_c7	X1100_7	Yes		9
+X1193_C1	G	SPAIN	chronic				IV Drug User	EU885761	2	chronic	X1193_c1, 1193_C1, X1193.c1, X1193	X1193_1	Yes		164
+X1254_C3	G	SPAIN	chronic		late		IV Drug User	EU885762	2	chronic	X1254_c3, X1254, X1254.c3, 1254_C3	X1254_3	Yes		182
+X1632_S2_B10	G	SPAIN	chronic		late		Heterosexual	FJ817370	2	chronic	X1632, X1632.S2.B10, 1632_S2_B10	X1632_s2_b10	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	203
+X1854_C2_10	G	SPAIN			152	5 or 6	IV Drug User	EU885763		early	X1854_c2_10	X1854_2_10	Yes		10
+X2088_C9	G	SPAIN	chronic		late		Heterosexual	EU885764	2	chronic	X2088_c9, X2088_9, X2088, 2088_C9, X2088.c9	X2088_9	Yes		194
+X2131_C1_B5	G	SPAIN					Heterosexual	FJ817368	2		X2131, X2131.C1.B5, 2131_C1_B5	X2131_c1_B5	Yes	The sequence we provide differs from the GenBank sequence by 1 amino acid. Based on personal communication (David Montefiori group), the sequence we provide is most likely the one used for neutralization studies. The accession number provided is used to obtain virus and patient data.	165
+X2160_C25	G	SPAIN	chronic		late		IV Drug User	EU885765		chronic	X2160_c25	X2160_r25	Yes		14
+X2252_C7	14_BG	SPAIN	chronic		late		IV Drug User	EU885766		chronic	X2252_c7	X2252_7	Yes		9
+X2278_C2_B6	B	SPAIN				5 or 6	Heterosexual	FJ817366	2	early	X2278, X2278.C2.B6	X2278_c2_B6	Yes	This virus belongs to a 12-virus panel that was shown optimal for standardized assessments of neutralizing antibodies (deCamp2014 PMID 24352443).	76
+X2348_C2_8	B	DOMINICAN REPUBLIC				5 or 6	Male Sex with Male	FJ817365		early		X2348_c2_8	Yes		5
+XJ16_6	07_BC	CHINA					 	HQ326133			XJ16-6	XJ16_6	Yes		4
+YBF16	O	CAMEROON	AIDS	late	late		Not Recorded	AJ133063		chronic		YBF16	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+YBF26	O	CAMEROON	AIDS	late	late		Heterosexual	AJ133068		chronic		YBF26	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	24
+YBF30	N	CAMEROON	AIDS		late		Heterosexual	AJ006022		chronic		YBF30	Yes		27
+YBF32	O	CAMEROON	AIDS	late	late		Heterosexual	AJ236417		chronic		YBF32	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	24
+YBF35	O	CAMEROON	AIDS	late	late		Heterosexual	AJ236418		chronic		YBF35	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+YBF37	O	CAMEROON	symptomatic	no data	no data		Heterosexual	AJ133067		chronic		YBF37	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+YBF38	O	CAMEROON	symptomatic	no data	no data		Heterosexual	AJ133070		chronic		YBF38	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+YBF39	O	CAMEROON	AIDS	late	late		Heterosexual	AJ236421		chronic		YBF39	Yes	Sequence used in this database does not match accession; unpublished full length Env sequence was provided by Francis Barin and colleagues.	27
+YN148R_9	07_BC	CHINA					 	HQ326139			YN148r-9	YN148r_9	Yes		4
+YN192_31	01_AE	CHINA				5 or 6	 	GU475046		early	YN192.31	YN192_31	Yes		4
+YU2	B	UNITED STATES	deceased		late		Not Recorded	M93258	2	chronic	YU_2, YU2_DG, YU-2, YU2_WT, YU2.DG	YU-2	Yes		247
+Z258_2012_SGA5	B	UNITED STATES	chronic		late		Not Recorded	KX595122		chronic		Z258.2012_SGA5	Yes		8
+ZA012_29	C	SOUTH AFRICA	chronic				Not Recorded	EU855133	2	chronic	97ZA012, ZAO12.29, C97ZA012, ZA012, ZA012.29	ZA012_29	Yes		181
+ZENV07_0504_15	B	SWITZERLAND					 	KU600814	2			ZEnv07_0504_15	Yes		20
+ZENV16_1202_7	B	SWITZERLAND					 	KU600818	2			ZEnv16_1202_7	Yes		20
+ZENV32_0111_5	01_AE	SWITZERLAND					 	KU600816	2			ZEnv32_0111_5	Yes		20
+ZENV91_0505_12	B	SWITZERLAND					 	KU600815	2			ZEnv91_0505_12	Yes		20
+ZENV92_1008_8	01_AE	SWITZERLAND					 	KU600817	2			ZEnv92_1008_8	Yes		20
+ZM106_9	C	ZAMBIA			91	6	Heterosexual	AY424163	2	intermediate	ZM106, ZM106.9, ZM106F.PB9, ZM106F_PB9, 106F9	ZM106F_PB9	Yes		178
+ZM109_4	C	ZAMBIA	chronic		91	6	Heterosexual	AY424138	1B or 2	chronic	ZM109F_PB4, ZM109.4, ZM109F.PB4, ZMN109F.PB4, ZMN109.PB4, ZM109F	ZM109F_PB4	Yes		300
+ZM135_10A	C	ZAMBIA	chronic		122	6	Heterosexual	AY424079	2	chronic	ZM135.10a, ZM135M, ZM135M.PL10a, ZM135M_PL10A	135MPL10a	Yes		255
+ZM176_66	C	ZAMBIA	acute infection				 			early	ZM176, ZM176.66		Yes	No GenBank accession. Unpublished sequence provided by Mark Louder.	117
+ZM197_7	C	ZAMBIA		55	early		Heterosexual	DQ388515	1B or 2	early	ZM197M_PB7, ZM197.7, ZM197M.PB7, ZM197M, ZM14654M.7	ZM197M	Yes		275
+ZM214_15	C	ZAMBIA		44	early		Heterosexual	DQ388516	2	early	ZM214M, ZM214M_PL15, ZM214.15, ZM214M.PL15, ZM17086M.15	ZM214M	Yes		281
+ZM215_8	C	ZAMBIA		54	early	6	Heterosexual	DQ422948	2	early	ZM215F.PB8, ZM17109F.8, ZM215F, ZM215.8, ZM215F_PB8	ZM215F	Yes		101
+ZM233_6	C	ZAMBIA		54	early	6	Heterosexual	DQ388517	2	early	ZM233M.PB6, ZM18108M.6, ZM233M_PB6, ZM233M, ZM233.6	ZM233M	Yes		256
+ZM246F	C	ZAMBIA	acute infection		early	2	Heterosexual	FJ496194	2	acute	ZM246F C1G, 246F_C1G, ZM246F.D5, ZM246, 246FC1G, 246F	ZM246F_flD5	Yes		128
+ZM246F_REV	C	ZAMBIA	acute infection		early	2	Heterosexual	FJ496194	2	acute	ZM246_REV_	ZM246F_flD5	Yes		5
+ZM247_V1	C	ZAMBIA	acute infection		early	2	Heterosexual	FJ496204	2	acute	ZM247Fv1_Rev-, ZM247V1, ZM247, ZM247V1_REV_, ZM247F.F7, ZM247v1(Rev-)	ZM247F_flF7	Yes		132
+ZM249_1	C	ZAMBIA	acute infection	7	early	2	Heterosexual	DQ388514	2	acute	ZM249M, ZM249.1, ZM249M.PL1, ZM249M_PL1, ZM19443M.1	ZM249M_PL1	Yes		255
+ZM53_12	C	ZAMBIA	chronic		91	6	Heterosexual	AY423984	2	chronic	ZM53M, ZM53M_PB12, 53M12, ZM53M.PB12, ZM53.12	53M12	Yes		238
+ZM55_28A	C	ZAMBIA			91	6	Heterosexual	AY423971	2	intermediate	ZM55.28a, ZM55F.PB28a, 55F28A, ZM55F_PB28A, ZM55	55F28a	Yes		167
+23_2_E	B						 				23.2.E		No		4
+23_8_12	B						 				23.8.12		No		4
+271_11	02_AG	CAMEROON	acute infection		early		Not Recorded	EU513197	1B or 2	early	271, 271-11	271	No	No sequence provided due to uncertainty about what sequence represents the assayed virus. GenBank sequences of 271_11 and T33_7 are 99% identical without explanation.	133
+320008	01_AE						 			acute			No		5
+320040	01_AE						 			acute			No		5
+4_10_3	B						 				4.10.3		No		4
+57128_02	D	UGANDA					 				57128.02		No	The sequence for this clone is not available. According to Mark Louder (personal communication), it is not the same clone as 57128_vrc15.	9
+8_8_8	B						 				8.8.8		No		4
+92BR025_C1	C						 				92BR025.C1		No		4
+92RW021	A	RWANDA	chronic				 			chronic			No		34
+93UG053	D	UGANDA			no data		Heterosexual	U13542				93UG053	No		11
+96USNG17	A	UNITED STATES					 	AF096328				96USNG17	No		11
+96USNG58	C	UNITED STATES					 	AF096329				96USNG58	No		11
+97IN003_4_2	C						 				97IN003.4.2		No		4
+98IN017	C	INDIA					 						No		11
+AC13_8	C	SOUTH AFRICA					 	AF468469				AC13	No		10
+AMC011	B	NETHERLANDS	chronic				 		2	early			No	Autologous virus from donor D12950 (ACS202); sampled 8 months post-seroconversion.	7
+BIG	B	FRANCE					 		2 or 3				No		13
+BJOX004000	B	CHINA					 			chronic	BJOX4, MG02		No		2
+BJOX014000	B	CHINA					 			early	BJOX14		No		2
+BJOX016000	07_BC	CHINA					 			chronic	BJOX16		No		2
+BJOX037000	07_BC	CHINA					 			intermediate	BJOX37		No		2
+BJOX041000	B	CHINA					 			intermediate	MG23, BJOX41		No		2
+BJOX046000	B	CHINA					 			intermediate	BJOX46		No		2
+C222	C						 						No		4
+C261	C						 						No		4
+C37_4_2	C						 				C37.4.2		No		4
+C38_2_2	C						 				C38.2.2		No		4
+CA6	C						 						No		4
+CAP256_SU_K169I	C	SOUTH AFRICA					 						No	The K169I mutant of CAP256 SU, which is the superinfecting strain of donor CAP256 at the 15-week timepoint.	30
+CAP256_SU_K169Q	C	SOUTH AFRICA					 						No	The K169Q mutant of CAP256 SU, which is the superinfecting strain of donor CAP256 at the 15-week timepoint.	30
+CAP256_SU_K169R	C	SOUTH AFRICA					 						No	The K169R mutant of CAP256 SU, which is the superinfecting strain of donor CAP256 at the 15-week timepoint.	30
+CAP256_SU_K169T	C	SOUTH AFRICA					 						No	The K169T mutant of CAP256 SU, which is the superinfecting strain of donor CAP256 at the 15-week timepoint.	30
+CAP256_SU_R166K	C	SOUTH AFRICA					 						No	The R166K mutant of CAP256 SU, which is the superinfecting strain of donor CAP256 at the 15-week timepoint.	30
+CB7	C						 						No		4
+CN54	07_BC						 						No		4
+FRO	B	FRANCE					 		2 or 3				No		13
+IAVI_C18	C						 				IAVIC_18, IAVI C18, IAVI-C18		No		8
+IAVI_C22	C						 		2		IAVIC22, IAVI.C22, IAVI C22		No	Landais et al. 2016 [PMID 26766578] note that IAVI-C22 and MGRM-C026 are the same virus.	46
+IAVI_C3	C						 				IAVIC3, IAVI C3, IAVI-C3		No		8
+KKGO	B	JAPAN					 						No		1
+KMT	B	JAPAN					 						No		1
+KTS376_96	B	JAPAN					 				KTS376-96		No		1
+MB201_B10	A	KENYA	chronic				 			chronic	MB201.B10		No		7
+MB539_2D1	A	KENYA	chronic				 			chronic	MB539.2D1		No		7
+MGRM_A_001	A		chronic				 			chronic			No		32
+MGRM_A_002	A		chronic				 			chronic			No		31
+MGRM_A_003	A		chronic				 			chronic			No		32
+MGRM_A_004	A		chronic				 			chronic			No		32
+MGRM_A_005	A		chronic				 			chronic			No		32
+MGRM_A_006	A		chronic				 			chronic			No		32
+MGRM_A_007	A		chronic				 			chronic			No		32
+MGRM_A_008	A		chronic				 			chronic			No		32
+MGRM_A_009	A		chronic				 			chronic			No		32
+MGRM_A_010	A		chronic				 			chronic			No		32
+MGRM_A_011	A		chronic				 			chronic			No		32
+MGRM_A_012	A		chronic				 			chronic			No		32
+MGRM_A_013	A		chronic				 			chronic			No		32
+MGRM_A_014	A		chronic				 			chronic			No		32
+MGRM_A_015	A		chronic				 			chronic			No		6
+MGRM_A_016	A		chronic				 			chronic			No		6
+MGRM_A_017	A		chronic				 			chronic			No		6
+MGRM_A_018	A		chronic				 			chronic			No		6
+MGRM_A_019	A		chronic				 			chronic			No		6
+MGRM_A_020	A		chronic				 			chronic			No		7
+MGRM_A_021	A		chronic				 			chronic			No		6
+MGRM_A_022	A		chronic				 			chronic			No		6
+MGRM_A_023	A		chronic				 			chronic			No		6
+MGRM_A_024	A		chronic				 			chronic			No		6
+MGRM_ACUTE_B_001	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_002	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_003	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_004	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_005	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_006	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_007	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_008	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_009	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_010	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_011	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_012	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_015	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_016	B		acute infection				 			early			No		6
+MGRM_ACUTE_B_017	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_018	B		acute infection				 			early			No		7
+MGRM_ACUTE_B_020	B		acute infection				 			early			No		7
+MGRM_AE_001	01_AE		chronic				 			chronic			No		32
+MGRM_AE_002	01_AE		chronic				 			chronic			No		32
+MGRM_AE_003	01_AE		chronic				 			chronic			No		32
+MGRM_AE_004	01_AE		chronic				 			chronic			No		32
+MGRM_AE_005	01_AE		chronic				 			chronic			No		32
+MGRM_AE_006	01_AE		chronic				 			chronic			No		32
+MGRM_AE_007	01_AE		chronic				 			chronic			No		32
+MGRM_AE_008	01_AE		chronic				 			chronic			No		32
+MGRM_AG_001	AG		chronic				 			chronic			No		32
+MGRM_AG_003	AG		chronic				 			chronic			No		32
+MGRM_AG_005	AG		chronic				 			chronic			No		32
+MGRM_AG_006	AG		chronic				 			chronic			No		32
+MGRM_AG_008	AG		chronic				 			chronic			No		32
+MGRM_AG_009	AG		chronic				 			chronic			No		32
+MGRM_AG_010_14	AG		chronic				 			chronic	MGRM_AG_010		No		12
+MGRM_AG_011	AG		chronic				 			chronic			No		32
+MGRM_AG_012	AG		chronic				 			chronic			No		32
+MGRM_AG_013	AG		chronic				 			chronic			No		32
+MGRM_C_001	C		chronic				 			chronic			No		31
+MGRM_C_002	C		chronic				 			chronic			No		31
+MGRM_C_004	C		chronic				 			chronic			No		31
+MGRM_C_005	C		chronic				 			chronic			No		31
+MGRM_C_006	C		chronic				 			chronic			No		31
+MGRM_C_007	C		chronic				 			chronic			No		31
+MGRM_C_008	C		chronic				 			chronic			No		31
+MGRM_C_009	C		chronic				 			chronic			No		31
+MGRM_C_010	C		chronic				 			chronic			No		31
+MGRM_C_012	C		chronic				 			chronic			No		31
+MGRM_C_013	C		chronic				 			chronic			No		31
+MGRM_C_014	C		chronic				 			chronic			No		31
+MGRM_C_015	C		chronic				 			chronic			No		31
+MGRM_C_017	C		chronic				 			chronic			No		31
+MGRM_C_019	C		chronic				 			chronic			No		31
+MGRM_C_020	C		chronic				 			chronic			No		31
+MGRM_C_022	C		chronic				 			chronic			No		31
+MGRM_C_023	C		chronic				 			chronic			No		31
+MGRM_C_024	C		chronic				 			chronic			No		31
+MGRM_C_025	C		chronic				 			chronic			No		31
+MGRM_C_026	C		chronic				 		2	chronic	MGRM-C026		No	Landais et al. 2016 [PMID 26766578] note that IAVI-C22 and MGRM-C026 are the same virus.	32
+MGRM_C_027	C		chronic				 			chronic			No		30
+MGRM_C_028	C		chronic				 			chronic			No		31
+MGRM_C_029	C		chronic				 			chronic			No		6
+MGRM_C_030	C		chronic				 			chronic			No		6
+MGRM_C_031	C		chronic				 			chronic			No		7
+MGRM_C_032	C		chronic				 			chronic			No		7
+MGRM_C_033	C		chronic				 			chronic			No		7
+MGRM_C_034	C		chronic				 			chronic			No		6
+MGRM_C_035	C		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_001	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_002	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_003	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_004	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_008	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_010	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_011	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_012	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_014_2	B		chronic				 			chronic			No		11
+MGRM_CHRONIC_B_017	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_018	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_020	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_023	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_024	B		chronic				 			chronic			No		32
+MGRM_CHRONIC_B_025	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_026	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_027	B		chronic				 			chronic			No		6
+MGRM_CHRONIC_B_028	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_029	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_030	B		chronic				 			chronic			No		6
+MGRM_CHRONIC_B_031	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_032	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_033	B		chronic				 			chronic			No		7
+MGRM_CHRONIC_B_034	B		chronic				 			chronic			No		7
+MGRM_D_001	D		chronic				 			chronic			No		31
+MGRM_D_002	D		chronic				 			chronic			No		31
+MGRM_D_003	D		chronic				 			chronic			No		31
+MGRM_D_004	D		chronic				 			chronic			No		31
+MGRM_D_005	D		chronic				 			chronic			No		31
+MGRM_D_008	D		chronic				 			chronic			No		31
+MGRM_D_011	D		chronic				 			chronic			No		31
+MGRM_D_012	D		chronic				 			chronic			No		31
+MGRM_D_013	D		chronic				 			chronic			No		31
+MGRM_D_014	D		chronic				 			chronic			No		31
+MGRM_D_016	D		chronic				 			chronic			No		31
+MGRM_D_018	D		chronic				 			chronic			No		31
+MGRM_D_019	D		chronic				 			chronic			No		31
+MGRM_D_020	D		chronic				 			chronic			No		31
+MGRM_D_021	D		chronic				 			chronic			No		31
+MGRM_D_022	D		chronic				 			chronic			No		31
+MGRM_D_024	D		chronic				 			chronic			No		31
+MGRM_D_026	D		chronic				 			chronic			No		31
+MGRM_D_028	D		chronic				 			chronic			No		31
+MGRM_D_029	D		chronic				 			chronic			No		31
+MGRM_D_030	D		chronic				 			chronic			No		6
+MGRM_D_031	D		chronic				 			chronic			No		6
+MGRM_D_032	D		chronic				 			chronic			No		6
+MGRM_D_033	D		chronic				 			chronic			No		6
+MGRM_D_034	D		chronic				 			chronic			No		7
+MGRM_D_035	D		chronic				 			chronic			No		6
+MGRM_D_036	D		chronic				 			chronic			No		6
+MGRM_D_037	D		chronic				 			chronic			No		6
+MGRM_D_038	D		chronic				 			chronic			No		6
+MGRM_D_039	D		chronic				 			chronic			No		6
+MGRM_F1_004	F1		chronic				 			chronic			No		31
+MGRM_F1_006	F1		chronic				 			chronic			No		31
+MGRM_F1_008	F1		chronic				 			chronic			No		31
+MGRM_F1_010	F1		chronic				 			chronic			No		30
+MGRM_F1_012	F1		chronic				 			chronic			No		31
+MGRM_F1_013	F1		chronic				 			chronic			No		29
+MGRM_F1_014	F1		chronic				 			chronic			No		31
+MGRM_F1_015	F1		chronic				 			chronic			No		31
+MGRM_F1_016	F1		chronic				 			chronic			No		31
+MGRM_F1_017	F1		chronic				 			chronic			No		31
+MGRM_F1_018	F1		chronic				 			chronic			No		31
+MGRM_F1_020	F1		chronic				 			chronic			No		31
+MGRM_F1_021	F1		chronic				 			chronic			No		31
+MGRM_F1_022	F1		chronic				 			chronic			No		31
+MGRM_F1_023	F1		chronic				 			chronic			No		31
+MGRM_G_001	G		chronic				 			chronic			No		31
+MGRM_G_004	G		chronic				 			chronic			No		31
+MGRM_G_006	G		chronic				 			chronic			No		31
+MGRM_G_009	G		chronic				 			chronic			No		31
+MGRM_G_011	G		chronic				 			chronic			No		31
+MGRM_G_013	G		chronic				 			chronic			No		31
+MGRM_G_014	G		chronic				 			chronic			No		31
+MGRM_G_015	G		chronic				 			chronic			No		31
+MGRM_G_016	G		chronic				 			chronic			No		31
+MGRM_G_017	G		chronic				 			chronic			No		31
+MGRM_G_019	G		chronic				 			chronic			No		31
+MGRM_G_024	G		chronic				 			chronic			No		31
+MGRM_G_025	G		chronic				 			chronic			No		31
+MGRM_G_027	G		chronic				 			chronic			No		31
+MGRM_G_028	G		chronic				 			chronic			No		31
+MS208_A3	A1D	KENYA	chronic				 			chronic	MS208.A3		No		5
+P08	01_AE						 			acute			No		8
+P11	01_AE						 			early			No		2
+QA255_21P_A15	A1	KENYA	acute infection				 			early	QA255.21P.ENV.A15		No		7
+SA32	C						 						No		3
+T266_60	02_AG	CAMEROON	chronic			6	Not Recorded	EU513193	2	early	266, T266-60, 266_60, 266-60	266	No	No sequence provided due to uncertainty about what sequence corresponds to tested virus.	116
+T33_7	02_AG	CAMEROON	chronic			6	Not Recorded	EU513186	2 or 3	early	33, 33-7, T33-7	33	No	No sequence provided due to uncertainty about what sequence represents the assayed virus. GenBank sequences of 271_11 and T33_7 are 99% identical without explanation.	116
+UG037_A9	A1	UGANDA	asymptomatic				 			chronic			No		11
+YKI	B	JAPAN					 						No		1
+ZA97001_1	C	SOUTH AFRICA					 				ZA97001.1		No		4
+ZM106_10	C	ZAMBIA	acute infection				 			early	ZM106.10		No		8
+ZM109_32	C	ZAMBIA	acute infection				 			early	ZM109.32		No		7
+ZM135_8A	C	ZAMBIA	chronic				 			chronic	ZM135.8a		No		7
+ZM146_7	C	ZAMBIA	acute infection				 			early	ZM146.7		No		14
+ZM181_6	C	ZAMBIA	acute infection				 			early	ZM181.6		No		10
+ZM53_21	C	ZAMBIA	chronic				 			chronic	ZM53.21		No		7
+ZM55_4A	C	ZAMBIA	acute infection				 			early	ZM55.4a		No		7
