@@ -32,7 +32,7 @@ import pandas as pd
 from abutils.utils.decorators import lazy_property
 
 from . import CATNAP_PATH
-from .bnab import get_bnab
+from .bnabs import get_bnab
 from .paper import Paper
 from .virus import get_virus
 
