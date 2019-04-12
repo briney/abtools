@@ -79,12 +79,6 @@ class Neutralization():
     @lazy_property
     def viruses(self):
         return list(set([n.raw['Virus'] for n in self.neuts]))
-
-    @lazy_property
-    def _ic50s(self):
-        ic50s = []
-        for r in self.raw:
-            if r['IC']
     
     @lazy_property
     def _abdict(self):
