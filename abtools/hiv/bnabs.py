@@ -38,7 +38,7 @@ from abutils.core.sequence import Sequence, read_json
 
 from . import CATNAP_PATH
 from .metadata import Metadata
-from .neut import Neutralization
+from .neut import get_neutralization
 from .paper import Paper
 
 if sys.version_info[0] > 2:
@@ -168,20 +168,20 @@ def get_bnabs(names=None):
             if row['Name'].strip():
                 metadata[row['Name']] = row
     # read the neut file
-    neutralization = {}
-    neut_file = os.path.join(CATNAP_PATH, 'neut.txt')
-    neutralization = pd.read_csv(neut_file,
-                                 sep='\t',
-                                 dtype=str,
-                                 index_col='Virus name')
-    neutralization = neutralization.T
-    for col in neutralization.columns.values:
-        if col['Name'].strip():
-            neutralization[col['Name']] = col
+    # neutralization = {}
+    # neut_file = os.path.join(CATNAP_PATH, 'neut.txt')
+    # neutralization = pd.read_csv(neut_file,
+    #                              sep='\t',
+    #                              dtype=str,
+    #                              index_col='Virus name')
+    # neutralization = neutralization.T
+    # for col in neutralization.columns.values:
+    #     if col['Name'].strip():
+    #         neutralization[col['Name']] = col
     # attach metadata and neut info to each pair
     for p in pairs:
         p.metadata = Metadata(metadata.get(p.name, None))
-        p.neut = Neutralization(neutralization.get(p.name, None))
+        p.neut = get_neutralization(antibody=p.name)
     return pairs
 
 
