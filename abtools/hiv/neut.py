@@ -32,9 +32,9 @@ import pandas as pd
 from abutils.utils.decorators import lazy_property
 
 from . import CATNAP_PATH
-from .bnabs import get_bnab
+import abtools.bnabs.get_bnab
 from .paper import Paper
-from .virus import get_virus
+import abtools.virus.get_virus
 
 if sys.version_info[0] > 2:
     STR_TYPES = [str, ]
