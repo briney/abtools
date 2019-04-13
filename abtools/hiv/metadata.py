@@ -23,6 +23,8 @@
 #
 
 
+import abtools.hiv.paper
+
 
 class Metadata():
     '''
@@ -63,7 +65,7 @@ class Metadata():
         if self._isolation_paper is None:
             if 'Isolation paper(Pubmed ID)' in self.raw:
                 paper_string = self.raw['Isolation paper(Pubmed ID)'].strip()
-                self._isolation_paper = bnAbPaper(paper_string)
+                self._isolation_paper = paper.Paper(paper_string)
         return self._isolation_paper
             
     @property
@@ -71,5 +73,5 @@ class Metadata():
         if self._germline_paper is None:
             if 'Germline paper(Pubmed ID)' in self.raw:
                 paper_string = self.raw['Germline paper(Pubmed ID)'].strip()
-                self._germline_paper = bnAbPaper(paper_string)
+                self._germline_paper = paper.Paper(paper_string)
         return self._germline_paper
