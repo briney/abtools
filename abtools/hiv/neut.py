@@ -276,7 +276,7 @@ class ID50(ICValue):
 
 def get_neutralization(antibody=None, virus=None):
     # read the neut file
-    with open(os.path.join(CATNAP_PATH, 'ab_info.txt')) as f:
+    with open(os.path.join(CATNAP_PATH, 'neut.txt')) as f:
         reader = csv.DictReader(f, delimiter='\t')
         data = [row for row in reader if row['Antibody'].strip()]
     antibodies = list(set([d['Antibody'] for d in data]))
