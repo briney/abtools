@@ -24,7 +24,9 @@
 
 
 from abc import abstractproperty
+import csv
 import itertools
+import os
 import sys
 
 import numpy as np
@@ -47,7 +49,7 @@ class Neutralization():
     '''
     Docstring for Neutralization
     '''
-    def __init__(neuts):
+    def __init__(self, neuts):
         self.neuts = neuts
 
     def __iter__(self):
@@ -216,14 +218,14 @@ class ICValue():
         
     @lazy_property
     def antibody(self):
-        return bnabs.get_bnab(self.raw['Antibody'])
+        return abtools.hiv.bnabs.get_bnab(self.raw['Antibody'])
     
     @lazy_property
     def virus(self):
-        return virus.get_virus(self.raw['Virus'])
+        return abtools.hiv.virus.get_virus(self.raw['Virus'])
     
     @lazy_property
-    def pmic(self):
+    def pmid(self):
         return self.raw['Pubmed ID']
     
     @lazy_property
