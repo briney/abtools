@@ -34,7 +34,7 @@ import sys
 import pandas as pd
 
 from abutils.core.pair import assign_pairs
-from abutils.core.sequence import Sequence
+from abutils.core.sequence import Sequence, read_json
 
 from . import CATNAP_PATH
 from .metadata import Metadata
@@ -155,8 +155,8 @@ def get_bnabs(names=None):
     if type(names) in STR_TYPES:
         names = [names, ]
     # read sequence data from JSON file
-    with open(os.path.join(CATNAP_PATH, 'ab_seqs.json')) as f:
-        seqs = [Sequence(s) for s in json.load(f)]
+    bnab_file = os.path.join(CATNAP_PATH, 'ab_seqs.json')
+    seqs = read_json(bnab_file)
     pairs = assign_pairs(seqs=seqs, delim='_')
     if names is not None:
         pairs = [p for p in pairs if p.name in names]
