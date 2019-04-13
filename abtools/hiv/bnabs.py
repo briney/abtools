@@ -165,8 +165,8 @@ def get_bnabs(names=None):
     with open(os.path.join(CATNAP_PATH, 'ab_info.txt')) as f:
         reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
-            if row['Antibody'].strip():
-                metadata[row['Antibody']] = row
+            if row['Name'].strip():
+                metadata[row['Name']] = row
     # read the neut file
     neutralization = {}
     neut_file = os.path.join(CATNAP_PATH, 'neut.txt')
@@ -176,8 +176,8 @@ def get_bnabs(names=None):
                                  index_col='Virus name')
     neutralization = neutralization.T
     for col in neutralization.columns.values:
-        if col['Antibody'].strip():
-            neutralization[col['Antibody']] = col
+        if col['Name'].strip():
+            neutralization[col['Name']] = col
     # attach metadata and neut info to each pair
     for p in pairs:
         p.metadata = Metadata(metadata.get(p.name, None))
