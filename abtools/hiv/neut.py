@@ -32,9 +32,9 @@ import pandas as pd
 from abutils.utils.decorators import lazy_property
 
 from . import CATNAP_PATH
-import abtools.hiv.bnabs.get_bnab
+import abtools.hiv.bnabs
 from .paper import Paper
-import abtools.hiv.virus.get_virus
+import abtools.hiv.virus
 
 if sys.version_info[0] > 2:
     STR_TYPES = [str, ]
@@ -215,11 +215,11 @@ class ICValue():
         
     @lazy_property
     def antibody(self):
-        return get_bnab(self.raw['Antibody'])
+        return bnabs.get_bnab(self.raw['Antibody'])
     
     @lazy_property
     def virus(self):
-        return get_virus(self.raw['Virus'])
+        return virus.get_virus(self.raw['Virus'])
     
     @lazy_property
     def pmic(self):
