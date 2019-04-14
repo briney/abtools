@@ -34,10 +34,11 @@ import pandas as pd
 
 from abutils.utils.decorators import lazy_property
 
-from . import CATNAP_PATH
 import abtools.hiv.bnabs
-from .paper import Paper
 import abtools.hiv.virus
+
+from . import CATNAP_PATH
+from .paper import Paper
 
 if sys.version_info[0] > 2:
     STR_TYPES = [str, ]
@@ -83,7 +84,11 @@ class Neutralization():
 
     @lazy_property
     def viruses(self):
-        return list(set([n.virus for n in self.neuts]))
+        viruses = []
+        for n in self.neuts:
+            viruses.append(n.virus.name)
+            viruses += n.virus.aliases
+        return list(set(viruses))
     
     @lazy_property
     def _abdict(self):
