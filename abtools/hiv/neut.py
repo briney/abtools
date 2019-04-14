@@ -274,25 +274,28 @@ class ID50(ICValue):
 
 
 
-def get_neutralization(antibody=None, virus=None):
-    # read the neut file
-    with open(os.path.join(CATNAP_PATH, 'neut.txt')) as f:
-        reader = csv.DictReader(f, delimiter='\t')
-        data = [row for row in reader if row['Antibody'].strip()]
-    antibodies = list(set([d['Antibody'] for d in data]))
-    viruses = list(set([d['Virus'] for d in data]))
-    neuts = []
-    for a, v in itertools.product(antibodies, viruses):
-        n = [d for d in data if all([d['Antibody'] == a, d['Virus'] == v])]
-        neuts.append(Neut(n))
+def get_neutralization(antibodies=None, viruses=None):
     # filter
-    if type(antibody) in STR_TYPES:
-        antibody = [antibody, ]
-    if type(virus) in STR_TYPES:
-        virus = [virus, ]
-    if antibody is not None:
-        neuts = [n for n in neuts if n.raw['Antibody'] in antibody]
-    if virus is not None:
-        neuts = [n for n in neuts if n.raw['Virus'] in virus]
+    if type(antibodies) in STR_TYPES:
+        antibodies = [antibodies, ]
+    if type(viruses) in STR_TYPES:
+        viruses = [viruses, ]
+    # read the neut file
+    neut_df = pd.read_csv(os.path.join(CATNAP_PATH, 'neut.txt'), sep='\t')
+    ## Would pandas be faster here??
+
+    # with open(os.path.join(CATNAP_PATH, 'neut.txt')) as f:
+    #     reader = csv.DictReader(f, delimiter='\t')
+    #     data = [row for row in reader if row['Antibody'].strip()]
+    if antibodies is None:
+        antibodies = neut_df['Antibody'].unique()
+    neuts = []
+    for a, in antibodies:
+        df = neut_df[neut_df['Antibody'] == a]
+        if viruses is None:
+            viruses = df['Virus'].unique()
+        for v in viruses:
+            d = df[df['Virus'] == v].to_dict(orient='records')
+            neuts.append(Neut(d))
     return Neutralization(neuts)
 
