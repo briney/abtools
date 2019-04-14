@@ -127,9 +127,9 @@ class Neut():
     def antibody(self):
         return self.raw[0]['Antibody']
 
-    @property
+    @lazy_property
     def virus(self):
-        return self.raw[0]['Virus']
+        return abtools.hiv.virus.get_virus(self.raw[0]['Virus'])
 
     @property
     def ic50_values(self):
