@@ -168,8 +168,14 @@ def get_viruses(viruses=None):
             print('ERROR:', err)
             sys.exit()
         vname = vdata['Virus name']
-        vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
-        vnt = [s for s in virus_nt if s.id.split('.')[2] == vname][0].sequence
+        try:
+            vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
+        except IndexError:
+            vaa = None
+        try:
+            vnt = [s for s in virus_nt if s.id.split('.')[2] == vname][0].sequence
+        except IndexError:
+            vnt = None
         virus_data.append(Virus(vdata, nt_sequence=vnt, aa_sequence=vaa))
     if len(virus_data) == 1:
         return virus_data[0]
