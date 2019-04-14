@@ -132,6 +132,25 @@ class Virus():
         return self.raw['# of Abs tested']
 
 
+def make_virus_db():
+    db = KeyValueStore(name='viruses', direc=CATNAP_PATH)
+    df = pd.read_csv(os.path.join(CATNAP_PATH, 'viruses.txt'), sep='\t').fillna('')
+    for row in df.iterrows():
+        data = row[1]
+        names = [data['Virus name']] + data['Alias'].split(', ')
+        for n in names:
+            db[n] = data
+    db.index()
+    return db
+
+
+def get_virus_db():
+    db_path = os.path.join(CATNAP_PATH, 'viruses')
+    if not os.path.isfile(db_path):
+        make_virus_db()
+    return KeyValueStore(name='viruses', direc=CATNAP_PATH)
+
+
 def get_virus(virus):
     return get_viruses([virus, ])
 
@@ -140,33 +159,17 @@ def get_viruses(viruses=None):
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
     # read the virus file
-    virus_df = pd.read_csv(os.path.join(CATNAP_PATH, 'viruses.txt'), sep='\t')
+    # virus_df = pd.read_csv(os.path.join(CATNAP_PATH, 'viruses.txt'), sep='\t')
+    virus_db = get_virus_db()
     virus_aa = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_aa.fasta'))
     virus_nt = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_nt.fasta'))
     if viruses is None:
-        viruses = virus_df['Virus name'].unique()
+        viruses = virus_db.keys()
     virus_data = []
     for v in viruses:
-        vdata = virus_df[virus_df['Virus name'] == v].to_dict(orient='records')
-        # if the provided virus name is an alias (not the actual formal name)
-        # we need to do some additional gymnastics to find the virus
-        if not vdata:
-            for row in virus_df.iterrows():
-                d = row[1]
-                if not pd.isnull(d['Alias']):
-                    aliases = d['Alias'].split(', ')
-                else:
-                    aliases = []
-                if v in aliases:
-                    vdata = virus_df[virus_df['Virus name'] == d['Virus name']].to_dict(orient='records')[0]
-                    break
-        else:
-            vdata = vdata[0]
-        if not vdata:
-            err = 'The virus name you requested ({}) does not seem to exist.\n'.format(v)
-            err += 'Virus names are case-sensitive, so check the capitalization and try again.\n\n'
-            print('ERROR:', err)
-            sys.exit()
+        vdata = virus_db[v]
+        if vdata is None:
+            continue
         vname = vdata['Virus name']
         try:
             vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
