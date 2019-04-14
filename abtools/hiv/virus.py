@@ -159,6 +159,11 @@ def get_viruses(viruses=None):
                     break
         else:
             vdata = vdata[0]
+        if not vdata:
+            err = 'The virus name you requested ({}) does not seem to exist.\n'.format(v)
+            err += 'Virus names are case-sensitive, so check the capitalization and try again.\n\n'
+            print('ERROR:', err)
+            sys.exit()
         vname = vdata['Virus name']
         vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
         vnt = [s for s in virus_nt if s.id.split('.')[2] == vname][0].sequence
