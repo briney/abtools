@@ -181,7 +181,7 @@ def get_bnabs(names=None):
     # attach metadata and neut info to each pair
     for p in pairs:
         p.metadata = Metadata(metadata.get(p.name, None))
-        p.neut = get_neutralization(antibody=p.name)
+        p.neut = get_neutralization(antibodies=p.name)
     return pairs
 
 
