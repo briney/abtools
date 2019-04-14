@@ -290,7 +290,7 @@ def get_neutralization(antibodies=None, viruses=None):
     if antibodies is None:
         antibodies = neut_df['Antibody'].unique()
     neuts = []
-    for a, in antibodies:
+    for a in antibodies:
         df = neut_df[neut_df['Antibody'] == a]
         if viruses is None:
             viruses = df['Virus'].unique()
