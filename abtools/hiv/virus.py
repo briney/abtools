@@ -144,7 +144,21 @@ def get_viruses(viruses=None):
         viruses = virus_df['Virus name'].unique()
     virus_data = []
     for v in viruses:
-        vdata = virus_df[virus_df['Virus name'] == v].to_dict()
+        vdata = virus_df[virus_df['Virus name'] == v].to_dict(orient='records')
+        # if the provided virus name is an alias (not the actual formal name)
+        # we need to do some additional gymnastics to find the virus
+        if not vdata:
+            for row in virus_df.iterrows():
+                d = row[1]
+                if not pd.isnull(d['Alias']):
+                    aliases = d['Alias'].split(', ')
+                else:
+                    aliases = []
+                if v in aliases:
+                    vdata = virus_df[virus_df['Virus name'] == d['Virus name']].to_dict(orient='records')[0]
+                    break
+        else:
+            vdata = vdata[0]
         vname = vdata['Virus name']
         vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
         vnt = [s for s in virus_nt if s.id.split('.')[2] == vname][0].sequence
