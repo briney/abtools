@@ -114,7 +114,10 @@ class Virus():
     
     @lazy_property
     def aliases(self):
-        return self.raw['Alias'].split(', ')
+        aliases = self.raw['Alias']
+        if not pd.isnull(aliases):
+            return aliases.split(', ')
+        return []
     
     @lazy_property
     def hiv_db_name(self):
