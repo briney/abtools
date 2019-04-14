@@ -28,6 +28,7 @@ import sys
 import pandas as pd
 
 from abutils.core.sequence import read_fasta
+from abutils.utils.database import KeyValueStore
 from abutils.utils.decorators import lazy_property
 
 from . import CATNAP_PATH
