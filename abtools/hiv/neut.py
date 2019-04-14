@@ -68,20 +68,22 @@ class Neutralization():
         return False
     
     def __getitem__(self, key):
+        # if type(key) == slice:
+        #     return self.sequence[key]
         if key in self.antibodies:
             return self._abdict[key]
         elif key in self.viruses:
-            return self._virdict[v]
+            return self._virdict[key]
         return None
 
 
     @lazy_property
     def antibodies(self):
-        return list(set([n.raw['Antibody'] for n in self.neuts]))
+        return list(set([n.antibody for n in self.neuts]))
 
     @lazy_property
     def viruses(self):
-        return list(set([n.raw['Virus'] for n in self.neuts]))
+        return list(set([n.virus for n in self.neuts]))
     
     @lazy_property
     def _abdict(self):
@@ -89,8 +91,8 @@ class Neutralization():
         for a in self.antibodies:
             d[a] = {}
             for v in self.viruses:
-                neuts = [n for n in self.neuts if all([n.raw['Antibody'] ==  a,
-                                                       n.raw['Virus'] == v])]
+                neuts = [n for n in self.neuts if all([n.antibody ==  a,
+                                                       n.virus == v])]
                 d[a][v] = neuts
         return d
     
@@ -100,8 +102,8 @@ class Neutralization():
         for v in self.viruses:
             d[v] = {}
             for a in self.antibodies:
-                neuts = [n for n in self.neuts if all([n.raw['Antibody'] ==  a,
-                                                       n.raw['Virus'] == v])]
+                neuts = [n for n in self.neuts if all([n.antibody ==  a,
+                                                       n.virus == v])]
                 d[v][a] = neuts
         return d
 
