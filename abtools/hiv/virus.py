@@ -145,8 +145,9 @@ def get_viruses(viruses=None):
     virus_data = []
     for v in viruses:
         vdata = virus_df[virus_df['Virus name'] == v].to_dict()
-        vaa = [s for s in virus_aa if s.id.split('.')[2] == v][0].sequence
-        vnt = [s for s in virus_nt if s.id.split('.')[2] == v][0].sequence
+        vname = vdata['Virus name']
+        vaa = [s for s in virus_aa if s.id.split('.')[2] == vname][0].sequence
+        vnt = [s for s in virus_nt if s.id.split('.')[2] == vname][0].sequence
         virus_data.append(Virus(vdata, nt_sequence=vnt, aa_sequence=vaa))
     if len(virus_data) == 1:
         return virus_data[0]
