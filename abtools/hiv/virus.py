@@ -184,3 +184,11 @@ def get_viruses(viruses=None):
     if len(virus_data) == 1:
         return virus_data[0]
     return virus_data
+
+
+def get_standardized_name(virus):
+    db = get_virus_db()
+    try:
+        return db[virus]['Virus name']
+    except TypeError:
+        return None

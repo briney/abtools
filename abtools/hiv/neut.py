@@ -32,6 +32,7 @@ import sys
 import numpy as np
 import pandas as pd
 
+from abutils.utils.database import SQLiteDatabase
 from abutils.utils.decorators import lazy_property
 
 import abtools.hiv.bnabs
@@ -280,6 +281,127 @@ class ID50(ICValue):
         return 'ID50'
 
 
+class NeutDB(SQLiteDatabase):
+    '''
+
+    '''
+    def __init__(self, name=None, direc=None, in_memory=False, table_name=None):
+        super(NeutDB, self).__init__(name=name, direc=direc,
+                                     in_memory=in_memory, table_name=table_name)
+
+
+    @property
+    def structure(self):
+        return [('antibody', 'text'), ('virus', 'text'), ('reference', 'text'), ('pmid', 'text'),
+                ('ic50', 'text'), ('ic80', 'text'), ('id50', 'text'), ('raw', 'text')]
+    
+    
+    @property
+    def columns(self):
+        return ['Antibody', 'Virus', 'Reference', 'Pubmed ID', 'IC50', 'IC80', 'ID50']
+    
+    
+    def antibodies(self, virus=None):
+        if virus is not None:
+            if isinstance(virus, tuple(STR_TYPES)):
+                virus = [virus, ]
+            query = '''SELECT {0}.antibody, {0}.virus
+                       FROM {0}
+                       WHERE {0}.virus in ({1})'''.format(self.table_name, '?'.join(len(virus)))
+            results = self.execute(query, tuple(virus))
+            return list(set(r[0] for r in results))
+        else:
+            query = 'SELECT DISTINCT {0}.antibody from {0}'.format(self.table_name)
+            results = self.cursor.execute(query)
+            return [r[0] for r in results]
+        
+    
+    def viruses(self, antibody=None):
+        if antibody is not None:
+            if isinstance(antibody, tuple(STR_TYPES)):
+                antibody = [antibody, ]
+            query = '''SELECT {0}.virus, {0}.antibody
+                       FROM {0}
+                       WHERE {0}.antibody in ({1})'''.format(self.table_name, '?'.join(len(antibody)))
+            results = self.execute(query, tuple(antibody))
+            return list(set(r[0] for r in results))
+        else:
+            query = 'SELECT DISTINCT {0}.virus from {0}'.format(self.table_name)
+            results = self.cursor.execute(query)
+            return [r[0] for r in results]
+        
+    
+    def insert_one(self, data):
+        '''
+        Inserts a single entry.
+
+        Inputs:
+          data: data to be inserted (as an iterable or dict)
+        '''
+        if isinstance(data, dict):
+            data = [data[c] for c in self.columns]
+        data = data[:-1] + [pickle.dumps(data[-1], protocol=0)]
+        with self.connection as conn:
+            conn.execute(self.insert_cmd, data)
+
+
+    def insert_many(self, data):
+        '''
+        Inserts multiple entries.
+
+        Inputs:
+          data - a list/generator of iterables or dicts, each containing
+                 data corresponding to a single entry.
+        '''
+        if isinstance(data[0], dict):
+            keys = self.columns
+            data = [[d[k] for k in keys] for d in data]
+        data = [d[:-1] + [pickle.dumps(d[-1], protocol=0)] for d in data]
+        with self.connection as conn:
+            conn.executemany(self.insert_cmd, data)
+    
+    
+    def find(self, antibody=None, virus=None):
+        query = 'SELECT {0}.antibody, {0}.virus, {0}.raw FROM {0} '.format(self.table_name)
+        query_args = []
+        if any([antibody is not None, virus is not None]):
+            query += 'WHERE '
+        if antibody is not None:
+            if isinstance(antibody, tuple(STR_TYPES)):
+                antibody = [antibody, ]
+            query += '{0}.antibody IN ({1})'.format(self.table_name, ','.join('?' * len(antibody)))
+            query_args += antibody
+        if all([antibody is not None, virus is not None]):
+            query += 'AND '
+        if virus is not None:
+            if isinstance(virus, tuple(STR_TYPES)):
+                virus = [virus, ]
+            query += '{0}.virus IN ({1})'.format(self.table_name, ','.join('?' * len(virus)))
+            query_args += virus
+        results = self.cursor.execute(query, tuple(query_args))
+        return [pickle.loads(r[-1]) for r in results]
+
+
+def make_neut_db():
+    db = NeutDB(name='neut', direc=CATNAP_PATH)
+    df = pd.read_csv(os.path.join(CATNAP_PATH, 'neut.txt'), sep='\t').fillna('')
+    data = []
+    for row in df.iterrows():
+        d = row[1].to_dict()
+        db = NeutDB(name='neut', direc=CATNAP_PATH)
+        data.append([d[c] if d[c] else None for c in db.columns] + [d])
+    db.insert_many(data)
+    db.index('Antibody')
+    db.index('Virus')
+    return db
+
+
+def get_neut_db():
+    db_path = os.path.join(CATNAP_PATH, 'neut')
+    if not os.path.isfile(db_path):
+        make_neut_db()
+    return NeutDB(name='neut', direc=CATNAP_PATH)
+
 
 def get_neutralization(antibodies=None, viruses=None):
     # filter
@@ -287,22 +409,35 @@ def get_neutralization(antibodies=None, viruses=None):
         antibodies = [antibodies, ]
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
-    # read the neut file
-    neut_df = pd.read_csv(os.path.join(CATNAP_PATH, 'neut.txt'), sep='\t')
-    ## Would pandas be faster here??
 
-    # with open(os.path.join(CATNAP_PATH, 'neut.txt')) as f:
-    #     reader = csv.DictReader(f, delimiter='\t')
-    #     data = [row for row in reader if row['Antibody'].strip()]
+    neut_db = get_neut_db()
     if antibodies is None:
-        antibodies = neut_df['Antibody'].unique()
+        antibodies = neut_db.antibodies()
     neuts = []
     for a in antibodies:
-        df = neut_df[neut_df['Antibody'] == a]
-        if viruses is None:
-            viruses = df['Virus'].unique()
+        viruses = neut_db.viruses(antibody=a)
         for v in viruses:
-            d = df[df['Virus'] == v].to_dict(orient='records')
+            d = neut_db.find(antibody=a, virus=v)
             neuts.append(Neut(d))
     return Neutralization(neuts)
+
+
+    # # read the neut file
+    # neut_df = pd.read_csv(os.path.join(CATNAP_PATH, 'neut.txt'), sep='\t')
+    # ## Would pandas be faster here??
+
+    # # with open(os.path.join(CATNAP_PATH, 'neut.txt')) as f:
+    # #     reader = csv.DictReader(f, delimiter='\t')
+    # #     data = [row for row in reader if row['Antibody'].strip()]
+    # if antibodies is None:
+    #     antibodies = neut_df['Antibody'].unique()
+    # neuts = []
+    # for a in antibodies:
+    #     df = neut_df[neut_df['Antibody'] == a]
+    #     if viruses is None:
+    #         viruses = df['Virus'].unique()
+    #     for v in viruses:
+    #         d = df[df['Virus'] == v].to_dict(orient='records')
+    #         neuts.append(Neut(d))
+    # return Neutralization(neuts)
 
