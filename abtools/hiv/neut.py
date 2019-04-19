@@ -187,7 +187,7 @@ class Neut():
                 return vals
         else:
             vals = [v for v in values if '>' not in str(v)]
-            vals = [float(v.replace('<', '') if type(v) in STR_TYPES else v for v in vals)]
+            vals = [float(v.replace('<', '') if type(v) in STR_TYPES else v) for v in vals]
             prod = np.prod(vals)
             return prod**(1 / len(vals))
 
