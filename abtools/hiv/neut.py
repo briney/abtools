@@ -324,7 +324,7 @@ class NeutDB(SQLiteDatabase):
             query = '''SELECT {0}.virus, {0}.antibody
                        FROM {0}
                        WHERE {0}.antibody in ({1})'''.format(self.table_name, ','.join('?' * len(antibody)))
-            results = self.execute(query, tuple(antibody))
+            results = self.cursor.execute(query, tuple(antibody))
             return list(set(r[0] for r in results))
         else:
             query = 'SELECT DISTINCT {0}.virus from {0}'.format(self.table_name)
