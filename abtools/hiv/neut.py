@@ -27,6 +27,7 @@ from abc import abstractproperty
 import csv
 import itertools
 import os
+import pickle
 import sys
 
 import numpy as np
@@ -404,12 +405,10 @@ def get_neut_db():
 
 
 def get_neutralization(antibodies=None, viruses=None):
-    # filter
     if type(antibodies) in STR_TYPES:
         antibodies = [antibodies, ]
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
-
     neut_db = get_neut_db()
     if antibodies is None:
         antibodies = neut_db.antibodies()
