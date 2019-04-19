@@ -159,8 +159,7 @@ def get_virus(virus):
 def get_viruses(viruses=None):
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
-    # read the virus file
-    # virus_df = pd.read_csv(os.path.join(CATNAP_PATH, 'viruses.txt'), sep='\t')
+    viruses = [get_standardized_name(v) for v in viruses]
     virus_db = get_virus_db()
     virus_aa = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_aa.fasta'))
     virus_nt = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_nt.fasta'))
