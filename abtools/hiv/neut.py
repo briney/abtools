@@ -99,11 +99,8 @@ class Neutralization():
     def _virdict(self):
         d = {}
         for v in self.viruses:
-            d[v] = {}
-            for a in self.antibodies:
-                neuts = [n for n in self.neuts if all([n.antibody ==  a,
-                                                       n.virus == v])]
-                d[v][a] = neuts
+            neut = [n for n in self.neuts if n.virus == v][0]
+            d[v] = neut
         return d
 
 
