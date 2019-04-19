@@ -308,8 +308,8 @@ class NeutDB(SQLiteDatabase):
                 virus = [virus, ]
             query = '''SELECT {0}.antibody, {0}.virus
                        FROM {0}
-                       WHERE {0}.virus in ({1})'''.format(self.table_name, '?'.join(len(virus)))
-            results = self.execute(query, tuple(virus))
+                       WHERE {0}.virus in ({1})'''.format(self.table_name, ','.join('?' * len(virus)))
+            results = self.cursor.execute(query, tuple(virus))
             return list(set(r[0] for r in results))
         else:
             query = 'SELECT DISTINCT {0}.antibody from {0}'.format(self.table_name)
@@ -323,7 +323,7 @@ class NeutDB(SQLiteDatabase):
                 antibody = [antibody, ]
             query = '''SELECT {0}.virus, {0}.antibody
                        FROM {0}
-                       WHERE {0}.antibody in ({1})'''.format(self.table_name, '?'.join(len(antibody)))
+                       WHERE {0}.antibody in ({1})'''.format(self.table_name, ','.join('?' * len(antibody)))
             results = self.execute(query, tuple(antibody))
             return list(set(r[0] for r in results))
         else:
