@@ -251,7 +251,7 @@ class IC50(ICValue):
     Docstring for IC50.
     '''
     def __init__(self, ic_data):
-        super.__init__(ic_data)
+        super(IC50, self).__init__(ic_data)
     
     @property
     def value_key(self):
@@ -263,7 +263,7 @@ class IC80(ICValue):
     Docstring for IC80.
     '''
     def __init__(self, ic_data):
-        super.__init__(ic_data)
+        super(IC80, self).__init__(ic_data)
 
     @property
     def value_key(self):
@@ -275,7 +275,7 @@ class ID50(ICValue):
     Docstring for ID50.
     '''
     def __init__(self, ic_data):
-        super.__init__(ic_data)
+        super(ID50, self).__init__(ic_data)
 
     @property
     def value_key(self):
