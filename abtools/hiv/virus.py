@@ -157,14 +157,14 @@ def get_virus(virus):
 
 
 def get_viruses(viruses=None):
+    virus_db = get_virus_db()
+    virus_aa = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_aa.fasta'))
+    virus_nt = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_nt.fasta'))
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
     if viruses is None:
         viruses = virus_db.keys()
     viruses = [get_standardized_name(v) for v in viruses]
-    virus_db = get_virus_db()
-    virus_aa = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_aa.fasta'))
-    virus_nt = read_fasta(os.path.join(CATNAP_PATH, 'virus_seqs_nt.fasta'))
     virus_data = []
     for v in viruses:
         vdata = virus_db[v]
