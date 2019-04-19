@@ -306,6 +306,7 @@ class NeutDB(SQLiteDatabase):
         if virus is not None:
             if isinstance(virus, tuple(STR_TYPES)):
                 virus = [virus, ]
+            virus = abtools.hiv.virus.get_standardized_name(v) for v in virus]
             query = '''SELECT {0}.antibody, {0}.virus
                        FROM {0}
                        WHERE {0}.virus in ({1})'''.format(self.table_name, ','.join('?' * len(virus)))
@@ -409,12 +410,14 @@ def get_neutralization(antibodies=None, viruses=None):
         antibodies = [antibodies, ]
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
+    viruses = abtools.hiv.virus.get_standardized_name(v) for v in viruses]
     neut_db = get_neut_db()
     if antibodies is None:
         antibodies = neut_db.antibodies()
     neuts = []
     for a in antibodies:
-        viruses = neut_db.viruses(antibody=a)
+        if viruses is None:
+            viruses = neut_db.viruses(antibody=a)
         for v in viruses:
             d = neut_db.find(antibody=a, virus=v)
             neuts.append(Neut(d))
