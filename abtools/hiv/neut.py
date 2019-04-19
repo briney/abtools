@@ -410,7 +410,8 @@ def get_neutralization(antibodies=None, viruses=None):
         antibodies = [antibodies, ]
     if type(viruses) in STR_TYPES:
         viruses = [viruses, ]
-    viruses = [abtools.hiv.virus.get_standardized_name(v) for v in viruses]
+    if viruses is not None:
+        viruses = [abtools.hiv.virus.get_standardized_name(v) for v in viruses]
     neut_db = get_neut_db()
     if antibodies is None:
         antibodies = neut_db.antibodies()
