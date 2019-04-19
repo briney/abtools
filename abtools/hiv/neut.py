@@ -71,37 +71,29 @@ class Neutralization():
         return False
     
     def __getitem__(self, key):
-        # if type(key) == slice:
-        #     return self.sequence[key]
-        if key in self.antibodies:
-            return self._abdict[key]
-        elif key in self.viruses:
-            return self._virdict[key]
-        return None
+        std_key = abtools.hiv.virus.get_standardized_name(key)
+        return self._virdict.get(std_key, None)
 
 
-    @lazy_property
-    def antibodies(self):
-        return list(set([n.antibody for n in self.neuts]))
+    # @lazy_property
+    # def antibodies(self):
+    #     return list(set([n.antibody for n in self.neuts]))
 
     @lazy_property
     def viruses(self):
-        viruses = []
-        for n in self.neuts:
-            viruses.append(n.virus.name)
-            viruses += n.virus.aliases
+        viruses = [abtools.hiv.virus.get_standardized_name(n.virus) for n in self.neuts]
         return list(set(viruses))
     
-    @lazy_property
-    def _abdict(self):
-        d = {}
-        for a in self.antibodies:
-            d[a] = {}
-            for v in self.viruses:
-                neuts = [n for n in self.neuts if all([n.antibody ==  a,
-                                                       n.virus == v])]
-                d[a][v] = neuts
-        return d
+    # @lazy_property
+    # def _abdict(self):
+    #     d = {}
+    #     for a in self.antibodies:
+    #         d[a] = {}
+    #         for v in self.viruses:
+    #             neuts = [n for n in self.neuts if all([n.antibody ==  a,
+    #                                                    n.virus == v])]
+    #             d[a][v] = neuts
+    #     return d
     
     @lazy_property
     def _virdict(self):
@@ -131,7 +123,7 @@ class Neut():
 
     @lazy_property
     def virus(self):
-        return abtools.hiv.virus.get_virus(self.raw[0]['Virus'])
+        return self.raw[0]['Virus']
 
     @property
     def ic50_values(self):
