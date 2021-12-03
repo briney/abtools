@@ -15,40 +15,41 @@
 
 
 
-from __future__ import print_function
+# from __future__ import print_function
 
-from collections import Counter
+# from collections import Counter
 from datetime import datetime
 # from itertools import cycle
-import json
-import math
+# import json
+# import math
 import multiprocessing as mp
 import os
 # import paramiko
-import shelve
+# import shelve
 import sqlite3
-from io import StringIO
+# from io import StringIO
 import subprocess as sp
 import sys
 import tempfile
 import time
-import urllib.request, urllib.parse, urllib.error
-import uuid
+# import urllib.request, urllib.parse, urllib.error
+# import uuid
 
 import numpy as np
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 
-from Bio import SeqIO
-from Bio import AlignIO
-from Bio.Align import AlignInfo
+# from Bio import SeqIO
+# from Bio import AlignIO
+# from Bio.Align import AlignInfo
 
-from abstar.utils.queue.celery import celery
+# from abstar.utils.queue.celery import celery
 
 from abutils import Sequence
 from abutils.io import read_sequences
-from abutils.utils import log, mongodb
-from abutils.utils.alignment import muscle
+from abutils.utils import log
+# from abutils.utils import  mongodb
+# from abutils.utils.alignment import muscle
 from abutils.utils.cluster import cluster
 from abutils.utils.pipeline import make_dir, list_files
 from abutils.utils.progbar import progress_bar
@@ -198,14 +199,13 @@ class Args(object):
 # =========================================
 
 
-
 def get_seqs(input, args):
-    # load JSON data
+    # read JSON data
     if args.json is not None:
         seqs = read_sequences(file=input, format='json',
                               id_key=args.id_key,
                               sequence_key=args.clustering_key)
-    # load tabular data
+    # read tabular data
     elif args.tabular is not None:
         seqs = read_sequences(file=input, format='tabular', sep=args.sep,
                               id_key=args.id_key,
@@ -501,7 +501,7 @@ def make_sort_unique_input(seqs, args):
 
 # =========================================
 #
-#           CD-HIT CLUSTERING
+#              CLUSTERING
 #
 # =========================================
 
@@ -879,7 +879,7 @@ def cluster_sequences(seq_db, args):
 
 # =========================================
 #
-#          CONSENSUS SEQUENCES
+#         CONSENTROID SEQUENCES
 #
 # =========================================
 
