@@ -374,7 +374,7 @@ def parse_umi(raw_seq, args):
 def build_seq_db(seqs, args):
     logger.info('Building a SQLite database of sequences...')
     db_path = os.path.join(args.temp_dir, 'seq_db')
-    keys = [args.id_key, args.umi_key, args.clustering_key, args.output_key, args.raw_key]
+    keys = list(set([args.id_key, args.umi_key, args.clustering_key, args.output_key, args.raw_key]))
     db_data = get_sequence_db_data(seqs, keys)
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
