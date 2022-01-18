@@ -48,7 +48,7 @@ import numpy as np
 from abutils import Sequence
 from abutils.io import read_sequences
 from abutils.utils import log
-# from abutils.utils import  mongodb
+from abutils.utils import mongodb
 # from abutils.utils.alignment import muscle
 from abutils.utils.cluster import cluster
 from abutils.utils.pipeline import make_dir, list_files
@@ -66,9 +66,9 @@ def parse_args():
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
-    parser.add_argument('-j', '--json', dest='json', default=None,
+    parser.add_argument('--json', dest='json', default=None,
                         help="Input JSON file or directory of JSON files.")
-    parser.add_argument('-t', '--tabular', dest='tabular', default=None,
+    parser.add_argument('--tabular', dest='tabular', default=None,
                         help="Input TABULAR file or directory of TABULAR files.")
     parser.add_argument('--sep', dest='sep', default='\t',
                         help="Character used to separate fields in TABULAR-formated inputs. Default is '\t'.")
@@ -93,7 +93,7 @@ def parse_args():
                         UMI bins or identity-based clusters with fewer sequences will be discarded. Defaults to 1, which \
                         results in centroid/consensus sequences being generated for all UMI bins or identity-based clusters.")
     parser.add_argument('--cluster-by-identity', dest='umi', action='store_false', default=True,
-                        help="Clusters sequences by identity rather than using universal antibody IDs (UAIDs).")
+                        help="Clusters sequences by identity rather than using universal antibody IDs (UMIs).")
     parser.add_argument('--parse-umis', dest='parse_umis', action='append', default=[],
                         help="Parameters for UMI parsing. \
                         If UMIs are present in multiple locations (for example, short UMIs at both the start \
@@ -121,8 +121,8 @@ def parse_args():
                         If performing UMI-based correction, this threshold is used when clustering sequences assigned \
                         to the same UMI bin. Default is 0.975.")
     parser.add_argument('--only-largest-cluster', default=False, action='store_true',
-                        help="If set while calculating centroids using UAIDs, \
-                        only the largest centroid for each UAID cluster is retained.")
+                        help="If set while calculating centroids using UMIs, \
+                        only the largest centroid for each UMI cluster is retained.")
     parser.add_argument('--non-redundant', dest='non_redundant', action='store_true', default=False,
                         help='If set, will make a non-redundant FASTA file using Unix sort. \
                         This is much faster than clustering using mmseqs, but can only remove exact duplicates. \
@@ -1105,17 +1105,17 @@ def log_params(args):
     logger.info('INPUT DB: {}'.format(args.db))
     logger.info('OUTPUT DIR: {}'.format(args.output))
     logger.info('TEMP DIR: {}'.format(args.temp_dir))
-    logger.info('UAIDs: {}'.format(args.uaid))
+    logger.info('UMIs: {}'.format(args.umi))
     logger.info('CLUSTERING TYPE: {}'.format('sort/uniq' if args.non_redundant else 'CD-HIT'))
     if args.non_redundant:
         logger.info('IDENTITY THRESHOLD: 1.0')
         logger.info('MIN SEQS: 1')
         return
-    elif args.uaid == 0:
+    elif args.umi == 0:
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
         logger.info('GERMLINES: {}'.format(args.germs))
     else:
-        logger.info('PARSE UAIDS: {}'.format(args.parse_uaids))
+        logger.info('PARSE UMIs: {}'.format(args.parse_umis))
     logger.info('MIN SEQS: {}'.format(args.min_seqs))
     logger.info('LARGEST CLUSTER ONLY: {}'.format(args.only_largest_cluster))
 
@@ -1330,7 +1330,7 @@ def run(**kwargs):
             different sequences get labeled with the same UMI or that PCR crossover can produce hybrid sequences
             within the same UMI bin that may confound consensus computation. To limit incorrect consensus/centroid
             calculation, sequences in each UMI bin are clustered using ``identity_threshold`` before
-            calculating consens/centroid sequences. By default, all UAID clusters that meet the
+            calculating consens/centroid sequences. By default, all UMI clusters that meet the
             ``min_seqs`` size threshold are used to generate consensus/centroid sequences. If that
             behavior is not desired, setting ``only_largest_cluster`` to ``True`` results in only
             the largest cluster in each UMI bin being used to generate centroid/consensus sequences.
@@ -1369,14 +1369,28 @@ def main(args):
     if args.json is not None:
         if os.path.isfile(args.json):
             groups = [args.json, ]
-        else:
+        elif os.path.isdir(args.json):
             groups = list_files(args.json)
+        else:
+            err = f'ERROR: The supplied JSON path ({args.json}) is neither a file nor a directory. '
+            err += 'Please double-check your JSON path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
     # check whether TABULAR files have been passed
     elif args.tabular is not None:
         if os.path.isfile(args.tabular):
             groups = [args.tabular, ]
-        else:
+        elif os.path.isdir(args.tabular):
             groups = list_files(args.tabular)
+        else:
+            err = f'ERROR: The supplied TABULAR path ({args.tabular}) is neither a file nor a directory. '
+            err += 'Please double-check your TABULAR path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
     # otherwise, get sequences from MongoDB
     else:
         if args.collection is not None:
