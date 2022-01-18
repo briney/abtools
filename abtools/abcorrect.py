@@ -381,7 +381,7 @@ def build_seq_db(seqs, args):
     key_string = ', '.join([f'{k} text' for k in keys])
     create_cmd = f'CREATE TABLE seqs ({key_string})'
     # create_cmd = '''CREATE TABLE seqs (seq_id text, umi text, clustering_seq text, output_seq text, raw text'})'''
-    insert_cmd = 'INSERT INTO seqs VALUES (?,?,?,?,?)'
+    insert_cmd = f"INSERT INTO seqs VALUES ({','.join(['?'] * len(keys))})"
     index_cmd = f'CREATE INDEX seq_index ON seqs ({args.id_key})'
     c.execute('DROP TABLE IF EXISTS seqs')
     c.execute(create_cmd)
