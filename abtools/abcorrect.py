@@ -139,7 +139,7 @@ def parse_args():
     parser.add_argument('--raw_key', dest='raw_key', default='raw_input',
                         help="The field containing the raw input sequence, used for parsing UMIs. \
                         Default is 'raw_input'.")
-    parser.add_argument('--output_key', dest='output_field', default='raw_input',
+    parser.add_argument('--output_key', dest='output_key', default='raw_input',
                         help="The field to be used for creating consensus/centroid sequences. \
                         Only required when parsing UMIs. Default is 'raw_input'.")
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
@@ -187,7 +187,7 @@ class Args(object):
         self.umi_key = umi_key
         self.clustering_key = clustering_key
         self.raw_key = raw_key
-        self.output_field = output_key
+        self.output_key = output_key
         self.debug = debug
 
 
