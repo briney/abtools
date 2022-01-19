@@ -33,7 +33,7 @@ import sys
 import tempfile
 import time
 # import urllib.request, urllib.parse, urllib.error
-# import uuid
+import uuid
 
 import numpy as np
 
@@ -50,7 +50,7 @@ from abutils.io import read_sequences
 from abutils.utils import log
 from abutils.utils import mongodb
 # from abutils.utils.alignment import muscle
-from abutils.utils.cluster import cluster
+from abutils.utils.cluster import cluster, Cluster
 from abutils.utils.pipeline import make_dir, list_files
 from abutils.utils.progbar import progress_bar
 
@@ -142,7 +142,7 @@ def parse_args():
     parser.add_argument('--output_key', dest='output_key', default='raw_input',
                         help="The field to be used for creating consensus/centroid sequences. \
                         Only required when parsing UMIs. Default is 'raw_input'.")
-    parser.add_argument('--no-in-memory-eb', dest='in_memory_db', action='store_false', default=True,
+    parser.add_argument('--no-in-memory-db', dest='in_memory_db', action='store_false', default=True,
                         help="If set, the sequence database will be stored on disk rather than in memory. \
                         Mainly useful when processing extremely large datasets that may exceed available memory.")
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
@@ -578,12 +578,15 @@ def cluster_umis(seq_db, args):
     clusters = []
     for i, umi_bin in enumerate(umi_bins, 1):
         seqs = get_clustering_seqs_by_id(umi_bin, seq_db, args)
-        bin_clusters = cluster(seqs, threshold=args.identity_threshold)
-        if args.only_largest_cluster:
-            clusters.append(bin_clusters.largest_cluster)
+        if len(seqs) > 1:
+            bin_clusters = cluster(seqs, threshold=args.identity_threshold)
+            if args.only_largest_cluster:
+                clusters.append(bin_clusters.largest_cluster)
+            else:
+                clusters.extend(bin_clusters.clusters)
         else:
-            clusters.extend(bin_clusters.clusters)
-        progress_bar(i, len(umi_bins), start_time=start_time)
+            clusters.append(Cluster(uuid.uuid4(), seqs))
+        progress_bar(i, len(umi_bins), start_time=start_time)    
     if not args.debug:
         os.unlink(sort_input)
         os.unlink(sorted_file.name)
