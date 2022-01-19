@@ -420,8 +420,9 @@ def get_sequence_db_data(seqs, keys):
 
 
 def remove_sqlite_db(args):
-    db_path = os.path.join(args.temp_dir, 'seq_db')
-    os.unlink(db_path)
+    if not args.in_memory_db:
+        db_path = os.path.join(args.temp_dir, 'seq_db')
+        os.unlink(db_path)
 
 
 # def get_seq_db_creation_cmd(args):
