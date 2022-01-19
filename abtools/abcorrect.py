@@ -917,7 +917,7 @@ def calculate_consentroids(clusters, seq_db, args):
             output_cluster_size = output_cluster.size
         if args.include_cluster_size:
             consentroid.id = f'{consentroid.id}_{output_cluster_size}'
-        sequences.appendd(consentroid)
+        sequences.append(consentroid)
         passed += 1
         progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
     return sequences
