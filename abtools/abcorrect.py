@@ -142,6 +142,9 @@ def parse_args():
     parser.add_argument('--output_key', dest='output_key', default='raw_input',
                         help="The field to be used for creating consensus/centroid sequences. \
                         Only required when parsing UMIs. Default is 'raw_input'.")
+    parser.add_argument('--no-in-memory-eb', dest='in_memory_db', action='store_false', default=True,
+                        help="If set, the sequence database will be stored on disk rather than in memory. \
+                        Mainly useful when processing extremely large datasets that may exceed available memory.")
     parser.add_argument('--no-cluster-sizes', dest='include_cluster_size', action='store_false', default=True,
                         help="If set, the sequence name of the consensus/centroid will not include the cluster size. \
                         Default is to include the cluster size in the consensus/centroid name.")
@@ -154,9 +157,9 @@ class Args(object):
     def __init__(self, db=None, collection=None, json=None, tabular=None, sep='\t',
                  output=None, log=None, temp_dir=None, include_cluster_size=True,
                  ip='localhost', port=27017, user=None, password=None,
-                 min_seqs=1, identity_threshold=0.975,
+                 min_seqs=1, identity_threshold=0.975, 
                  umi=True, parse_umis=None, non_redundant=False,
-                 consensus=True, only_largest_cluster=False,
+                 consensus=True, only_largest_cluster=False, in_memory_db=True,
                  id_key='sequence_id', umi_key='umi', clustering_key='sequence',
                  raw_key='raw_input', output_key='raw_input', debug=False):
         super(Args, self).__init__()
@@ -183,6 +186,7 @@ class Args(object):
         self.include_cluster_size = include_cluster_size
         self.only_largest_cluster = only_largest_cluster
         self.non_redundant = non_redundant
+        self.in_memory_db = in_memory_db
         self.id_key = id_key
         self.umi_key = umi_key
         self.clustering_key = clustering_key
@@ -381,7 +385,10 @@ def build_seq_db(seqs, args):
     # get DB data
     keys = list(set([args.id_key, args.umi_key, args.clustering_key, args.output_key, args.raw_key]))
     db_data = get_sequence_db_data(seqs, keys)
-    db_path = os.path.join(args.temp_dir, 'seq_db')
+    if args.in_memory_db:
+        db_path = ':memory:'
+    else:
+        db_path = os.path.join(args.temp_dir, 'seq_db')
     # connect to the DB
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -1182,6 +1189,7 @@ def log_params(args):
 
 def write_output(group, sequences, sizes, group_start_time, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
+    logger.info('')
     logger.info('writing {} sequences to output file...'.format(seq_type))
     write_fasta_output(group, sequences, args)
     if sizes is not None:
