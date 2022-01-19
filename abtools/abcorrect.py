@@ -202,19 +202,19 @@ class Args(object):
 def get_seqs(input, args):
     # read JSON data
     if args.json is not None:
-        print('reading input file...')
+        logger.info('reading input file...')
         seqs = read_sequences(file=input, format='json',
                               id_key=args.id_key,
                               sequence_key=args.clustering_key)
     # read tabular data
     elif args.tabular is not None:
-        print('reading input file...')
+        logger.info('reading input file...')
         seqs = read_sequences(file=input, format='tabular', sep=args.sep,
                               id_key=args.id_key,
                               sequence_key=args.clustering_key)
     # load MongoDB data
     elif args.db is not None:
-        print('querying MongoDB...')
+        logger.info('querying MongoDB...')
         mongodb_kwargs = {'ip': args.ip,
                           'port': args.port,
                           'user': args.user,
@@ -231,10 +231,10 @@ def get_seqs(input, args):
     if args.parse_umis:
         required_keys.append(args.raw_key)
     check_sequence_keys(seqs, required_keys)
-    print(f'found {len(seqs)} input sequences')
+    logger.info(f'found {len(seqs)} input sequences')
     # parse UMIs
     if args.parse_umis:
-        print('parsing UMIs...')
+        logger.info('parsing UMIs...')
         for s in seqs:
             s[args.umi_key] = parse_umi(s[args.raw_key], args)
     return seqs
@@ -391,7 +391,7 @@ def build_seq_db(seqs, args):
     c.execute('DROP TABLE IF EXISTS seqs')
     c.execute(create_cmd)
     c.executemany(insert_cmd, db_data)
-    print('indexing the SQLite database...')
+    logger.info('indexing the SQLite database...')
     c.execute(index_cmd)
     return c
 
@@ -589,8 +589,8 @@ def process_sorted_umi_file(sorted_file):
     '''
     Processes a sorted UMI file and returns a list of sequence IDs for each UMI bin.
     '''
-    logger.info('')
-    logger.info('Processing the sorted UMI file...')
+    # logger.info('')
+    logger.info('processing the sorted UMI file...')
     start = time.time()
     umi_bins = []
     bin_ids = []
