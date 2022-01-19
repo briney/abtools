@@ -202,16 +202,19 @@ class Args(object):
 def get_seqs(input, args):
     # read JSON data
     if args.json is not None:
+        print('reading input file...')
         seqs = read_sequences(file=input, format='json',
                               id_key=args.id_key,
                               sequence_key=args.clustering_key)
     # read tabular data
     elif args.tabular is not None:
+        print('reading input file...')
         seqs = read_sequences(file=input, format='tabular', sep=args.sep,
                               id_key=args.id_key,
                               sequence_key=args.clustering_key)
     # load MongoDB data
     elif args.db is not None:
+        print('querying MongoDB...')
         mongodb_kwargs = {'ip': args.ip,
                           'port': args.port,
                           'user': args.user,
@@ -228,8 +231,10 @@ def get_seqs(input, args):
     if args.parse_umis:
         required_keys.append(args.raw_key)
     check_sequence_keys(seqs, required_keys)
+    print(f'found {len(seqs)} input sequences')
     # parse UMIs
     if args.parse_umis:
+        print('parsing UMIs...')
         for s in seqs:
             s[args.umi_key] = parse_umi(s[args.raw_key], args)
     return seqs
@@ -372,7 +377,7 @@ def parse_umi(raw_seq, args):
 
 
 def build_seq_db(seqs, args):
-    logger.info('Building a SQLite database of sequences...')
+    logger.info('building a SQLite database of sequences...')
     db_path = os.path.join(args.temp_dir, 'seq_db')
     keys = list(set([args.id_key, args.umi_key, args.clustering_key, args.output_key, args.raw_key]))
     db_data = get_sequence_db_data(seqs, keys)
@@ -386,6 +391,7 @@ def build_seq_db(seqs, args):
     c.execute('DROP TABLE IF EXISTS seqs')
     c.execute(create_cmd)
     c.executemany(insert_cmd, db_data)
+    print('indexing the SQLite database...')
     c.execute(index_cmd)
     return c
 
@@ -466,10 +472,10 @@ def get_output_seqs_by_id(seq_ids, seq_db, args):
 
 def sort_unique(seqs, args):
     sort_file, input_count = make_sort_unique_input(seqs, args)
-    logger.info(f'Found {input_count} sequences')
+    # logger.info(f'Found {input_count} sequences')
     unique_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
     sort_unique_cmd = f'sort -k2,2 -u -o {unique_file.name} {sort_file}'
-    logger.info('Running sort/uniq...')
+    logger.info('running sort/uniq...')
     p = sp.Popen(sort_unique_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     p.communicate()
     os.unlink(sort_file)
@@ -537,20 +543,20 @@ def make_sort_unique_input(seqs, args):
 def cluster_umis(seq_db, args):
     # sort sequences into UMI bins
     sort_input, input_count = make_umi_sort_input(seq_db, args)
-    logger.info('Found {} sequences'.format(input_count))
+    # logger.info('Found {} sequences'.format(input_count))
     start_time = time.time()
     sorted_file = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
     sort_cmd = 'sort -k2,2 -o {} {}'.format(sorted_file.name, sort_input)
-    logger.info('Sorting sequences by UMI...')
+    logger.info('\nsorting sequences by UMI...')
     p = sp.Popen(sort_cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     stdout, stderr = p.communicate()
     if args.debug:
         logger.info(f'STDOUT\n{stdout}')
         logger.info(f'STDERR\n{stderr}\n')
-    logger.info(f'Sorting took {round(time.time() - start_time, 2)} seconds')
+    logger.info(f'sorting took {round(time.time() - start_time, 2)} seconds')
     umi_bins = process_sorted_umi_file(sorted_file.name)
     # cluster sequences in each UMI bin
-    logger.info('\nClustering UMI bins...')
+    logger.info('\nclustering UMI bins...')
     start_time = datetime.now()
     progress_bar(0, len(umi_bins), start_time=start_time)
     clusters = []
@@ -606,28 +612,28 @@ def process_sorted_umi_file(sorted_file):
             umi_bins.append(bin_ids)
     bin_sizes = [len(u) for u in umi_bins]
     logger.info(f'{len(umi_bins)} UMI bins were identified.\n')
-    logger.info(f'The average UMI bin contains {round(np.mean(bin_sizes), 2)} sequences.') 
-    logger.info(f'The largest UMI bin contains {max(bin_sizes)} sequences.')
+    logger.info(f'the average UMI bin contains {round(np.mean(bin_sizes), 2)} sequences.') 
+    logger.info(f'the largest UMI bin contains {max(bin_sizes)} sequences.')
     return umi_bins
 
 
 def cluster_sequences(seq_db, args):
     # get sequences for clustering
-    logger.info('Retrieving sequences for clustering...')
+    logger.info('retrieving sequences for clustering...')
     query = f'''SELECT seqs.{args.id_key}, seqs.{args.clustering_key} FROM seqs'''
     result = seq_db.execute(query).fetchall()
     seqs = [Sequence(r[1], id=r[0]) for r in result]
     logger.info(f'Found {len(seqs)} sequences')
     # do the clustering
-    logger.info(f'Clustering sequences at {args.identity_threshold * 100}% identity...')
+    logger.info(f'clustering sequences at {args.identity_threshold * 100}% identity...')
     start_time = time.time()
     clusters = cluster(seqs,
                        threshold=args.identity_threshold,
                        temp_dir=args.temp_dir)
     sizes = [c.size for c in clusters]
-    logger.info(f'Clustering completed in {round(time.time() - start_time, 2)} seconds.')
+    logger.info(f'clustering completed in {round(time.time() - start_time, 2)} seconds.')
     logger.info(f'{len(clusters)} clusters were identified.')
-    logger.info(f'The average cluster contains {np.mean(sizes)} sequences.')
+    logger.info(f'the average cluster contains {np.mean(sizes)} sequences.')
     return clusters.clusters
 
 
@@ -887,7 +893,7 @@ def cluster_sequences(seq_db, args):
 
 def calculate_consentroids(clusters, seq_db, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
-    logger.info(f'Computing {seq_type} sequences...')
+    logger.info(f'computing {seq_type} sequences...')
     start_time = datetime.now()
     extra_info = 'passed cluster size threshold: {} / {}'
     progress_bar(0, len(clusters), start_time=start_time, extra_info=extra_info.format(0, 0))
@@ -1164,7 +1170,7 @@ def log_params(args):
 
 def write_output(group, sequences, sizes, group_start_time, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
-    logger.info('Writing {} sequences to output file...'.format(seq_type))
+    logger.info('writing {} sequences to output file...'.format(seq_type))
     write_fasta_output(group, sequences, args)
     if sizes is not None:
         write_stats_output(group, sizes, args)
@@ -1175,7 +1181,7 @@ def write_output(group, sequences, sizes, group_start_time, args):
 
 
 def write_nr_output(group, unique_file, group_start_time, args):
-    logger.info('Writing non-redundant sequences to output file...')
+    logger.info('writing non-redundant sequences to output file...')
     oname = group
     if os.path.isfile(group):
         oname = '.'.join(os.path.basename(group).split('.')[:-1])
