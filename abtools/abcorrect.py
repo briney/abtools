@@ -400,10 +400,14 @@ def build_seq_db(seqs, args):
     # insert data
     insert_cmd = f"INSERT INTO seqs VALUES ({','.join(['?'] * len(keys))})"
     c.executemany(insert_cmd, db_data)
-    # index on the id key
+    # create indexes
     logger.info('indexing the SQLite database...')
-    index_cmd = f'CREATE INDEX seq_index ON seqs ({args.id_key})'
-    c.execute(index_cmd)
+    cindex_cmd = f"CREATE INDEX clustering_index ON seqs ({args.id_key}, {args.clustering_key})"
+    c.execute(cindex_cmd)
+    oindex_cmd = f"CREATE INDEX output_index ON seqs ({args.id_key}, {args.output_key})"
+    c.execute(oindex_cmd)
+    rindex_cmd = f"CREATE INDEX raw_index ON seqs ({args.id_key}, {args.raw_key})"
+    c.execute(rindex_cmd)
     return c
 
 
