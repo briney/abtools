@@ -421,7 +421,7 @@ def chunker(l, size=900):
 
 def get_clustering_seqs(seq_db, args):
     query = f'''SELECT seqs.{args.id_key}, seqs.{args.clustering_key} FROM seqs'''
-    seqs = seq_db.execute(query)
+    seqs = seq_db.execute(query).fetchall()
 
 
 def get_clustering_seqs_by_id(seq_ids, seq_db, args):
@@ -615,7 +615,7 @@ def cluster_sequences(seq_db, args):
     # get sequences for clustering
     logger.info('Retrieving sequences for clustering...')
     query = f'''SELECT seqs.{args.id_key}, seqs.{args.clustering_key} FROM seqs'''
-    result = seq_db.execute(query)
+    result = seq_db.execute(query).fetchall()
     seqs = [Sequence(r[1], id=r[0]) for r in result]
     logger.info(f'Found {len(seqs)} sequences')
     # do the clustering
