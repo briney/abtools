@@ -560,7 +560,7 @@ def cluster_umis(seq_db, args):
         if args.only_largest_cluster:
             clusters.append(bin_clusters.largest_cluster)
         else:
-            clusters.append(bin_clusters.clusters)
+            clusters.extend(bin_clusters.clusters)
         progress_bar(i, len(umi_bins), start_time=start_time)
     if not args.debug:
         os.unlink(sort_input)
