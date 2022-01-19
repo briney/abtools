@@ -378,20 +378,24 @@ def parse_umi(raw_seq, args):
 
 def build_seq_db(seqs, args):
     logger.info('building a SQLite database of sequences...')
-    db_path = os.path.join(args.temp_dir, 'seq_db')
+    # get DB data
     keys = list(set([args.id_key, args.umi_key, args.clustering_key, args.output_key, args.raw_key]))
     db_data = get_sequence_db_data(seqs, keys)
+    db_path = os.path.join(args.temp_dir, 'seq_db')
+    # connect to the DB
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
+    # create a SQLite table
+    c.execute('DROP TABLE IF EXISTS seqs')
     key_string = ', '.join([f'{k} text' for k in keys])
     create_cmd = f'CREATE TABLE seqs ({key_string})'
-    # create_cmd = '''CREATE TABLE seqs (seq_id text, umi text, clustering_seq text, output_seq text, raw text'})'''
-    insert_cmd = f"INSERT INTO seqs VALUES ({','.join(['?'] * len(keys))})"
-    index_cmd = f'CREATE INDEX seq_index ON seqs ({args.id_key})'
-    c.execute('DROP TABLE IF EXISTS seqs')
     c.execute(create_cmd)
+    # insert data
+    insert_cmd = f"INSERT INTO seqs VALUES ({','.join(['?'] * len(keys))})"
     c.executemany(insert_cmd, db_data)
+    # index on the id key
     logger.info('indexing the SQLite database...')
+    index_cmd = f'CREATE INDEX seq_index ON seqs ({args.id_key})'
     c.execute(index_cmd)
     return c
 
@@ -893,6 +897,7 @@ def cluster_sequences(seq_db, args):
 
 def calculate_consentroids(clusters, seq_db, args):
     seq_type = 'consensus' if args.consensus else 'centroid'
+    logger.info('')
     logger.info(f'computing {seq_type} sequences...')
     start_time = datetime.now()
     extra_info = 'passed cluster size threshold: {} / {}'
@@ -920,6 +925,7 @@ def calculate_consentroids(clusters, seq_db, args):
         sequences.append(consentroid)
         passed += 1
         progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
+    logger.info('')
     return sequences
 
 
