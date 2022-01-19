@@ -903,14 +903,20 @@ def calculate_consentroids(clusters, seq_db, args):
         if c.size < args.min_seqs:
             progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
             continue
-        output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
-        output_clusters = cluster(output_seqs,
-                                  threshold=args.identity_threshold * 0.8,
-                                  temp_dir=args.temp_dir)
-        output_cluster = output_clusters.largest_cluster
-        consentroid = output_cluster.consensus if args.consensus else output_cluster.centroid
+        elif c.size == 1:
+            output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
+            consentroid = output_seqs[0]
+            output_cluster_size = 1
+        else:
+            output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
+            output_clusters = cluster(output_seqs,
+                                    threshold=args.identity_threshold * 0.8,
+                                    temp_dir=args.temp_dir)
+            output_cluster = output_clusters.largest_cluster
+            consentroid = output_cluster.consensus if args.consensus else output_cluster.centroid
+            output_cluster_size = output_cluster.size
         if args.include_cluster_size:
-            consentroid.id = f'{consentroid.id}_{output_cluster.size}'
+            consentroid.id = f'{consentroid.id}_{output_cluster_size}'
         sequences.appendd(consentroid)
         passed += 1
         progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
