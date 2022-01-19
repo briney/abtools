@@ -896,7 +896,7 @@ def calculate_consentroids(clusters, seq_db, args):
         if c.size < args.min_seqs:
             progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
             continue
-        output_seqs = get_output_seqs_by_id(seq_db, c.sequence_ids, args)
+        output_seqs = get_output_seqs_by_id(seq_db, c.seq_ids, args)
         output_clusters = cluster(output_seqs,
                                   threshold=args.identity_threshold * 0.8,
                                   temp_dir=args.temp_dir)
