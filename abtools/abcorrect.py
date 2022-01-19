@@ -430,7 +430,7 @@ def get_clustering_seqs_by_id(seq_ids, seq_db, args):
         query = f'''SELECT seqs.{args.id_key}, seqs.{args.clustering_key}
                     FROM seqs
                     WHERE seqs.{args.id_key} in ({','.join('?' * len(chunk))})'''
-        seq_chunk = seq_db.execute(query, chunk)
+        seq_chunk = seq_db.execute(query, chunk).fetchall()
         seqs.extend(seq_chunk)
     return [Sequence(s[1], id=s[0]) for s in seqs]
 
@@ -441,7 +441,7 @@ def get_output_seqs_by_id(seq_ids, seq_db, args):
         query = f'''SELECT seqs.{args.id_key}, seqs.{args.output_key}
                     FROM seqs
                     WHERE seqs.{args.id_key} in ({','.join('?' * len(chunk))})'''
-        seq_chunk = seq_db.execute(query, chunk)
+        seq_chunk = seq_db.execute(query, chunk).fetchall()
         seqs.extend(seq_chunk)
     return [Sequence(s[1], id=s[0]) for s in seqs]
 
@@ -569,7 +569,8 @@ def cluster_umis(seq_db, args):
 
 
 def make_umi_sort_input(seq_db, args):
-    seqs = seq_db.execute(f'SELECT seqs.{args.id_key}, seqs.{args.umi_key} FROM seqs')
+    query = f'SELECT seqs.{args.id_key}, seqs.{args.umi_key} FROM seqs'
+    seqs = seq_db.execute(query).fetchall()
     seq_strings = [' '.join(s) for s in seqs]
     sort_input = tempfile.NamedTemporaryFile(dir=args.temp_dir, delete=False)
     sort_input.close()
