@@ -205,17 +205,20 @@ class Args(object):
 
 def get_seqs(input, args):
     # read JSON data
+    fields = [args.id_key, args.umi_key, args.clustering_key, args.raw_key, args.output_key]
     if args.json is not None:
         logger.info('reading input file...')
         seqs = read_sequences(file=input, format='json',
                               id_key=args.id_key,
-                              sequence_key=args.clustering_key)
+                              sequence_key=args.clustering_key,
+                              fields=fields)
     # read tabular data
     elif args.tabular is not None:
         logger.info('reading input file...')
         seqs = read_sequences(file=input, format='tabular', sep=args.sep,
                               id_key=args.id_key,
-                              sequence_key=args.clustering_key)
+                              sequence_key=args.clustering_key,
+                              fields=fields)
     # load MongoDB data
     elif args.db is not None:
         logger.info('querying MongoDB...')
