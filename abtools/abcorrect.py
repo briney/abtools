@@ -1150,7 +1150,7 @@ def log_params(args):
         return
     elif args.umi == 0:
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
-        logger.info('GERMLINES: {}'.format(args.germs))
+#        logger.info('GERMLINES: {}'.format(args.germs))
     else:
         logger.info('PARSE UMIs: {}'.format(args.parse_umis))
     logger.info('MIN SEQS: {}'.format(args.min_seqs))
