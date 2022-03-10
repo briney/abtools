@@ -91,7 +91,7 @@ def parse_args():
                         Default is 'human'.")
     parser.add_argument('--id_key', dest='id_key', default='sequence_id',
                         help="The field containing the sequence ID. Default is 'sequence_id'.")
-    parser.add_argument('--raw_key', dest='raw_key', default='raw_input',
+    parser.add_argument('--raw_key', dest='raw_key', default='raw_input', required=True,
                         help="The field containing the raw input sequence, used to pass sequences. \
                         Default is 'raw_input'.")
     parser.add_argument('--debug', dest='debug', action='store_true', default=False,
@@ -261,8 +261,6 @@ def aggregate(data, norm=True, sort_by='value', keys=None):
 def cdr3_plot(seqs, collection, make_plot, chain, output_dir):
     if not make_plot:
         return None
-    print('\n')
-    print('Generating CDR3 plots ...')
     max_len = 40 if chain == 'heavy' else 20
     cdr3s = [s['cdr3_len'] for s in seqs if s['cdr3_len'] > 0 and s['cdr3_len'] <= max_len]
     x, y = aggregate(cdr3s, keys=list(range(1, max_len + 1)))
@@ -285,8 +283,6 @@ def germline_plot(seqs, gene, collection, output_dir, level, species, chain):
     germs = get_germlines(species, gene, chain=chain)
     if not level:
         return None
-    print('\n')
-    print(f"Generating {gene} plots ...")
     level = ['fam', 'gene'] if level == 'both' else [level, ]
     for l in level:
         if l == 'fam':
@@ -326,14 +322,14 @@ def get_germline_plot_colors(data, l):
 
 
 def isotypes():
+    print('\n')
+    print('Isotype plots not implemented ...')
     pass
 
 
 def vj_heatmap(seqs, collection, make_plot, species, chain, output_dir):
     if not make_plot:
         return None
-    print('\n')
-    print('Generating heatmaps plots ...')
     plot_file = os.path.join(output_dir, '{}_VJheatmap_{}.pdf'.format(collection, chain))
     vj_data = group_by_vj(seqs, species, chain)
     vj_df = pd.DataFrame(vj_data)
@@ -496,6 +492,7 @@ def main(args):
         start_time = time.time()
         print_collection_info(group)
         seqs = get_seqs(group, args)
+        name = group.split('.')[0]
 
         if len(seqs) == 0:
             print('No sequences to handle ...')
@@ -508,14 +505,14 @@ def main(args):
             print("CDR3 length :", seqs[0]['cdr3_len'])
             print("V gene :", seqs[0]['v_gene'])
 
-        germline_plot(seqs, 'V', group, args.output, args.var_plot, args.species, args.chain)
+        germline_plot(seqs, 'V', name, args.output, args.var_plot, args.species, args.chain)
         if args.chain == 'heavy':
-            germline_plot(seqs, 'D', group, args.output, args.div_plot, args.species, args.chain)
-        germline_plot(seqs, 'J', group, args.output, args.join_plot, args.species, args.chain)
-        cdr3_plot(seqs, group, args.cdr3_plot, args.chain, args.output)
-        vj_heatmap(seqs, group, args.heatmap, args.species, args.chain, args.output)
+            germline_plot(seqs, 'D', name, args.output, args.div_plot, args.species, args.chain)
+        germline_plot(seqs, 'J', name, args.output, args.join_plot, args.species, args.chain)
+        cdr3_plot(seqs, name, args.cdr3_plot, args.chain, args.output)
+        vj_heatmap(seqs, name, args.heatmap, args.species, args.chain, args.output)
     print('\n')
-    print('AbStats done.')
+    print('AbStats finished, successfully!.')
 
 
 
