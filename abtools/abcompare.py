@@ -25,6 +25,7 @@
 
 from __future__ import print_function
 
+import json
 from collections import Counter
 import itertools
 import math
@@ -48,6 +49,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from abutils.utils import log, mongodb
+from abutils.utils.pipeline import make_dir
 
 
 
@@ -56,11 +58,11 @@ def parse_args():
     parser = argparse.ArgumentParser("Compares two or more antibody repertoires.")
     parser.add_argument('-o', '--output', dest='output', required=True,
                         help="Output directory for figure and data files. Required.")
-    parser.add_argument('-l', '--log', dest='log',
+    parser.add_argument('-l', '--log', dest='log', required=True,
                         help="Location for the log file. \
                         If not provided, log will be written to <output>/abcompare.log")
-    parser.add_argument('-d', '--database', dest='db', required=True,
-                        help="Name of the MongoDB database to query. Required.")
+    parser.add_argument('-d', '--database', dest='db', default=None,
+                        help="Name of the MongoDB database to query.")
     parser.add_argument('-1', '--collection1', dest='collection1', default=None,
                         help="Name of the first MongoDB collection to query for comparison. \
                         If -1 and -2 are not provided, all collections in the given database will be processed iteratively.")
@@ -79,18 +81,28 @@ def parse_args():
                         help="Username for the MongoDB server. Not used if not provided.")
     parser.add_argument('-p', '--password', dest='password', default=None,
                         help="Password for the MongoDB server. Not used if not provided.")
+    parser.add_argument('--json1', dest='json1', default=None,
+                        help="Input first JSON file.")
+    parser.add_argument('--json2', dest='json2', default=None,
+                        help="Input second JSON file.")
+    parser.add_argument('--tabular1', dest='tabular1', default=None,
+                        help="Input first TABULAR file.")
+    parser.add_argument('--tabular2', dest='tabular2', default=None,
+                        help="Input second TABULAR file.")
+    parser.add_argument('--sep', dest='sep', default='\t',
+                        help="Character used to separate fields in TABULAR-formated inputs. Default is '\t'.")
     parser.add_argument('-k', '--chunksize', dest='chunksize', type=int, default=100000,
                         help="Number of sequences to use for each similarity calculation. \
                         Default is 100,000.")
     parser.add_argument('-I', '--iterations', dest='iterations', type=int, default=1000,
                         help="Number of iterations of the similarity calculation to perform. \
-                        Default is 10000.")
+                        Default is 1000.")
     parser.add_argument('-s', '--similarity-method', dest='method',
-                        choices=['morisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine'],
+                        choices=['morisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine', 'unifrac'],
                         default='morisita-horn',
                         help="The similarity calculation to use. \
-                        Options are 'morisita-horn', 'kullback-leibler' and 'jensen-shannon'. \
-                        Note that kullback-leibler is actually a divergence measure (lower values indicate greater similarity) \
+                        Options are 'morisita-horn', 'kullback-leibler', 'jensen-shannon', 'jaccard', 'bray-curtis', 'renkonen', 'cosine' and 'unifrac'. \
+                        Note that kullback-leibler and the UniFrac are actually divergence measures (lower values indicate greater similarity) \
                         Default is 'morisita-horn'.")
     parser.add_argument('-c', '--control', dest='control_similarity', default=False, action='store_true',
                         help="Plot the control similarity of the two collections")
@@ -107,15 +119,19 @@ class Args(object):
     def __init__(self, output=None, log=None, db=None,
                  collection1=None, collection2=None, collection_prefix=None,
                  ip='localhost', port=27017, user=None, password=None,
+                 json1=None, json2=None, tabular1=None, tabular2=None, sep='\t',
                  chunksize=100000, iterations=10000,
                  method='marisita-horn', control_similarity=False,
                  chain='heavy', debug=False):
         super(Args, self).__init__()
-        if not all([output, db]):
-            logging.info("\nERROR: Ouput directory and MongoDB database name must be provided.\n")
+        if not all([output]):
+            print("\nERROR: Output directory must be provided.\n")
+            sys.exit(1)
+        if all([db is None, json1 is None, tabular1 is None]):
+            print("\nERROR: One of 'db', 'json' or 'tabular' must be supplied.\n")
             sys.exit(1)
         self.output = output
-        args.log = log
+        self.log = log
         self.db = db
         self.collection1 = collection1
         self.collection2 = collection2
@@ -124,12 +140,17 @@ class Args(object):
         self.port = int(port)
         self.user = user
         self.password = password
+        self.json1 = json1
+        self.json2 = json2
+        self.tabular1 = tabular1
+        self.tabular2 = tabular2
+        self.sep = sep
         self.chunksize = int(chunksize)
         self.iterations = int(iterations)
         self.method = method
         self.control_similarity = control_similarity
         if chain not in ['heavy', 'kappa', 'lambda']:
-            logging.info('\nERROR: Please select an appropriate chain. \
+            print('\nERROR: Please select an appropriate chain. \
                 Valid choices are: heavy, kappa and lambda.\n')
             sys.exit(1)
         self.chain = chain
@@ -183,6 +204,39 @@ def query(db, collection, chain):
     return seqs
 
 
+# ================================================
+#
+#                   JSON INPUT
+#
+# ================================================
+
+
+def get_json_vgenes(_s1, _s2 ,chain):
+    logger.info('')
+    logger.info('Loading first json repertoire ...')
+    with open(_s1, 'r') as f1:
+        data1 = [json.loads(l1) for l1 in f1]
+    s1_vg = [d1['v_gene']['gene'] for d1 in data1 if d1['chain'] == chain]
+    logger.info('')
+    logger.info('Loading second json repertoire ...')
+    with open(_s2, 'r') as f2:
+        data2 = [json.loads(l2) for l2 in f2]
+    s2_vg = [d2['v_gene']['gene'] for d2 in data2 if d2['chain'] == chain]
+    logger.info('')
+    logger.info('Done loading json repertoires.')
+    return s1_vg, s2_vg
+
+# ================================================
+#
+#                   TABULAR INPUT
+#
+# ================================================
+
+def get_tabular_vgenes(_s1, _s2 ,chain):
+    #To-do ...
+    s1_vg = []
+    s2_vg = []
+    return s1_vg, s2_vg
 
 # ================================================
 #
@@ -272,7 +326,9 @@ def simdif_method(sample1, sample2, args):
                'jaccard': (jaccard_similarity, False, False),
                'bray-curtis': (bc_similarity, False, True),
                'renkonen': (renkonen_similarity, False, True),
-               'cosine': (cosine_similarity, False, False)}
+               'cosine': (cosine_similarity, False, False),
+               'sd_similarity': (sd_similarity,)
+               'unifrac':(uf_distance,)}
     method, continuous, normalize = methods[args.method]
     s1, s2 = random_sample_no_replacement(sample1,
                                           sample2,
@@ -307,7 +363,7 @@ def calculate_control_similarities(s1, s2, args):
 
 def mh_similarity(sample1, sample2):
     '''
-    Calculates the Marista-Horn similarity for two samples.
+    Calculates the Morisita-Horn similarity for two samples.
 
     .. note:
 
@@ -321,7 +377,7 @@ def mh_similarity(sample1, sample2):
 
     Returns:
 
-        float: Marista-Horn similarity (between 0 and 1)
+        float: Morisita-Horn similarity (between 0 and 1)
     '''
     X = sum(sample1)
     Y = sum(sample2)
@@ -494,13 +550,13 @@ def cosine_similarity(s1, s2):
         float: Cosine similarity (between 0 and 1)
     '''
     num = sum([Pi * Qi for Pi, Qi in zip(s1, s2)])
-    denomPi = mp.sqrt(sum([Pi * Pi for Pi in s1])) * mp.sqrt(sum([Qi * Qi for Qi in s2]))
-    return float(num) / denom
+    denompi = math.sqrt(sum([Pi * Pi for Pi in s1])) * math.sqrt(sum([Qi * Qi for Qi in s2]))
+    return float(num) / denompi
 
 
 def sd_similarity(s1, s2):
     '''
-    Calculates the Brey-Curtis similarity for two samples.
+    Calculates the SD (?) similarity for two samples.
 
     .. note:
 
@@ -514,7 +570,7 @@ def sd_similarity(s1, s2):
 
     Results:
 
-        float: Brey-Curtis similarity (between 0 and 1)
+        float: SD similarity (between 0 and 1)
     '''
     num = 0
     denom = 0
@@ -524,6 +580,21 @@ def sd_similarity(s1, s2):
         denom += min(y) > 0
     return 1. * num / denom
 
+
+def uf_distance():
+    '''
+    Calculates the UniFrac distance of two samples.
+    UniFrac distance is a measure of beta-diversity based on tree-distances
+
+    Args:
+        s1:
+        s2:
+
+    Returns:
+
+    '''
+    #To-do
+    return
 
 def bin_similarities(similarities):
     return np.histogram(similarities, bins=10)
@@ -542,13 +613,16 @@ def monitor_mp_jobs(results, log):
 
 def update_progress(finished, jobs, log, failed=None):
     pct = int(100. * finished / jobs)
-    ticks = pct / 2
+    ticks = int(pct / 2)
     spaces = 50 - ticks
     if failed:
         prog_bar = '\r({}/{}) |{}{}|  {}% ({}, {})'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct, finished - failed, failed)
     else:
         prog_bar = '\r({}/{}) |{}{}|  {}%'.format(finished, jobs, '|' * ticks, ' ' * spaces, pct)
-    sys.stdout.write(prog_bar)
+    try:
+        sys.stdout.write(prog_bar)
+    except:
+        pass
     sys.stdout.flush()
 
 
@@ -622,8 +696,14 @@ def write_data(s1, s2, median, counts, bins, similarities, ofile, args):
 def write_output(s1, s2, median, counts, bins, similarities, args, control=False):
     ctrl = 'control_' if control else ''
     m = '{}'.format('divergences' if args.method == 'kullback-leibler' else 'similarities')
-    fig_file = os.path.join(args.output, '{}_{}_{}_{}{}.pdf'.format(s1, s2, args.method, ctrl, m))
-    data_file = os.path.join(args.output, '{}_{}_{}_{}data.txt'.format(s1, s2, args.method, ctrl))
+    _s1, _s2 = s1, s2
+    if 'json' in s1:
+        _s1 = s1.split('.')[0]
+        _s1 = _s1.split('/')[-1]
+        _s2 = s2.split('.')[0]
+        _s2 = _s2.split('/')[-1]
+    fig_file = os.path.join(args.output, '{}_{}_{}_{}{}.pdf'.format(_s1, _s2, args.method, ctrl, m))
+    data_file = os.path.join(args.output, '{}_{}_{}_{}data.txt'.format(_s1, _s2, args.method, ctrl))
     make_sim_plot(counts, bins, median, fig_file, args.output)
     write_data(s1, s2, median, counts, bins, similarities, data_file, args)
 
@@ -751,6 +831,16 @@ def run(**kwargs):
             of ``user`` or ``password`` is not provided, the connection to the MongoDB
             database will be attempted without authentication.
 
+        json1 (str) : Path to first json file
+
+        json2 (str) : Path to second json file
+
+        tabular1 (str) : Path to first tabular file
+
+        tabular2 (str) : Path to second tabular file
+
+        sep (str) : tabular-file field separator. Default is '\t'
+
         chunksize (int): Number of sequences for each iteration. Default is 100,000.
 
         iterations (int): Number of iterations to perform on each pair of samples.
@@ -789,11 +879,44 @@ def run_standalone(args):
 
 
 def main(args):
-    db = mongodb.get_db(args.db, args.ip, args.port,
+    for d in [args.output, ]:
+        make_dir(d)
+    # inputs
+    # check whether JSON files have been passed
+    if args.json1 is not None:
+        if os.path.isfile(args.json1):
+            pairs = [(args.json1, args.json2), ]
+        else:
+            err = f'ERROR: The supplied JSON path ({args.json1}) is not a file. '
+            err += 'Please double-check your JSON path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
+
+    # check whether TABULAR files have been passed
+    elif args.tabular1 is not None:
+        if os.path.isfile(args.tabular1):
+            pairs = [(args.tabular1, args.tabular2), ]
+        else:
+            err = f'ERROR: The supplied TABULAR path ({args.tabular1}) is not a file. '
+            err += 'Please double-check your TABULAR path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
+
+    # otherwise, get sequences from MongoDB
+    else:
+        db = mongodb.get_db(args.db, args.ip, args.port,
                         args.user, args.password)
-    print_method(args.method)
-    pairs = get_collection_pairs(db, args)
-    index_collections(db, pairs)
+        print_method(args.method)
+        pairs = get_collection_pairs(db, args)
+        index_collections(db, pairs)
+
+
+    # main program
+
     prev1 = None
     scores = {}
     cscores = {}
@@ -802,9 +925,17 @@ def main(args):
         curr1 = s1
         if prev1 != curr1:
             print_collection_info(s1)
-            s1_all_vgenes = get_vgenes(db, s1, args.chain)
+            if args.db is not None:
+                s1_all_vgenes = get_vgenes(db, s1, args.chain)
         print_pair_info(s1, s2)
-        s1_vgenes, s2_vgenes = get_vgenes(db, s2, args.chain, prev_data=s1_all_vgenes)
+        if args.json1 is not None:
+            s1_vgenes, s2_vgenes = get_json_vgenes(s1, s2, args.chain)
+        elif args.tabluar1 is not None:
+            s1_vgenes, s2_vgenes = get_tabular_vgenes(s1, s2, args.chain)
+        elif args.db is not None:
+            s1_vgenes, s2_vgenes = get_vgenes(db, s2, args.chain, prev_data=s1_all_vgenes)
+
+
         logger.info('')
         logger.info('Calculating similarities...')
         median, counts, bins, similarities = calculate_similarities(s1_vgenes,

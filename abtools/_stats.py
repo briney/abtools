@@ -15,33 +15,20 @@
 
 from __future__ import print_function
 
+import argparse
 import os
 import sys
-import uuid
 import time
-import shelve
-import urllib.request, urllib.parse, urllib.error
-import sqlite3
-import tempfile
-import argparse
-import subprocess as sp
-import multiprocessing as mp
-from io import StringIO
-from collections import Counter
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import seaborn as sns
-
-from pymongo import MongoClient
-
-from abutils.utils import log, mongodb
-
 from abstar.core.germline import get_germlines
-
+from abutils.io import read_sequences
+from abutils.utils import log
+from abutils.utils import mongodb
+from abutils.utils.pipeline import make_dir, list_files
 
 
 def parse_args():
@@ -53,11 +40,17 @@ def parse_args():
     parser.add_argument('-l', '--log', dest='log',
                         help="Location for the AbStats log file. \
                         If not provided, will be written to <output>/abstats.log.")
-    parser.add_argument('-d', '--database', dest='db', required=True,
-                        help="Name of the MongoDB database to query. Required.")
+    parser.add_argument('-d', '--database', dest='db', required=False,
+                        help="Name of the MongoDB database to query.")
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
+    parser.add_argument('--json', dest='json', default=None,
+                        help="Input JSON file or directory of JSON files.")
+    parser.add_argument('--tabular', dest='tabular', default=None,
+                        help="Input TABULAR file or directory of TABULAR files.")
+    parser.add_argument('--sep', dest='sep', default='\t',
+                        help="Character used to separate fields in TABULAR-formated inputs. Default is '\t'.")
     parser.add_argument('-i', '--ip', dest='ip', default='localhost',
                         help="IP address for the MongoDB server.  Defaults to 'localhost'.")
     parser.add_argument('--port', dest='port', default=27017, type=int,
@@ -96,6 +89,11 @@ def parse_args():
     parser.add_argument('-s', '--species', dest='species', default='human', choices=['human', 'mouse', 'macaque'],
                         help="Species of the sequence data. Choices are 'human', 'mouse', and 'macaque'. \
                         Default is 'human'.")
+    parser.add_argument('--id_key', dest='id_key', default='sequence_id',
+                        help="The field containing the sequence ID. Default is 'sequence_id'.")
+    parser.add_argument('--raw_key', dest='raw_key', default='raw_input', required=True,
+                        help="The field containing the raw input sequence, used to pass sequences. \
+                        Default is 'raw_input'.")
     parser.add_argument('--debug', dest='debug', action='store_true', default=False,
                         help="If set, will run in debug mode.")
     return parser
@@ -105,15 +103,17 @@ def parse_args():
 class Args(object):
     """docstring for Args"""
     def __init__(self, output=None, temp=None, log=None,
-        db=None, collection=None, ip='localhost', port=27017,
-        user=None, password=None,
+        db=None, collection=None, json=None, tabular=None, sep='\t',
+        ip='localhost', port=27017, user=None, password=None,
         var_plot=None, div_plot=None, join_plot=None,
         cdr3_plot=None, heatmap=False, isotype_plot=False, chain='heavy',
-        debug=False):
+        id_key='sequence_id', raw_key='raw_input', debug=False):
         super(Args, self).__init__()
-
-        if not all([output, temp, db]):
-            print('\nERROR: --output, --temp and --database are all required options.\n')
+        if all([db is None, json is None, tabular is None]):
+            print("\nERROR: One of 'db', 'json' or 'tabular' must be supplied.\n")
+            sys.exit(1)
+        if not all([output, temp]):
+            print('\nERROR: --output and --temp are all required options.\n')
             sys.exit(1)
 
         self.output = output
@@ -121,6 +121,9 @@ class Args(object):
         self.log = log
         self.db = db
         self.collection = collection
+        self.json = json
+        self.tabular = tabular
+        self.sep = sep
         self.ip = ip
         self.port = int(port)
         self.user = user
@@ -132,50 +135,99 @@ class Args(object):
         self.heatmap = heatmap
         self.isotype_plot = isotype_plot
         self.chain = chain
+        self.id_key = id_key
+        self.raw_key = raw_key
         self.debug = debug
 
-
-
-def get_db(db, ip='localhost', port=27017, user=None, password=None):
-    if all([user is not None, password is not None]):
-        pwd = urllib.parse.quote_plus(password)
-        uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
-        conn = MongoClient(uri)
+def get_seqs(input, args):
+    # read JSON data
+    fields = [args.id_key, args.raw_key, "cdr3_len", "v_gene", "d_gene", "j_gene"]
+    if args.json is not None:
+        logger.info('reading input file...')
+        seqs = read_sequences(file=input, format='json',
+                              id_key=args.id_key,
+                              sequence_key=args.raw_key,
+                              fields=fields)
+    # read tabular data
+    elif args.tabular is not None:
+        logger.info('reading input file...')
+        seqs = read_sequences(file=input, format='tabular', sep=args.sep,
+                              id_key=args.id_key,
+                              sequence_key=args.raw_key,
+                              fields=fields)
+    # load MongoDB data
+    elif args.db is not None:
+        logger.info('querying MongoDB...')
+        mongodb_kwargs = {'ip': args.ip,
+                          'port': args.port,
+                          'user': args.user,
+                          'password': args.password}
+        seqs = read_sequences(format='mongodb',
+                              mongodb_kwargs=mongodb_kwargs,
+                              db=args.db, collection=input,
+                              id_key=args.id_key,
+                              sequence_key=args.raw_key)
     else:
-        conn = MongoClient(ip, port)
-    return conn[db]
-
-
-def get_collections(db):
-    if args.collection:
-        return [args.collection, ]
-    collections = db.collection_names(include_system_collections=False)
-    return sorted(collections)
-
-
-
-def query(db, collection, chain):
-    print('Getting sequences from MongoDB...', end='')
-    sys.stdout.flush()
-    c = db[collection]
-    results = c.find({'chain': chain, 'prod': 'yes'},
-                     {'_id': 0,
-                      'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.gene': 1,
-                      'v_gene.fam': 1, 'd_gene.fam': 1, 'j_gene.fam': 1,
-                      'cdr3_len': 1, 'isotype': 1})
-    seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
-    print('Done.\nFound {} sequences\n'.format(len(seqs)))
+        seqs = []
+    # make sure all of the necessary keys are present in the annotated data
+    required_keys = [args.id_key, args.raw_key, "cdr3_len", "v_gene", "d_gene", "j_gene"]
+    check_sequence_keys(seqs, required_keys)
+    logger.info(f'found {len(seqs)} input sequences')
     return seqs
+
+def check_sequence_keys(seqs, keys):
+    for k in keys:
+        missing = 0
+        for s in seqs:
+            if k not in s.annotations:
+                missing += 1
+        missing_frac = missing / len(seqs)
+        if missing_frac > 0.1:
+            error = f'ERROR: The "{k}" field was missing in {round(missing_frac * 100, 2)}% of the input sequences. '
+            error += 'Please ensure that the id, clustering, raw and output keys are present in the input data.'
+            print(f'\n{error}\n')
+            sys.exit()
+
+# def get_db(db, ip='localhost', port=27017, user=None, password=None):
+#     if all([user is not None, password is not None]):
+#         pwd = urllib.parse.quote_plus(password)
+#         uri = 'mongodb://{}:{}@{}:{}'.format(user, pwd, ip, port)
+#         conn = MongoClient(uri)
+#     else:
+#         conn = MongoClient(ip, port)
+#     return conn[db]
+#
+#
+# def get_collections(db):
+#     if args.collection:
+#         return [args.collection, ]
+#     collections = db.collection_names(include_system_collections=False)
+#     return sorted(collections)
+#
+#
+#
+# def query(db, collection, chain):
+#     print('Getting sequences from MongoDB...', end='')
+#     sys.stdout.flush()
+#     c = db[collection]
+#     results = c.find({'chain': chain, 'prod': 'yes'},
+#                      {'_id': 0,
+#                       'v_gene.gene': 1, 'd_gene.gene': 1, 'j_gene.gene': 1,
+#                       'v_gene.fam': 1, 'd_gene.fam': 1, 'j_gene.fam': 1,
+#                       'cdr3_len': 1, 'isotype': 1})
+#     seqs = [r for r in results if '/OR' not in r['v_gene']['gene']]
+#     print('Done.\nFound {} sequences\n'.format(len(seqs)))
+#     return seqs
 
 
 def aggregate(data, norm=True, sort_by='value', keys=None):
     '''
-    Counts the number of occurances of each item in 'data'.
+    Counts the number of occurrences of each item in 'data'.
 
     Inputs
     data: a list of values.
     norm: normalize the resulting counts (as percent)
-    sort_by: how to sort the retured data. Options are 'value' and 'count'.
+    sort_by: how to sort the returned data. Options are 'value' and 'count'.
 
     Output
     a non-redundant list of values (from 'data') and a list of counts.
@@ -228,7 +280,6 @@ def cdr3_plot(seqs, collection, make_plot, chain, output_dir):
 
 
 def germline_plot(seqs, gene, collection, output_dir, level, species, chain):
-    # from abtools.utils.germlines import germlines
     germs = get_germlines(species, gene, chain=chain)
     if not level:
         return None
@@ -271,6 +322,8 @@ def get_germline_plot_colors(data, l):
 
 
 def isotypes():
+    print('\n')
+    print('Isotype plots not implemented ...')
     pass
 
 
@@ -399,19 +452,67 @@ def run_standalone(args):
 
 
 def main(args):
-    db = mongodb.get_db(args.db, ip=args.ip, port=args.port, user=args.user, password=args.password)
-    for collection in mongodb.get_collections(db):
-        print_collection_info(collection)
-        seqs = query(db, collection, args.chain)
-        if len(seqs) == 0:
-            continue
-        germline_plot(seqs, 'V', collection, args.output, args.var_plot, args.species, args.chain)
-        if args.chain == 'heavy':
-            germline_plot(seqs, 'D', collection, args.output, args.div_plot, args.species, args.chain)
-        germline_plot(seqs, 'J', collection, args.output, args.join_plot, args.species, args.chain)
-        cdr3_plot(seqs, collection, args.cdr3_plot, args.chain, args.output)
-        vj_heatmap(seqs, collection, args.heatmap, args.species, args.chain, args.output)
+    for d in [args.output, args.temp_dir]:
+        make_dir(d)
+    # check whether JSON files have been passed
+    if args.json is not None:
+        if os.path.isfile(args.json):
+            groups = [args.json, ]
+        elif os.path.isdir(args.json):
+            groups = list_files(args.json)
+        else:
+            err = f'ERROR: The supplied JSON path ({args.json}) is neither a file nor a directory. '
+            err += 'Please double-check your JSON path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
+    # check whether TABULAR files have been passed
+    elif args.tabular is not None:
+        if os.path.isfile(args.tabular):
+            groups = [args.tabular, ]
+        elif os.path.isdir(args.tabular):
+            groups = list_files(args.tabular)
+        else:
+            err = f'ERROR: The supplied TABULAR path ({args.tabular}) is neither a file nor a directory. '
+            err += 'Please double-check your TABULAR path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
+    # otherwise, get sequences from MongoDB
+    else:
+        if args.collection is not None:
+            groups = [args.collection, ]
+        else:
+            db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
+            groups = mongodb.get_collections(db)
 
+    for group in groups:
+        start_time = time.time()
+        print_collection_info(group)
+        seqs = get_seqs(group, args)
+        name = group.split('.')[0]
+
+        if len(seqs) == 0:
+            print('No sequences to handle ...')
+            continue
+
+        if args.debug:
+            print("Debugging ..., must show seq_id, vdj_nt, cdr3_len and v_gene if seqs are loaded:")
+            print("Seq id :", seqs[0]['seq_id'])
+            print("VDJ nt :", seqs[0]['vdj_nt'])
+            print("CDR3 length :", seqs[0]['cdr3_len'])
+            print("V gene :", seqs[0]['v_gene'])
+
+        germline_plot(seqs, 'V', name, args.output, args.var_plot, args.species, args.chain)
+        if args.chain == 'heavy':
+            germline_plot(seqs, 'D', name, args.output, args.div_plot, args.species, args.chain)
+        germline_plot(seqs, 'J', name, args.output, args.join_plot, args.species, args.chain)
+        cdr3_plot(seqs, name, args.cdr3_plot, args.chain, args.output)
+        vj_heatmap(seqs, name, args.heatmap, args.species, args.chain, args.output)
+    print('\n')
+    print('AbStats finished, successfully!.')
 
 
 

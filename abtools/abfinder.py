@@ -52,14 +52,20 @@ from abutils.utils import color, log, mongodb, progbar
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser("For a MongoDB collection, plots the germline divergence against the sequence identity to a given 'subject' sequence.")
-    parser.add_argument('-d', '--database', dest='db', required=True,
+    parser.add_argument('-d', '--database', dest='db', default=None,
                         help="Name of the MongoDB database to query. Required.")
     parser.add_argument('-c', '--collection', dest='collection', default=None,
                         help="Name of the MongoDB collection to query. \
                         If not provided, all collections in the given database will be processed iteratively.")
     parser.add_argument('--collection-prefix', dest='collection_prefix', default=None,
                         help="If supplied, will iteratively process only collections beginning with <collection_prefix>.")
-    parser.add_argument('-o', '--output', dest='output_dir', default=None,
+    parser.add_argument('--json', dest='json', default=None,
+                        help="Input JSON file or directory of JSON files.")
+    parser.add_argument('--tabular', dest='tabular', default=None,
+                        help="Input TABULAR file or directory of TABULAR files.")
+    parser.add_argument('--sep', dest='sep', default='\t',
+                        help="Character used to separate fields in TABULAR-formated inputs. Default is '\t'.")
+    parser.add_argument('-o', '--output', dest='output_dir', default=None, required=True,
                         help="Output directory figure files. If not provided, figures will not be generated. \
                         Directory will be created if it does not already exist.")
     parser.add_argument('-t', '--temp', dest='temp_dir', required=True,
@@ -131,19 +137,25 @@ def parse_args():
 
 
 class Args(object):
-    def __init__(self, db=None, collection=None,
+    def __init__(self, db=None, collection=None, json=None, tabular=None, sep='\t',
                  output=None, temp=None, log=None, cluster=False,
                  ip='localhost', port=27017, user=None, password=None, update=True,
                  standard=None, chain='heavy', is_aa=True,
                  x_min=-1, x_max=35, y_min=65, y_max=101, gridsize=0, mincount=3,
                  colormap='Blues', debug=False):
         super(Args, self).__init__()
-        if not all([db, output, temp, standard]):
+        if all([db is None, json is None, tabular is None]):
+            print("\nERROR: One of 'db', 'json' or 'tabular' must be supplied.\n")
+            sys.exit(1)
+        elif not all([output, temp, standard]):
             err = 'You must provide a MongoDB database name, output and temp directories, \
                 and a file containing one or more comparison (standard) sequences in FASTA format.'
             raise RuntimeError(err)
         self.db = db
         self.collection = collection
+        self.json = json
+        self.tabular = tabular
+        self.sep = sep
         self.output_dir = output
         self.temp_dir = temp
         self.log = log
@@ -207,7 +219,52 @@ def get_chain(args):
     return [args.chain, ]
 
 
-def get_sequences(db, collection, temp_dir, args):
+def get_sequences(input, args):
+    # read JSON data
+    fields = [args.id_key, args.umi_key, args.clustering_key, args.raw_key, args.output_key]
+    if args.json is not None:
+        logger.info('reading input file...')
+        seqs = read_sequences(file=input, format='json',
+                              id_key=args.id_key,
+                              sequence_key=args.clustering_key,
+                              fields=fields)
+    # read tabular data
+    elif args.tabular is not None:
+        logger.info('reading input file...')
+        seqs = read_sequences(file=input, format='tabular', sep=args.sep,
+                              id_key=args.id_key,
+                              sequence_key=args.clustering_key,
+                              fields=fields)
+    # load MongoDB data
+    elif args.db is not None:
+        logger.info('querying MongoDB...')
+        mongodb_kwargs = {'ip': args.ip,
+                          'port': args.port,
+                          'user': args.user,
+                          'password': args.password}
+        seqs = read_sequences(format='mongodb',
+                              mongodb_kwargs=mongodb_kwargs,
+                              db=args.db, collection=input,
+                              id_key=args.id_key,
+                              sequence_key=args.clustering_key)
+    else:
+        seqs = []
+
+    # make sure all of the necessary keys are present in the annotated data
+    required_keys = [args.id_key, args.clustering_key, args.output_key]
+    if args.parse_umis:
+        required_keys.append(args.raw_key)
+    check_sequence_keys(seqs, required_keys)
+    logger.info(f'found {len(seqs)} input sequences')
+    # parse UMIs
+    if args.parse_umis:
+        logger.info('parsing UMIs...')
+        for s in seqs:
+            s[args.umi_key] = parse_umi(s[args.raw_key], args)
+    return seqs
+
+
+
     files = []
     fastas = []
     chunksize = 1000
@@ -444,6 +501,11 @@ def print_single_collection(collection):
     logger.info(collection)
     logger.info('-' * len(collection))
 
+def print_single_group(group):
+    logger.info('')
+    logger.info('')
+    logger.info(group)
+    logger.info('-' * len(group)) 
 
 def print_query_info():
     logger.info('Querying for comparison sequences...')
@@ -639,31 +701,94 @@ def run_standalone(args):
 
 def main(args):
     print_abfinder_start()
-    db = mongodb.get_db(args.db, args.ip, args.port,
-        args.user, args.password)
-    make_directories(args)
+    for d in [args.output_dir, args.temp_dir]:
+        make_dir(d)
+
+    # check whether JSON files have been passed
+    if args.json is not None:
+        if os.path.isfile(args.json):
+            groups = [args.json, ]
+        elif os.path.isdir(args.json):
+            groups = list_files(args.json)
+        else:
+            err = f'ERROR: The supplied JSON path ({args.json}) is neither a file nor a directory. '
+            err += 'Please double-check your JSON path.'
+        print('\n')
+        print(err)
+        print('\n')
+        sys.exit()
+
+    # check whether TABULAR files have been passed
+    elif args.tabular is not None:
+        if os.path.isfile(args.tabular):
+            group = [args.tabular, ]
+        elif os.path.isdir(args.tabular):
+            group = list_files(args.tabular)
+        else:
+            err = f'ERROR: The supplied TABULAR path ({args.tabular}) is neither a file nor a directory. '
+            err += 'Please double-check your TABULAR path.'
+            print('\n')
+            print(err)
+            print('\n')
+            sys.exit()
+
+    # otherwise, get sequences from MongoDB
+    else:
+        if args.collection is not None:
+            groups = [args.collection, ]
+        else:
+            db = mongodb.get_db(args.db, args.ip, args.port, args.user, args.password)
+            groups = mongodb.get_collections(db)
+
+    # main program:
     standards = get_standards(args)
     print_standards_info(standards)
-    collections = mongodb.get_collections(db, args.collection, prefix=args.collection_prefix)
-    print_collections_info(collections)
-    for collection in collections:
+    print_groups_info(groups)
+    for group in groups:
+        start_time = time.time()
         indexed = False
-        print_single_collection(collection)
+        print_single_group(group)
         if args.remove_padding:
             print_remove_padding()
-            mongodb.remove_padding(db, collection)
-        seq_files = get_sequences(db, collection, args.temp_dir, args)
+            pass
+        seqs = get_sequences(group, args)
         for standard in standards:
             print_single_standard(standard)
-            scores = run_jobs(seq_files, standard, args)
+            score = run_jobs(seqs, standard, args)
             if args.output_dir:
-                make_figure(standard.id, scores, collection, args)
+                make_figure(seqs, standard, args)
             if args.update:
                 if not indexed:
-                    mongodb.index(db, collection, 'seq_id')
-                    indexed = True
-                update_db(db, standard.id, scores, collection, args)
-        clean_up(seq_files)
+                    pass
+        clean_up(seqs)
+
+
+
+    # older version only with MongoDB input
+
+    # make_directories(args)
+    # standards = get_standards(args)
+    # print_standards_info(standards)
+    # collections = mongodb.get_collections(db, args.collection, prefix=args.collection_prefix)
+    # print_collections_info(collections)
+    # for collection in collections:
+    #     indexed = False
+    #     print_single_collection(collection)
+    #     if args.remove_padding:
+    #         print_remove_padding()
+    #         mongodb.remove_padding(db, collection)
+    #     seq_files = get_sequences(db, collection, args.temp_dir, args)
+    #     for standard in standards:
+    #         print_single_standard(standard)
+    #         scores = run_jobs(seq_files, standard, args)
+    #         if args.output_dir:
+    #             make_figure(standard.id, scores, collection, args)
+    #         if args.update:
+    #             if not indexed:
+    #                 mongodb.index(db, collection, 'seq_id')
+    #                 indexed = True
+    #             update_db(db, standard.id, scores, collection, args)
+    #     clean_up(seq_files)
 
 
 if __name__ == '__main__':

@@ -927,19 +927,31 @@ def calculate_consentroids(clusters, seq_db, args):
             progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
             continue
         elif c.size == 1:
-            output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
-            consentroid = output_seqs[0]
-            output_cluster_size = 1
+            query = f'''SELECT seqs.seq_id, seqs.raw_input
+                                    FROM seqs
+                                    WHERE seqs.seq_id in (?)'''
+            raw_seqs = seq_db.execute(query, c.seq_ids).fetchall()
+            consentroid = Sequence(raw_seqs[0][1], id=f'{raw_seqs[0][0]}_{c.size}')
+            # output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
+            # consentroid = output_seqs[0]
+            # output_cluster_size = 1
         else:
-            output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
-            output_clusters = cluster(output_seqs,
-                                    threshold=args.identity_threshold * 0.8,
-                                    temp_dir=args.temp_dir)
-            output_cluster = output_clusters.largest_cluster
-            consentroid = output_cluster.consensus if args.consensus else output_cluster.centroid
-            output_cluster_size = output_cluster.size
-        if args.include_cluster_size:
-            consentroid.id = f'{consentroid.id}_{output_cluster_size}'
+            if not args.consensus:
+                query = f'''SELECT seqs.seq_id, seqs.raw_input
+                                    FROM seqs
+                                    WHERE seqs.seq_id in (?)'''
+                raw_seqs = seq_db.execute(query, [c.centroid.id, ]).fetchall()
+                consentroid = Sequence(raw_seqs[0][1], id=f'{raw_seqs[0][0]}_{c.size}')
+            else:
+                output_seqs = get_output_seqs_by_id(c.seq_ids, seq_db, args)
+                output_clusters = cluster(output_seqs,
+                                        threshold=args.identity_threshold * 0.8,
+                                        temp_dir=args.temp_dir)
+                output_cluster = output_clusters.largest_cluster
+                consentroid = output_cluster.consensus
+                output_cluster_size = output_cluster.size
+                if args.include_cluster_size:
+                    consentroid.id = f'{consentroid.id}_{output_cluster_size}'
         sequences.append(consentroid)
         passed += 1
         progress_bar(i, len(clusters), start_time=start_time, extra_info=extra_info.format(passed, i))
@@ -1150,7 +1162,7 @@ def log_params(args):
         return
     elif args.umi == 0:
         logger.info('IDENTITY THRESHOLD: {}'.format(args.identity_threshold))
-        logger.info('GERMLINES: {}'.format(args.germs))
+#        logger.info('GERMLINES: {}'.format(args.germs))
     else:
         logger.info('PARSE UMIs: {}'.format(args.parse_umis))
     logger.info('MIN SEQS: {}'.format(args.min_seqs))
